@@ -5,7 +5,8 @@ var rootPhraseNode;
 
 function ready() {
     var sentence = "this is a test sentence";
-    var phraseTreeStr = "(S (NP I) (VP (V saw) (X him)))";
+    var phraseTreeStr = "(S (NP (I)) (VP (V (saw)) (X (him))))";
+    var phraseTreeStr = "(since_their_articles_appeared_,_the_price_of_gold_has_moved_up_still_further. (since_the_publication_of_their_article,_the_gold_price_has_risen_still_further (since (seit)) (the_publication_of_their_article,_the_gold_price_has_risen_still_further (the_publication_of_their_article,_the_gold_price_is_risen_still_further (the_publication_of_their_article (the_publication (the (der)) (publication (Veröffentlichung)) ) (their_article (their (ihrer)) (Article (Artikel))))(the_gold_price_is_risen_still_further (the_gold_price_is (is (ist)) (the_gold_price (the (der)) (gold_price (Goldpreis)))) (risen_still_further (still_further (still (noch)) (further (weiter))) (risen (gestiegen))))))) (. (.)))"
     rootPhraseNode = parsePhraseTree(phraseTreeStr);
     var phraseLeaves = getleaves(rootPhraseNode);
     console.log("done...");
@@ -53,15 +54,19 @@ function parsePhraseTree(phraseTreeStr) {
             toppn.addPhraseChild(pn);
             _stack.push(pn);
         } else if (item == ")") {
-            _stack.pop();
             rootpn = _stack.pop();
+            //rootpn = _stack[_stack.length - 1];
+            //toppn = _stack[_stack.length - 1];
+            //toppn.addPhraseChild(pn);
         } else {
+            console.log("should never come here now.....");
             toppn = _stack[_stack.length - 1];
             pn = new PhraseNode(item, toppn);
             toppn.addPhraseChild(pn);
             _stack.push(pn);
         }
     }
+    rootpn = _stack.pop();
     return rootpn;
 }
 
@@ -198,6 +203,14 @@ function showsent(phraseNodes) {
 }
 
 
+function highlight(e) {
+    console.log("highlight " + e.target.id);
+    e.target.style.backgroundColor = "grey"
+}
+function unhighlight(e) {
+    console.log("unhilight " + e.target.id);
+    e.target.style.backgroundColor = "white"
+}
 function createWordTable(numid, phraseNode) {
     wordTable = document.createElement("table");
     wordTable.id = numid.toString();
@@ -209,14 +222,16 @@ function createWordTable(numid, phraseNode) {
         for (var j = 0; j < 1; j++) {
             var td = tr.insertCell();
             if (i == 1) {
-                td.innerHTML = wordTable.phraseNode.phrase + "," + wordTable.id;
+                td.innerHTML = wordTable.phraseNode.phrase.replace(/_/g, " "); //+ "," + wordTable.id;
             } else {
                 td.appendChild(document.createTextNode(""));
                 td.id = "cell," + numid.toString() + "," + i.toString();
                 td.addEventListener("click", spanClicked, false);
+                td.addEventListener("mouseover", highlight, false);
+                td.addEventListener("mouseout", unhighlight, false);
                 td.height = "10px";
             }
-            td.style.border = "1px solid black";
+            //td.style.border = "1px solid black";
             if (i == 1 && j == 1) {
                 td.setAttribute('rowSpan', '2');
             }
@@ -226,7 +241,7 @@ function createWordTable(numid, phraseNode) {
 
     wordTable.setPhraseNode = function (newPhraseNode) {
         this.phraseNode = newPhraseNode;
-        this.rows[1].cells[0].innerHTML = this.phraseNode.phrase + "," + this.id;
+        this.rows[1].cells[0].innerHTML = this.phraseNode.phrase.replace(/_/g, " "); //+ "," + this.id;
     }
 
     wordTable.setNewId = function (newId) {
@@ -254,7 +269,7 @@ function PhraseNode(phrase, parent) {
         var isAncestor = false
         var a_parent = this.parent;
         while (a_parent != null) {
-            console.log("ancestor:" + a_parent.phrase + (a_parent == pn));
+            //console.log("ancestor:" + a_parent.phrase + (a_parent == pn));
             if (a_parent == pn) {
                 isAncestor = true;
             }
