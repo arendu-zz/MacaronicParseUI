@@ -6,7 +6,7 @@ var rootPhraseNode;
 function ready() {
     var sentence = "this is a test sentence";
     var phraseTreeStr = "(S (NP (I)) (VP (V (saw)) (X (him))))";
-    var phraseTreeStr = "(since_their_articles_appeared_,_the_price_of_gold_has_moved_up_still_further. (since_the_publication_of_their_article,_the_gold_price_has_risen_still_further (since (seit)) (the_publication_of_their_article,_the_gold_price_has_risen_still_further (the_publication_of_their_article,_the_gold_price_is_risen_still_further (the_publication_of_their_article (the_publication (the (der)) (publication (Veröffentlichung)) ) (their_article (their (ihrer)) (Article (Artikel))))(the_gold_price_is_risen_still_further (the_gold_price_is (is (ist)) (the_gold_price (the (der)) (gold_price (Goldpreis)))) (risen_still_further (still_further (still (noch)) (further (weiter))) (risen (gestiegen))))))) (. (.)))"
+    var phraseTreeStr = "(since_their_articles_appeared_,_the_price_of_gold_has_moved_up_still_further. (since_the_publication_of_their_article,_the_gold_price_has_risen_still_further (since (seit)) (the_publication_of_their_article,_the_gold_price_has_risen_still_further (the_publication_of_their_article,_the_gold_price_is_risen_still_further (the_publication_of_their_article (the_publication (the (der)) (publication (Veröffentlichung)) ) (their_article (their (ihrer)) (article (Artikel))))(the_gold_price_is_risen_still_further (the_gold_price_is (is (ist)) (the_gold_price (the (der)) (gold_price (Goldpreis)))) (risen_still_further (still_further (still (noch)) (further (weiter))) (risen (gestiegen))))))) (. (.)))"
     rootPhraseNode = parsePhraseTree(phraseTreeStr);
     var phraseLeaves = getleaves(rootPhraseNode);
     console.log("done...");
@@ -192,14 +192,20 @@ function previewParent(e, wordTable) {
             zIndex: -1
         });
     } else {
-        //elemx = jtdpos.left + jtdwidth - previewDiv.offsetWidth;
-        //$("body").height -
         elem.css({
             position: 'absolute',
-            bottom: $("body").height() - (jtdpos.top + jdtheight),
-            right: $("body").width() - (jtdpos.left + jtdwidth),
+            top: jtdpos.top,
+            right: $("body").width() - (jtdpos.left + jtdwidth) + 13,
             zIndex: -1
         });
+        //elemx = jtdpos.left + jtdwidth - previewDiv.offsetWidth;
+        //$("body").height -
+        /*elem.css({
+         position: 'absolute',
+         bottom: $("body").height() - (jtdpos.top + jdtheight),
+         right: $("body").width() - (jtdpos.left + jtdwidth),
+         zIndex: -1
+         });*/
     }
 
 
