@@ -55,6 +55,10 @@ function parsePhraseTree(phraseTreeStr) {
             _stack.push(pn);
         } else if (item == ")") {
             rootpn = _stack.pop();
+            for (var c = 0; c < rootpn.phraseChildren.length; c++) {
+                var pc = rootpn.phraseChildren[c];
+                pc.setPhraseSiblings(rootpn.phraseChildren);
+            }
             //rootpn = _stack[_stack.length - 1];
             //toppn = _stack[_stack.length - 1];
             //toppn.addPhraseChild(pn);
@@ -67,6 +71,10 @@ function parsePhraseTree(phraseTreeStr) {
         }
     }
     rootpn = _stack.pop();
+    for (var c = 0; c < rootpn.phraseChildren.length; c++) {
+        var pc = rootpn.phraseChildren[c];
+        pc.setPhraseSiblings(rootpn.phraseChildren);
+    }
     return rootpn;
 }
 
@@ -85,9 +93,117 @@ function spanClicked(e) {
         goDonwToChildren(wordTable);
 
     }
+    unhighlight(e);
     e.stopPropagation();
 }
+function highlight(e) {
+    console.log("a span has been hovered over:" + e.target.id);
+    //e.target.style.opacity = 0.5
+    //e.target.style.backgroundColor = "grey"
+    var tablenum = e.target.id.split(",")[1];
+    var rownum = parseInt(e.target.id.split(",")[2]);
+    var wordTable = document.getElementById(tablenum);
+    wordTable.lightHighlight(rownum);
+    /*for (var c = 0; c < wordTable.phraseNode.phraseSiblings.length; c++) {
+     wordTable.phraseNode.phraseSiblings[c].wordTable.lightHighlight(rownum);
+     }*/
+    if (rownum == 0) {
+        previewParent(e, wordTable);
+    } else {
+        previewChildren(e, wordTable);
+    }
 
+
+}
+
+function previewChildren(e, wordTable) {
+    var previewDiv = document.getElementById("previewOverlay")
+    if (previewDiv != null) {
+        $("body").removeChild(previewDiv);
+    }
+
+    if (wordTable.phraseNode.phraseChildren.length > 0) {
+        previewDiv = document.createElement("div")
+        previewDiv.id = "previewOverlay";
+        previewDiv.style.border = "1px solid black";
+        for (var i = 0; i < wordTable.phraseNode.phraseChildren.length; i++) {
+            var pn = wordTable.phraseNode.phraseChildren[i];
+            var previewSpan = document.createElement("span")
+            previewSpan.style.border = "1px solid black";
+            previewSpan.innerHTML = pn.phrase
+            previewDiv.appendChild(previewSpan)
+        }
+        $("body").append(previewDiv);
+        var elem = $(previewDiv);
+        var jtd = $(e.currentTarget)
+        var pos = jtd.offset()
+        console.log("mouse over box location is" + 0 + "," + 0)
+        elem.css({
+            position: 'absolute',
+            top: pos.top,
+            left: pos.left,
+            zIndex: -1
+        });
+    } else {
+        console.log("phrase node:" + wordTable.phraseNode.phrase + " has no children");
+    }
+}
+
+function previewParent(e, wordTable) {
+
+    var parentPhraseNode = wordTable.phraseNode.parent;
+    var firstChild = false
+    if (wordTable.phraseNode == wordTable.phraseNode.phraseSiblings[0]) {
+        firstChild = true
+
+    } else {
+        firstChild = false
+
+    }
+
+
+    var previewDiv = document.getElementById("previewOverlay")
+    if (previewDiv != null) {
+        $("body").removeChild(previewDiv);
+    }
+    previewDiv = document.createElement("div")
+    previewDiv.style.border = "1px solid black";
+    var previewSpan = document.createElement("span")
+    previewDiv.id = "previewOverlay"
+
+    $("body").append(previewDiv);
+    previewDiv.appendChild(previewSpan)
+
+    var docHeight = $(document).height();
+
+    previewSpan.innerHTML = parentPhraseNode.phrase
+    var elem = $(previewDiv);
+    var jtd = $(e.currentTarget)
+
+    var jtdpos = jtd.offset()
+    var jtdwidth = jtd.width();
+    var jdtheight = jtd.height();
+    console.log("jdt width and height" + jdtheight + " " + jtdwidth)
+    if (firstChild) {
+        elem.css({
+            position: 'absolute',
+            top: jtdpos.top,
+            left: jtdpos.left,
+            zIndex: -1
+        });
+    } else {
+        //elemx = jtdpos.left + jtdwidth - previewDiv.offsetWidth;
+        //$("body").height -
+        elem.css({
+            position: 'absolute',
+            bottom: $("body").height() - (jtdpos.top + jdtheight),
+            right: $("body").width() - (jtdpos.left + jtdwidth),
+            zIndex: -1
+        });
+    }
+
+
+}
 function goUpToParent(wordTable) {
     var pn = wordTable.phraseNode;
     pn.isMyAncestor(pn);
@@ -100,6 +216,7 @@ function goUpToParent(wordTable) {
     }
     redoIds(containerDiv);
 }
+
 function removeDescents(wordTable) {
     var containerDiv = wordTable.parentNode;
     var setForRemoval = []
@@ -117,6 +234,20 @@ function removeDescents(wordTable) {
         containerDiv.removeChild(rem);
     }
 }
+
+function getDescents(wordTable) {
+    var containerDiv = wordTable.parentNode;
+    var setofDescents = []
+    NodeList.prototype.forEach = Array.prototype.forEach
+    var children = containerDiv.childNodes;
+    children.forEach(function (item) {
+        if (item.phraseNode.isMyAncestor(wordTable.phraseNode)) {
+            setofDescents.push(item);
+        }
+    });
+
+    return setofDescents;
+}
 function goDonwToChildren(wordTable) {
     if (wordTable.phraseNode.phraseChildren.length > 0) {
         var currentid = parseInt(wordTable.id);
@@ -133,32 +264,6 @@ function goDonwToChildren(wordTable) {
     }
 }
 
-function split(tableNum) {
-    var currentid = tableNum;
-    var i = (parseInt(tableNum))
-    var insertAfterId = (parseInt(tableNum) - 1).toString();
-    var insertAfterTable = document.getElementById(insertAfterId);
-    var currentTable = document.getElementById(tableNum);
-    console.log("need to split " + currentTable.id);
-    var containerDiv = currentTable.parentNode;
-
-    var txt2split = currentTable.middleTxt.split(" ");
-    if (txt2split.length == 1) {
-        console.log("can not split...")
-
-    } else {
-        for (var o = 0; o < txt2split.length; o++) {
-            //var elem = tableCreate(i, 3, 1, stringarr[i]);
-            var elem1 = createWordTable(i + o, txt2split[o]);
-
-            containerDiv.insertBefore(elem1, currentTable);
-        }
-        containerDiv.removeChild(currentTable);
-        redoIds(containerDiv);
-    }
-
-}
-
 function redoIds(containerDiv) {
     NodeList.prototype.forEach = Array.prototype.forEach
     var children = containerDiv.childNodes;
@@ -169,25 +274,7 @@ function redoIds(containerDiv) {
         i++;
     });
 }
-function merge(tableNum) {
-    var neighborTableId = (parseInt(tableNum) + 1).toString();
-    var neighborTable = document.getElementById(neighborTableId);
-    var currentTable = document.getElementById(tableNum);
-    if (neighborTable == null) {
-        console.log("can not merge this with anything");
-        console.log("no neighbor with id:" + neighborTableId)
-    } else {
-        console.log("need to merge " + currentTable.id + " and " + neighborTable.id);
-        var newMiddleTxt = currentTable.middleTxt + " " + neighborTable.middleTxt;
-        var mergedTable = createWordTable(tableNum, newMiddleTxt);
-        var containerDiv = currentTable.parentNode;
-        containerDiv.insertBefore(mergedTable, currentTable);
-        containerDiv.removeChild(currentTable);
-        containerDiv.removeChild(neighborTable);
-        redoIds(containerDiv);
-    }
 
-}
 
 function showsent(phraseNodes) {
     var lineDiv = document.createElement("div");
@@ -203,18 +290,28 @@ function showsent(phraseNodes) {
 }
 
 
-function highlight(e) {
-    console.log("highlight " + e.target.id);
-    e.target.style.backgroundColor = "grey"
-}
 function unhighlight(e) {
     console.log("unhilight " + e.target.id);
-    e.target.style.backgroundColor = "white"
+    var tablenum = e.target.id.split(",")[1];
+    var wordTable = document.getElementById(tablenum);
+    wordTable.unLightHighlight(0);
+    wordTable.unLightHighlight(2);
+    /*for (var c = 0; c < wordTable.phraseNode.phraseSiblings.length; c++) {
+     wordTable.phraseNode.phraseSiblings[c].wordTable.unLightHighlight(0);
+     wordTable.phraseNode.phraseSiblings[c].wordTable.unLightHighlight(2);
+     }*/
+    //e.target.style.backgroundColor = "white"
+    var previewDiv = document.getElementById("previewOverlay")
+    if (previewDiv != null) {
+        previewDiv.parentNode.removeChild(previewDiv);
+    }
 }
+
 function createWordTable(numid, phraseNode) {
-    wordTable = document.createElement("table");
+    var wordTable = document.createElement("table");
     wordTable.id = numid.toString();
     wordTable.phraseNode = phraseNode;
+    wordTable.phraseNode.setWordTable(wordTable);
     wordTable.style.display = "inline-block";
     wordTable.style.float = "left";
     for (var i = 0; i < 3; i++) {
@@ -239,6 +336,17 @@ function createWordTable(numid, phraseNode) {
         }
     }
 
+
+    wordTable.unLightHighlight = function (position) {
+        this.rows[position].cells[0].style.opacity = 0
+        this.rows[position].cells[0].style.backgroundColor = "white"
+    }
+
+    wordTable.lightHighlight = function (position) {
+        this.rows[position].cells[0].style.opacity = 0.5
+        this.rows[position].cells[0].style.backgroundColor = "grey"
+    }
+
     wordTable.setPhraseNode = function (newPhraseNode) {
         this.phraseNode = newPhraseNode;
         this.rows[1].cells[0].innerHTML = this.phraseNode.phrase.replace(/_/g, " "); //+ "," + this.id;
@@ -257,11 +365,20 @@ function createWordTable(numid, phraseNode) {
 function PhraseNode(phrase, parent) {
     this.phrase = phrase;
     this.parent = parent;
+    this.wordTable = null;
     this.phraseChildren = [];
+    this.phraseSiblings = [];
     this.addPhraseChild = function (phraseNode) {
         this.phraseChildren.push(phraseNode);
     }
 
+    this.setPhraseSiblings = function (phraseSiblings) {
+        this.phraseSiblings = phraseSiblings;
+    }
+
+    this.setWordTable = function (wordTable) {
+        this.wordTable = wordTable;
+    }
     this.toString = function () {
         return "PhraseNode:" + this.phrase;
     }
