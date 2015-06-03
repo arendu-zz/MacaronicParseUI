@@ -50,6 +50,7 @@ function parsePhraseTree(phraseTreeStr) {
         if (item == "(") {
             nextItem = _phraseTreeList.shift()
             toppn = _stack[_stack.length - 1];
+
             pn = new PhraseNode(nextItem, toppn);
             toppn.addPhraseChild(pn);
             _stack.push(pn);
@@ -65,6 +66,7 @@ function parsePhraseTree(phraseTreeStr) {
         } else {
             console.log("should never come here now.....");
             toppn = _stack[_stack.length - 1];
+
             pn = new PhraseNode(item, toppn);
             toppn.addPhraseChild(pn);
             _stack.push(pn);
@@ -75,7 +77,22 @@ function parsePhraseTree(phraseTreeStr) {
         var pc = rootpn.phraseChildren[c];
         pc.setPhraseSiblings(rootpn.phraseChildren);
     }
+
+    var num = 0;
+    Q = []
+    Q.push(rootpn)
+    while (Q.length > 0) {
+        pn = Q.shift();
+        pn.num = num;
+        num++
+        for (var c = 0; c < pn.phraseChildren.length; c++) {
+            pc = pn.phraseChildren[c]
+            Q.push(pc);
+        }
+    }
     return rootpn;
+
+
 }
 
 function spanClicked(e) {
@@ -124,10 +141,10 @@ function highlight(e) {
             }
         });
 
-        previewParent(e, wordTable, top, left);
+        previewParent(wordTable, top, left);
     } else {
         wordTable.lightHighlight(rownum)
-        previewChildren(e, wordTable);
+        previewChildren(wordTable);
     }
 
 
@@ -152,7 +169,7 @@ function unhighlight(e) {
     }
 }
 
-function previewChildren(e, wordTable) {
+function previewChildren(wordTable) {
     var previewDiv = document.getElementById("previewOverlay")
     if (previewDiv != null) {
         $("body").removeChild(previewDiv);
@@ -161,7 +178,7 @@ function previewChildren(e, wordTable) {
     if (wordTable.phraseNode.phraseChildren.length > 0) {
         previewDiv = document.createElement("div")
         previewDiv.id = "previewOverlay";
-        previewDiv.style.border = "1px solid black";
+        //previewDiv.style.border = "1px solid black";
         for (var i = 0; i < wordTable.phraseNode.phraseChildren.length; i++) {
             var pn = wordTable.phraseNode.phraseChildren[i];
             var previewSpan = document.createElement("span")
@@ -178,8 +195,8 @@ function previewChildren(e, wordTable) {
         }
         $("body").append(previewDiv);
         var elem = $(previewDiv);
-        var jtd = $(e.currentTarget)
-        var pos = jtd.offset()
+        //var jtd = $(e.currentTarget)
+        var pos = wordTable.getBottomCellCoordinate()
         console.log("mouse over box location is" + 0 + "," + 0)
         elem.css({
             position: 'absolute',
@@ -192,14 +209,14 @@ function previewChildren(e, wordTable) {
     }
 }
 
-function previewParent(e, wordTable, top, left) {
+function previewParent(wordTable, top, left) {
     var parentPhraseNode = wordTable.phraseNode.parent;
     var previewDiv = document.getElementById("previewOverlay")
     if (previewDiv != null) {
         $("body").removeChild(previewDiv);
     }
     previewDiv = document.createElement("div")
-    previewDiv.style.border = "1px solid black";
+    //previewDiv.style.border = "1px solid black";
     var previewSpan = document.createElement("span")
     previewDiv.id = "previewOverlay"
     $("body").append(previewDiv);
@@ -312,7 +329,7 @@ function createWordTable(numid, phraseNode) {
         for (var j = 0; j < 1; j++) {
             var td = tr.insertCell();
             if (i == 1) {
-                td.innerHTML = wordTable.phraseNode.phrase.replace(/_/g, " "); //+ "," + wordTable.id;
+                td.innerHTML = wordTable.phraseNode.phrase.replace(/_/g, " ") + "," + wordTable.phraseNode.num
             } else {
                 td.appendChild(document.createTextNode(""));
                 td.id = "cell," + numid.toString() + "," + i.toString();
@@ -334,6 +351,11 @@ function createWordTable(numid, phraseNode) {
         return jtd.offset();
     }
 
+    wordTable.getBottomCellCoordinate = function () {
+        var jtd = $(this.rows[2].cells[0])
+        return jtd.offset();
+    }
+
     wordTable.unLightHighlight = function (position) {
         this.rows[position].cells[0].style.opacity = 0.0
         this.rows[position].cells[0].style.backgroundColor = "grey"
@@ -348,7 +370,7 @@ function createWordTable(numid, phraseNode) {
 
     wordTable.setPhraseNode = function (newPhraseNode) {
         this.phraseNode = newPhraseNode;
-        this.rows[1].cells[0].innerHTML = this.phraseNode.phrase.replace(/_/g, " "); //+ "," + this.id;
+        this.rows[1].cells[0].innerHTML = this.phraseNode.phrase.replace(/_/g, " ") + "," + this.phraseNode.num
     }
 
     wordTable.setNewId = function (newId) {
@@ -363,6 +385,7 @@ function createWordTable(numid, phraseNode) {
 
 function PhraseNode(phrase, parent) {
     this.phrase = phrase;
+    this.num = -1;
     this.parent = parent;
     this.wordTable = null;
     this.phraseChildren = [];
