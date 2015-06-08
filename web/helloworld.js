@@ -2,6 +2,122 @@
  * Created by arenduchintala on 5/20/15.
  */
 var rootPhraseNode;
+var lineDiv;
+var maxCellNum = 0
+var currentCellNum = 0
+var currentSlider = 0
+var timer = null
+
+function mysliderfunc(valnum) {
+    currentSlider = (valnum / 100.0) * (maxCellNum * 2)
+    if (Math.abs(currentCellNum - currentSlider) > 1) {
+        if (currentCellNum < currentSlider) {
+            goUp()
+        } else {
+            goDown()
+        }
+    }
+
+}
+
+function tickDown() {
+    currentCellNum--;
+    stepclickDown();
+    console.log("from timer:  current" + currentCellNum + " slider:" + currentSlider)
+    if (Math.abs(currentCellNum - currentSlider) < 1) {
+        stop()
+    } else {
+
+        timer = null;
+        goDown();        // restart the timer
+    }
+}
+function tickUp() {
+    stepclickUp();
+    currentCellNum++;
+    console.log("from timer:  current" + currentCellNum + " slider:" + currentSlider)
+    if (Math.abs(currentCellNum - currentSlider) < 1) {
+        stop()
+    } else {
+        timer = null;
+        goUp();        // restart the timer
+    }
+
+};
+
+function stop() {
+    clearTimeout(timer);
+    timer = null;
+};
+function goDown() {
+    if (timer == null) {
+        timer = setTimeout(tickDown, 4);
+    }
+}
+
+function goUp() {
+    if (timer == null) {
+        timer = setTimeout(tickUp, 4);
+    }
+}
+
+function stepclickUp() {
+    console.log("something stepclick")
+    var maxnum = 0
+    var maxid = -1
+    var children = lineDiv.childNodes;
+    NodeList.prototype.forEach = Array.prototype.forEach
+    children.forEach(function (item) {
+        var pn = item.phraseNode;
+        if (pn.num > maxnum) {
+            maxnum = pn.num;
+            maxid = item.id
+        }
+
+    });
+    var wordTable = document.getElementById(maxid);
+    if (wordTable != null) {
+        console.log("max num right now is" + maxnum + " with phrase " + wordTable.phraseNode.phrase)
+        if (wordTable.highlighted) {
+            goUpToParent(wordTable);
+        } else {
+            highlightWordTable(wordTable, 0);
+        }
+    } else {
+        console.log("word table is null..")
+    }
+
+
+}
+
+function stepclickDown() {
+    console.log("go down automated...")
+    var minnum = 100000
+    var minid = -1
+    var children = lineDiv.childNodes;
+    NodeList.prototype.forEach = Array.prototype.forEach
+    children.forEach(function (item) {
+        var pn = item.phraseNode;
+        if (pn.num < minnum && pn.phraseChildren.length > 0) {
+            minnum = pn.num;
+            minid = item.id
+        }
+
+    });
+
+    var wordTable = document.getElementById(minid);
+    if (wordTable != null) {
+        console.log("min num right now is" + minnum + " with phrase " + wordTable.phraseNode.phrase)
+        if (wordTable.highlighted) {
+            goDonwToChildren(wordTable)
+        } else {
+            highlightWordTable(wordTable, 2)
+        }
+    } else {
+        console.log("word table is null..")
+    }
+
+}
 
 function ready() {
     var sentence = "this is a test sentence";
@@ -84,6 +200,7 @@ function parsePhraseTree(phraseTreeStr) {
     while (Q.length > 0) {
         pn = Q.shift();
         pn.num = num;
+        maxCellNum = num
         num++
         for (var c = 0; c < pn.phraseChildren.length; c++) {
             pc = pn.phraseChildren[c]
@@ -113,6 +230,7 @@ function spanClicked(e) {
     unhighlight(e);
     e.stopPropagation();
 }
+
 function highlight(e) {
     console.log("a span has been hovered over:" + e.target.id);
     //e.target.style.opacity = 0.5
@@ -120,6 +238,11 @@ function highlight(e) {
     var tablenum = e.target.id.split(",")[1];
     var rownum = parseInt(e.target.id.split(",")[2]);
     var wordTable = document.getElementById(tablenum);
+    highlightWordTable(wordTable, rownum)
+
+}
+
+function highlightWordTable(wordTable, rownum) {
     if (rownum == 0) {
         var left = 10000
         var top = 10000
@@ -146,14 +269,16 @@ function highlight(e) {
         wordTable.lightHighlight(rownum)
         previewChildren(wordTable);
     }
-
-
 }
 
 function unhighlight(e) {
     console.log("unhilight " + e.target.id);
     var tablenum = e.target.id.split(",")[1];
     var wordTable = document.getElementById(tablenum);
+    unhighlightWordTable(wordTable);
+}
+
+function unhighlightWordTable(wordTable) {
     var containerDiv = wordTable.parentNode;
     var children = containerDiv.childNodes;
     NodeList.prototype.forEach = Array.prototype.forEach
@@ -172,7 +297,7 @@ function unhighlight(e) {
 function previewChildren(wordTable) {
     var previewDiv = document.getElementById("previewOverlay")
     if (previewDiv != null) {
-        $("body").removeChild(previewDiv);
+        previewDiv.parentNode.removeChild(previewDiv)
     }
 
     if (wordTable.phraseNode.phraseChildren.length > 0) {
@@ -213,7 +338,7 @@ function previewParent(wordTable, top, left) {
     var parentPhraseNode = wordTable.phraseNode.parent;
     var previewDiv = document.getElementById("previewOverlay")
     if (previewDiv != null) {
-        $("body").removeChild(previewDiv);
+        previewDiv.parentNode.removeChild(previewDiv);
     }
     previewDiv = document.createElement("div")
     //previewDiv.style.border = "1px solid black";
@@ -232,6 +357,10 @@ function previewParent(wordTable, top, left) {
 }
 
 function goUpToParent(wordTable) {
+    var previewDiv = document.getElementById("previewOverlay")
+    if (previewDiv != null) {
+        previewDiv.parentNode.removeChild(previewDiv);
+    }
     var pn = wordTable.phraseNode;
     pn.isMyAncestor(pn);
     var parentPhraseNode = wordTable.phraseNode.parent;
@@ -276,6 +405,10 @@ function getDescents(wordTable) {
     return setofDescents;
 }
 function goDonwToChildren(wordTable) {
+    var previewDiv = document.getElementById("previewOverlay")
+    if (previewDiv != null) {
+        previewDiv.parentNode.removeChild(previewDiv);
+    }
     if (wordTable.phraseNode.phraseChildren.length > 0) {
         var currentid = parseInt(wordTable.id);
         var containerDiv = wordTable.parentNode;
@@ -304,9 +437,10 @@ function redoIds(containerDiv) {
 
 
 function showsent(phraseNodes) {
-    var lineDiv = document.createElement("div");
+    lineDiv = document.createElement("div");
     lineDiv.id = "myLineDiv";
     document.body.appendChild(lineDiv);
+
 
     for (var i = 0; i < phraseNodes.length; i++) {
         var pn = phraseNodes[i];
@@ -314,6 +448,8 @@ function showsent(phraseNodes) {
         var elem = createWordTable(i, pn);
         lineDiv.appendChild(elem);
     }
+
+
 }
 
 
@@ -324,12 +460,13 @@ function createWordTable(numid, phraseNode) {
     wordTable.phraseNode.setWordTable(wordTable);
     wordTable.style.display = "inline-block";
     wordTable.style.float = "left";
+    wordTable.highlighted = false;
     for (var i = 0; i < 3; i++) {
         var tr = wordTable.insertRow();
         for (var j = 0; j < 1; j++) {
             var td = tr.insertCell();
             if (i == 1) {
-                td.innerHTML = wordTable.phraseNode.phrase.replace(/_/g, " ") + "," + wordTable.phraseNode.num
+                td.innerHTML = wordTable.phraseNode.phrase.replace(/_/g, " ") //+ "," + wordTable.phraseNode.num
             } else {
                 td.appendChild(document.createTextNode(""));
                 td.id = "cell," + numid.toString() + "," + i.toString();
@@ -357,12 +494,14 @@ function createWordTable(numid, phraseNode) {
     }
 
     wordTable.unLightHighlight = function (position) {
+        this.highlighted = false
         this.rows[position].cells[0].style.opacity = 0.0
         this.rows[position].cells[0].style.backgroundColor = "grey"
         this.rows[1].cells[0].style.opacity = 1
     }
 
     wordTable.lightHighlight = function (position) {
+        this.highlighted = true
         this.rows[position].cells[0].style.opacity = 0.0
         this.rows[position].cells[0].style.backgroundColor = "grey"
         this.rows[1].cells[0].style.opacity = 0.3
@@ -370,7 +509,7 @@ function createWordTable(numid, phraseNode) {
 
     wordTable.setPhraseNode = function (newPhraseNode) {
         this.phraseNode = newPhraseNode;
-        this.rows[1].cells[0].innerHTML = this.phraseNode.phrase.replace(/_/g, " ") + "," + this.phraseNode.num
+        this.rows[1].cells[0].innerHTML = this.phraseNode.phrase.replace(/_/g, " ") //+ "," + this.phraseNode.num
     }
 
     wordTable.setNewId = function (newId) {
@@ -416,5 +555,63 @@ function PhraseNode(phrase, parent) {
         }
         return isAncestor;
     }
+
+}
+
+function MacaronicLine(lineid, rootPhraseNode) {
+    this.lineDiv = document.createElement("div");
+    this.lineDiv.id = "lineDiv" + srt(lineid);
+    this.rootPhraseNode = rootPhraseNode
+
+
+    this.addToDoc = function () {
+        document.appendChild(this.lineDiv)
+    }
+    this.removeFromDoc = function () {
+        this.lineDiv.parentNode.removeChild(this.lineDiv)
+    }
+
+    this.displayPhrases = function () {
+        this.addToDoc()
+        var phraseLeaves = getleaves(this.rootPhraseNode);
+        for (var i = 0; i < phraseLeaves.length; i++) {
+            var pn = phraseLeaves[i];
+            //var elem = tableCreate(i, 3, 1, stringarr[i]);
+            var elem = createWordTable(i, pn);
+            this.lineDiv.appendChild(elem);
+        }
+
+    }
+
+    this.spanClicked = function (e) {
+        console.log("a span has been clicked:" + e.target.id);
+        var tablenum = e.target.id.split(",")[1];
+        var wordTable = document.getElementById(tablenum);
+        var pn = wordTable.phraseNode;
+        var rownum = parseInt(e.target.id.split(",")[2]);
+        if (rownum == 0) {
+            console.log("phrase: " + pn.phrase + "clicked, go up to parent");
+            //goUpToParent(wordTable);
+        } else {
+            var pn = wordTable.phraseNode;
+            console.log("phrase: " + pn.phrase + "clicked, go down to children")
+            //goDonwToChildren(wordTable);
+
+        }
+        this.unhighlight(e);
+        e.stopPropagation();
+    }
+
+    this.highlight = function (e) {
+        console.log("a span has been hovered over:" + e.target.id);
+        //e.target.style.opacity = 0.5
+        //e.target.style.backgroundColor = "grey"
+        var tablenum = e.target.id.split(",")[1];
+        var rownum = parseInt(e.target.id.split(",")[2]);
+        var wordTable = document.getElementById(tablenum);
+        //highlightWordTable(wordTable, rownum)
+
+    }
+
 
 }

@@ -4,20 +4,45 @@
         "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
+    <link href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css" type="text/css"
+          rel="stylesheet"/>
+    <link href="jquery.ui.slider.css" type="text/css" rel="stylesheet"/>
+    <link href="jquery-ui.theme.css" type="text/css" rel="stylesheet"/>
+    <link href="mycss.css" type="text/css" rel="stylesheet"/>
     <script type="text/javascript" src="jquery-1.11.3.min.js"/>
+    <script type="text/javascript" src="jquery-ui.js"/>
     <script type="text/javascript" src="helloworld.js"/>
     <script type="text/javascript">
 
         $(document).ready(function () {
-            document.body.innerHTML = ""
-            ready();
+            $("#status").html("")
 
+            if (jQuery.ui) {
+                $("#slider").slider({
+                    step: 1,
+                    min: 0,
+                    max: 100,
+                    slide: function (e, ui) {
+                        console.log("sliding:" + ui.value)
+                        mysliderfunc(ui.value)
+                    }
+                })
+            } else {
+                alert("no jquery ui")
+            }
+
+            ready();
         });
+
 
     </script>
     <title></title>
 </head>
-<body>
-not yet ready...
+
+<body id="mainBody" style='margin-bottom:20;margin-top:20;margin-left:20;margin-right:20;'>
+
+
+<div id="slider" ></div>
+
 </body>
 </html>
