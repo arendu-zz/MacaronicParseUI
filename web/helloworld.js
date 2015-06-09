@@ -14,6 +14,14 @@ function mysliderfunc(valnum) {
     });
 }
 
+function startsWith(string1, string2) {
+    var res = string1.substring(0, string2.length);
+    if (res == string2) {
+        return true
+    } else {
+        return false
+    }
+}
 
 function ready() {
     var sentence = "this is a test sentence";
@@ -27,13 +35,21 @@ function ready() {
     macline.displayPhrases()
     mllist.push(macline)
 
-    /*var items = parsePhraseTree("(S (NP (I)) (VP (V (saw)) (X (him))))");
-     rootPhraseNode = items[0]
-     numNT = items[1]
-     var macline = new MacaronicLine(1, rootPhraseNode, numNT)
-     macline.addToDoc()
-     macline.displayPhrases();
-     mllist.push(macline)*/
+    var items = parsePhraseTree("(S (NP (I)) (VP (V (saw)) (X (him))))");
+    var rootPhraseNode = items[0]
+    var numNT = items[1]
+    var macline = new MacaronicLine(1, rootPhraseNode, numNT)
+    macline.addToDoc()
+    macline.displayPhrases();
+    mllist.push(macline)
+
+    var items = parsePhraseTree("(S (NP (I)) (VP (V (saw)) (X (him))))");
+    var rootPhraseNode = items[0]
+    var numNT = items[1]
+    var macline = new MacaronicLine(2, rootPhraseNode, numNT)
+    macline.addToDoc()
+    macline.displayPhrases();
+    mllist.push(macline)
 
 }
 function removeEmptyStrings(val) {
@@ -124,6 +140,8 @@ function parsePhraseTree(phraseTreeStr) {
 
 function createWordTable(numid, phraseNode, macaronicline) {
     var wordTable = document.createElement("table");
+    wordTable.numid = numid
+    wordTable.macaronicline = macaronicline
     wordTable.id = 'ml,' + macaronicline.id.toString() + ',wt,' + numid.toString();
     wordTable.phraseNode = phraseNode;
     wordTable.phraseNode.setWordTable(wordTable);
@@ -185,7 +203,8 @@ function createWordTable(numid, phraseNode, macaronicline) {
     }
 
     wordTable.setNewId = function (newId) {
-        this.id = newId.toString();
+        this.numid = newId
+        this.id = 'ml,' + this.macaronicline.id.toString() + ',wt,' + this.numid.toString();
         this.rows[0].cells[0].id = "cell," + newId.toString() + ",0";
         this.rows[2].cells[0].id = "cell," + newId.toString() + ",2";
     }
@@ -241,6 +260,7 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
     self["prevValNum"] = 0
     self["timer"] = null;
     self["lineDiv"] = document.createElement("div");
+    self.lineDiv.class = "macaronicLine"
     self["isPreviewState"] = false
 
     this.lineDiv.id = "lineDiv" + lineid.toString()
@@ -306,7 +326,8 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
             //self.previewDiv.style.border = "1px solid black";
             var previewSpan = document.createElement("span")
             self.previewDiv.id = "previewOverlay" + self.id.toString()
-            $("body").append(self.previewDiv);
+            //$("body").append(self.previewDiv);
+            self.lineDiv.appendChild(self.previewDiv)
             self.isPreviewState = true;
             self.previewDiv.appendChild(previewSpan)
 
@@ -356,7 +377,8 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
 
                 }
             }
-            $("body").append(self.previewDiv);
+            //$("body").append(self.previewDiv);
+            self.lineDiv.appendChild(self.previewDiv)
             self.isPreviewState = true;
             var elem = $(self.previewDiv);
             //var jtd = $(e.currentTarget)
@@ -382,17 +404,22 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
             var children = containerDiv.childNodes;
             NodeList.prototype.forEach = Array.prototype.forEach
             children.forEach(function (item) {
-                var pn = item.phraseNode;
-                if (pn.isMyAncestor(parentWordTable)) {
-                    item.lightHighlight(rownum);
-                    var jtdpos = item.getTopLeftCoordinate();
-                    if (jtdpos.left < left) {
-                        left = jtdpos.left
-                    }
-                    if (jtdpos.top < top) {
-                        top = jtdpos.top
+                if (startsWith(item.id, "previewOverlay")) {
+
+                } else {
+                    var pn = item.phraseNode;
+                    if (pn.isMyAncestor(parentWordTable)) {
+                        item.lightHighlight(rownum);
+                        var jtdpos = item.getTopLeftCoordinate();
+                        if (jtdpos.left < left) {
+                            left = jtdpos.left
+                        }
+                        if (jtdpos.top < top) {
+                            top = jtdpos.top
+                        }
                     }
                 }
+
             });
             self.previewParent(wordTable, top, left);
         } else {
@@ -453,7 +480,9 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
         NodeList.prototype.forEach = Array.prototype.forEach
         var children = containerDiv.childNodes;
         children.forEach(function (item) {
-            if (item.phraseNode.isMyAncestor(wordTable.phraseNode)) {
+            if (startsWith(item.id, "previewOverlay")) {
+                console.log("ignoreding previewOverlay:" + item.id)
+            } else if (item.phraseNode.isMyAncestor(wordTable.phraseNode)) {
                 setForRemoval.push(item);
             }
         });
@@ -471,9 +500,14 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
         var children = containerDiv.childNodes;
         var i = 0;
         children.forEach(function (item) {
-            item.setNewId(i);
-            item.setPhraseNode(item.phraseNode);//just for debugging
-            i++;
+            if (startsWith(item.id, "previewOverlay")) {
+
+            } else {
+                item.setNewId(i);
+                item.setPhraseNode(item.phraseNode);//just for debugging
+                i++;
+            }
+
         });
     }
 
@@ -491,9 +525,14 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
             var children = containerDiv.childNodes;
             NodeList.prototype.forEach = Array.prototype.forEach
             children.forEach(function (item) {
-                var pn = item.phraseNode;
-                item.unLightHighlight(0);
-                item.unLightHighlight(2);
+                if (startsWith(item.id, "previewOverlay")) {
+
+                } else {
+                    var pn = item.phraseNode;
+                    item.unLightHighlight(0);
+                    item.unLightHighlight(2);
+                }
+
             });
         }
 
@@ -515,11 +554,16 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
         var children = self.lineDiv.childNodes;
         NodeList.prototype.forEach = Array.prototype.forEach
         children.forEach(function (item) {
-            var pn = item.phraseNode;
-            if (pn.num > maxnum) {
-                maxnum = pn.num;
-                maxid = item.id
+            if (startsWith(item.id, "previewOverlay")) {
+
+            } else {
+                var pn = item.phraseNode;
+                if (pn.num > maxnum) {
+                    maxnum = pn.num;
+                    maxid = item.id
+                }
             }
+
 
         });
         var wordTable = document.getElementById(maxid);
@@ -545,11 +589,16 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
         var children = self.lineDiv.childNodes;
         NodeList.prototype.forEach = Array.prototype.forEach
         children.forEach(function (item) {
-            var pn = item.phraseNode;
-            if (pn.num < minnum && pn.phraseChildren.length > 0) {
-                minnum = pn.num;
-                minid = item.id
+            if (startsWith(item.id, "previewOverlay")) {
+                console.log("ignore previewOverlay:" + item.id)
+            } else {
+                var pn = item.phraseNode;
+                if (pn.num < minnum && pn.phraseChildren.length > 0) {
+                    minnum = pn.num;
+                    minid = item.id
+                }
             }
+
 
         });
 
@@ -609,9 +658,15 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
             console.log("new zone.." + direction + " zone:" + zone.toString() + " prevZone:" + self.prevZone.toString())
             var zonediff = Math.abs(self.prevZone - zone)
             if (self.isPreviewState && self.prevDirection == "going back") {
-                console.log("is a preview state.. so must undo the last preview...")
-                zonediff = zonediff - 1;
-                self.undoStepClick();
+                console.log("1:is a preview state.. so must undo the last preview...")
+
+                var soa = self.undoStepClick();
+                if (soa) {
+                    zonediff = zonediff - 1;
+                    console.log("1: a preview has been undone...")
+                } else {
+                    console.log("1:no preview to remove...")
+                }
             } else {
                 console.log("1:prevzone < zone not undoing preview... " + self.isPreviewState + " prevdi:" + self.prevDirection)
             }
@@ -626,9 +681,14 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
             var zonediff = Math.abs(self.prevZone - zone)
 
             if (self.isPreviewState && self.prevDirection == "going foward") {
-                console.log("is a preview state.. so must undo the last preview...")
-                zonediff = zonediff - 1;
-                self.undoStepClick();
+                console.log("2:is a preview state.. so must undo the last preview...")
+                var soa = self.undoStepClick();
+                if (soa) {
+                    zonediff = zonediff - 1;
+                    console.log("2: a preview has been undone...")
+                } else {
+                    console.log("2:no preview to remove...")
+                }
             } else {
                 console.log("2:prevzone > zone not undoing preview... " + self.isPreviewState + " prevdi:" + self.prevDirection)
             }
@@ -638,8 +698,6 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
             }
             self.prevZone = zone;
             self.prevDirection = direction;
-
-
         }
 
         self.prevValNum = valnum;
@@ -655,6 +713,7 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
     }
 
     self.undoStepClick = function () {
+        var statusOfAction = false
         var wt = null
         if (self.previewDiv != null) {
             self.previewDiv.wordTable.unLightHighlight(0)
@@ -666,11 +725,12 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
             }
             self.previewDiv = null
             self.isPreviewState = false
+            statusOfAction = true;
         }
         if (wt != null) {
             self.unhighlightWordTable(wt, 0)
         }
-
+        return statusOfAction
     }
     self.stop = function () {
         clearTimeout(self.timer);

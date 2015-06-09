@@ -1,0 +1,47 @@
+#top, #bottom, #left, #right {
+    background: #a5ebff;
+    position: fixed;
+}
+
+#left, #right {
+    top: 0;
+    bottom: 0;
+    width: 15px;
+}
+
+#left {
+    left: 0;
+}
+
+#right {
+    right: 0;
+}
+
+#top, #bottom {
+    left: 0;
+    right: 0;
+    height: 15px;
+}
+
+#top {
+    top: 0;
+}
+
+#bottom {
+    bottom: 0;
+}
+
+#slider {
+    width: 85px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+div {
+    border: #00ff00;
+    border-style: solid;
+    display: block;
+    clear: both;
+    height: auto;
+    overflow: auto
+}
