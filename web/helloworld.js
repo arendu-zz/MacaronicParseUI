@@ -1,132 +1,40 @@
 /**
  * Created by arenduchintala on 5/20/15.
  */
-var rootPhraseNode;
-var lineDiv;
-var maxCellNum = 0
-var currentCellNum = 0
-var currentSlider = 0
-var timer = null
+
+
+var mllist = []
 
 function mysliderfunc(valnum) {
-    currentSlider = (valnum / 100.0) * (maxCellNum * 2)
-    if (Math.abs(currentCellNum - currentSlider) > 1) {
-        if (currentCellNum < currentSlider) {
-            goUp()
-        } else {
-            goDown()
-        }
-    }
-
-}
-
-function tickDown() {
-    currentCellNum--;
-    stepclickDown();
-    console.log("from timer:  current" + currentCellNum + " slider:" + currentSlider)
-    if (Math.abs(currentCellNum - currentSlider) < 1) {
-        stop()
-    } else {
-
-        timer = null;
-        goDown();        // restart the timer
-    }
-}
-function tickUp() {
-    stepclickUp();
-    currentCellNum++;
-    console.log("from timer:  current" + currentCellNum + " slider:" + currentSlider)
-    if (Math.abs(currentCellNum - currentSlider) < 1) {
-        stop()
-    } else {
-        timer = null;
-        goUp();        // restart the timer
-    }
-
-};
-
-function stop() {
-    clearTimeout(timer);
-    timer = null;
-};
-function goDown() {
-    if (timer == null) {
-        timer = setTimeout(tickDown, 4);
-    }
-}
-
-function goUp() {
-    if (timer == null) {
-        timer = setTimeout(tickUp, 4);
-    }
-}
-
-function stepclickUp() {
-    console.log("something stepclick")
-    var maxnum = 0
-    var maxid = -1
-    var children = lineDiv.childNodes;
+    console.log("current slider:" + valnum.toString())
+    currentSlider = valnum
     NodeList.prototype.forEach = Array.prototype.forEach
-    children.forEach(function (item) {
-        var pn = item.phraseNode;
-        if (pn.num > maxnum) {
-            maxnum = pn.num;
-            maxid = item.id
-        }
-
+    mllist.forEach(function (item) {
+        item.setSliderNum(valnum)
     });
-    var wordTable = document.getElementById(maxid);
-    if (wordTable != null) {
-        console.log("max num right now is" + maxnum + " with phrase " + wordTable.phraseNode.phrase)
-        if (wordTable.highlighted) {
-            goUpToParent(wordTable);
-        } else {
-            highlightWordTable(wordTable, 0);
-        }
-    } else {
-        console.log("word table is null..")
-    }
-
-
 }
 
-function stepclickDown() {
-    console.log("go down automated...")
-    var minnum = 100000
-    var minid = -1
-    var children = lineDiv.childNodes;
-    NodeList.prototype.forEach = Array.prototype.forEach
-    children.forEach(function (item) {
-        var pn = item.phraseNode;
-        if (pn.num < minnum && pn.phraseChildren.length > 0) {
-            minnum = pn.num;
-            minid = item.id
-        }
-
-    });
-
-    var wordTable = document.getElementById(minid);
-    if (wordTable != null) {
-        console.log("min num right now is" + minnum + " with phrase " + wordTable.phraseNode.phrase)
-        if (wordTable.highlighted) {
-            goDonwToChildren(wordTable)
-        } else {
-            highlightWordTable(wordTable, 2)
-        }
-    } else {
-        console.log("word table is null..")
-    }
-
-}
 
 function ready() {
     var sentence = "this is a test sentence";
-    var phraseTreeStr = "(S (NP (I)) (VP (V (saw)) (X (him))))";
+
     var phraseTreeStr = "(since_their_articles_appeared_,_the_price_of_gold_has_moved_up_still_further. (since_the_publication_of_their_article,_the_gold_price_has_risen_still_further (since (seit)) (the_publication_of_their_article,_the_gold_price_has_risen_still_further (the_publication_of_their_article,_the_gold_price_is_risen_still_further (the_publication_of_their_article (the_publication (the (der)) (publication (Veröffentlichung)) ) (their_article (their (ihrer)) (article (Artikel))))(the_gold_price_is_risen_still_further (the_gold_price_is (is (ist)) (the_gold_price (the (der)) (gold_price (Goldpreis)))) (risen_still_further (still_further (still (noch)) (further (weiter))) (risen (gestiegen))))))) (. (.)))"
-    rootPhraseNode = parsePhraseTree(phraseTreeStr);
-    var phraseLeaves = getleaves(rootPhraseNode);
-    console.log("done...");
-    showsent(phraseLeaves);
+    var items = parsePhraseTree(phraseTreeStr);
+    var rootPhraseNode = items[0]
+    var numNT = items[1]
+    var macline = new MacaronicLine(0, rootPhraseNode, numNT)
+    macline.addToDoc()
+    macline.displayPhrases()
+    mllist.push(macline)
+
+    /*var items = parsePhraseTree("(S (NP (I)) (VP (V (saw)) (X (him))))");
+     rootPhraseNode = items[0]
+     numNT = items[1]
+     var macline = new MacaronicLine(1, rootPhraseNode, numNT)
+     macline.addToDoc()
+     macline.displayPhrases();
+     mllist.push(macline)*/
+
 }
 function removeEmptyStrings(val) {
     return !(val == "" || val == " ");
@@ -151,6 +59,7 @@ function getleaves(rootPhraseTree) {
 }
 function parsePhraseTree(phraseTreeStr) {
     //"1、2、3".split(/()/g) == ["1", "、", "2", "、", "3"]
+    var numNT = 0;
     var _phraseTreeList = phraseTreeStr.replace(/\s\s+/g, ' ').split(/(\(|\)|\s)/g).filter(removeEmptyStrings)
     //console.log(_phraseTreeList);
     _phraseTreeList.pop();
@@ -199,263 +108,23 @@ function parsePhraseTree(phraseTreeStr) {
     Q.push(rootpn)
     while (Q.length > 0) {
         pn = Q.shift();
+        if (pn.phraseChildren.length > 0) {
+            numNT++;
+        }
         pn.num = num;
-        maxCellNum = num
         num++
         for (var c = 0; c < pn.phraseChildren.length; c++) {
             pc = pn.phraseChildren[c]
             Q.push(pc);
         }
     }
-    return rootpn;
-
-
-}
-
-function spanClicked(e) {
-    console.log("a span has been clicked:" + e.target.id);
-    var tablenum = e.target.id.split(",")[1];
-    var wordTable = document.getElementById(tablenum);
-    var pn = wordTable.phraseNode;
-    var rownum = parseInt(e.target.id.split(",")[2]);
-    if (rownum == 0) {
-        console.log("phrase: " + pn.phrase + "clicked, go up to parent");
-        goUpToParent(wordTable);
-    } else {
-        var pn = wordTable.phraseNode;
-        console.log("phrase: " + pn.phrase + "clicked, go down to children")
-        goDonwToChildren(wordTable);
-
-    }
-    unhighlight(e);
-    e.stopPropagation();
-}
-
-function highlight(e) {
-    console.log("a span has been hovered over:" + e.target.id);
-    //e.target.style.opacity = 0.5
-    //e.target.style.backgroundColor = "grey"
-    var tablenum = e.target.id.split(",")[1];
-    var rownum = parseInt(e.target.id.split(",")[2]);
-    var wordTable = document.getElementById(tablenum);
-    highlightWordTable(wordTable, rownum)
-
-}
-
-function highlightWordTable(wordTable, rownum) {
-    if (rownum == 0) {
-        var left = 10000
-        var top = 10000
-        var parentWordTable = wordTable.phraseNode.parent;
-        var containerDiv = wordTable.parentNode;
-        var children = containerDiv.childNodes;
-        NodeList.prototype.forEach = Array.prototype.forEach
-        children.forEach(function (item) {
-            var pn = item.phraseNode;
-            if (pn.isMyAncestor(parentWordTable)) {
-                item.lightHighlight(rownum);
-                var jtdpos = item.getTopLeftCoordinate();
-                if (jtdpos.left < left) {
-                    left = jtdpos.left
-                }
-                if (jtdpos.top < top) {
-                    top = jtdpos.top
-                }
-            }
-        });
-
-        previewParent(wordTable, top, left);
-    } else {
-        wordTable.lightHighlight(rownum)
-        previewChildren(wordTable);
-    }
-}
-
-function unhighlight(e) {
-    console.log("unhilight " + e.target.id);
-    var tablenum = e.target.id.split(",")[1];
-    var wordTable = document.getElementById(tablenum);
-    unhighlightWordTable(wordTable);
-}
-
-function unhighlightWordTable(wordTable) {
-    var containerDiv = wordTable.parentNode;
-    var children = containerDiv.childNodes;
-    NodeList.prototype.forEach = Array.prototype.forEach
-    children.forEach(function (item) {
-        var pn = item.phraseNode;
-        item.unLightHighlight(0);
-        item.unLightHighlight(2);
-    });
-
-    var previewDiv = document.getElementById("previewOverlay")
-    if (previewDiv != null) {
-        previewDiv.parentNode.removeChild(previewDiv);
-    }
-}
-
-function previewChildren(wordTable) {
-    var previewDiv = document.getElementById("previewOverlay")
-    if (previewDiv != null) {
-        previewDiv.parentNode.removeChild(previewDiv)
-    }
-
-    if (wordTable.phraseNode.phraseChildren.length > 0) {
-        previewDiv = document.createElement("div")
-        previewDiv.id = "previewOverlay";
-        //previewDiv.style.border = "1px solid black";
-        for (var i = 0; i < wordTable.phraseNode.phraseChildren.length; i++) {
-            var pn = wordTable.phraseNode.phraseChildren[i];
-            var previewSpan = document.createElement("span")
-            //previewSpan.style.border = "1px solid black";
-            previewSpan.innerHTML = pn.phrase.replace(/_/g, " ")
-            previewDiv.appendChild(previewSpan)
-            if (i == wordTable.phraseNode.phraseChildren.length - 1) {
-
-            } else {
-                var previewSpan = document.createElement("span")
-                previewSpan.innerHTML = "-"
-                previewDiv.appendChild(previewSpan)
-            }
-        }
-        $("body").append(previewDiv);
-        var elem = $(previewDiv);
-        //var jtd = $(e.currentTarget)
-        var pos = wordTable.getBottomCellCoordinate()
-        console.log("mouse over box location is" + 0 + "," + 0)
-        elem.css({
-            position: 'absolute',
-            top: pos.top,
-            left: pos.left,
-            zIndex: -1
-        });
-    } else {
-        console.log("phrase node:" + wordTable.phraseNode.phrase + " has no children");
-    }
-}
-
-function previewParent(wordTable, top, left) {
-    var parentPhraseNode = wordTable.phraseNode.parent;
-    var previewDiv = document.getElementById("previewOverlay")
-    if (previewDiv != null) {
-        previewDiv.parentNode.removeChild(previewDiv);
-    }
-    previewDiv = document.createElement("div")
-    //previewDiv.style.border = "1px solid black";
-    var previewSpan = document.createElement("span")
-    previewDiv.id = "previewOverlay"
-    $("body").append(previewDiv);
-    previewDiv.appendChild(previewSpan)
-    previewSpan.innerHTML = parentPhraseNode.phrase.replace(/_/g, " ")
-    var elem = $(previewDiv);
-    elem.css({
-        position: 'absolute',
-        top: top,
-        left: left,
-        zIndex: -1
-    });
-}
-
-function goUpToParent(wordTable) {
-    var previewDiv = document.getElementById("previewOverlay")
-    if (previewDiv != null) {
-        previewDiv.parentNode.removeChild(previewDiv);
-    }
-    var pn = wordTable.phraseNode;
-    pn.isMyAncestor(pn);
-    var parentPhraseNode = wordTable.phraseNode.parent;
-    if (parentPhraseNode != null) {
-        var containerDiv = wordTable.parentNode;
-        var parentWordTable = createWordTable(wordTable.id, parentPhraseNode);
-        containerDiv.insertBefore(parentWordTable, wordTable);
-        removeDescents(parentWordTable);
-    }
-    redoIds(containerDiv);
-}
-
-function removeDescents(wordTable) {
-    var containerDiv = wordTable.parentNode;
-    var setForRemoval = []
-    NodeList.prototype.forEach = Array.prototype.forEach
-    var children = containerDiv.childNodes;
-    children.forEach(function (item) {
-        if (item.phraseNode.isMyAncestor(wordTable.phraseNode)) {
-            setForRemoval.push(item);
-        }
-    });
-
-    for (var i = 0; i < setForRemoval.length; i++) {
-        var rem = setForRemoval[i];
-        console.log(rem.phraseNode.phrase + " is being removed");
-        containerDiv.removeChild(rem);
-    }
-}
-
-function getDescents(wordTable) {
-    var containerDiv = wordTable.parentNode;
-    var setofDescents = []
-    NodeList.prototype.forEach = Array.prototype.forEach
-    var children = containerDiv.childNodes;
-    children.forEach(function (item) {
-        if (item.phraseNode.isMyAncestor(wordTable.phraseNode)) {
-            setofDescents.push(item);
-        }
-    });
-
-    return setofDescents;
-}
-function goDonwToChildren(wordTable) {
-    var previewDiv = document.getElementById("previewOverlay")
-    if (previewDiv != null) {
-        previewDiv.parentNode.removeChild(previewDiv);
-    }
-    if (wordTable.phraseNode.phraseChildren.length > 0) {
-        var currentid = parseInt(wordTable.id);
-        var containerDiv = wordTable.parentNode;
-        for (var i = 0; i < wordTable.phraseNode.phraseChildren.length; i++) {
-            var pn = wordTable.phraseNode.phraseChildren[i];
-            var cwt = createWordTable(currentid + i, pn);
-            containerDiv.insertBefore(cwt, wordTable);
-        }
-        containerDiv.removeChild(wordTable);
-        redoIds(containerDiv);
-    } else {
-        console.log("phrase node:" + wordTable.phraseNode.phrase + " has no children");
-    }
-}
-
-function redoIds(containerDiv) {
-    NodeList.prototype.forEach = Array.prototype.forEach
-    var children = containerDiv.childNodes;
-    var i = 0;
-    children.forEach(function (item) {
-        item.setNewId(i);
-        item.setPhraseNode(item.phraseNode);//just for debugging
-        i++;
-    });
+    return [rootpn, numNT];
 }
 
 
-function showsent(phraseNodes) {
-    lineDiv = document.createElement("div");
-    lineDiv.id = "myLineDiv";
-    document.body.appendChild(lineDiv);
-
-
-    for (var i = 0; i < phraseNodes.length; i++) {
-        var pn = phraseNodes[i];
-        //var elem = tableCreate(i, 3, 1, stringarr[i]);
-        var elem = createWordTable(i, pn);
-        lineDiv.appendChild(elem);
-    }
-
-
-}
-
-
-function createWordTable(numid, phraseNode) {
+function createWordTable(numid, phraseNode, macaronicline) {
     var wordTable = document.createElement("table");
-    wordTable.id = numid.toString();
+    wordTable.id = 'ml,' + macaronicline.id.toString() + ',wt,' + numid.toString();
     wordTable.phraseNode = phraseNode;
     wordTable.phraseNode.setWordTable(wordTable);
     wordTable.style.display = "inline-block";
@@ -469,11 +138,14 @@ function createWordTable(numid, phraseNode) {
                 td.innerHTML = wordTable.phraseNode.phrase.replace(/_/g, " ") //+ "," + wordTable.phraseNode.num
             } else {
                 td.appendChild(document.createTextNode(""));
-                td.id = "cell," + numid.toString() + "," + i.toString();
-                td.addEventListener("click", spanClicked, false);
-                td.addEventListener("mouseover", highlight, false);
-                td.addEventListener("mouseout", unhighlight, false);
+                td.id = wordTable.id + ",c," + i.toString();
+                td["rownum"] = i
+                td.addEventListener("click", macaronicline.spanClicked, false);
+                td.addEventListener("mouseover", macaronicline.highlight, false);
+                td.addEventListener("mouseout", macaronicline.unhighlight, false);
                 td.height = "10px";
+                td["wordtable"] = wordTable;
+
             }
             //td.style.border = "1px solid black";
             if (i == 1 && j == 1) {
@@ -558,59 +230,463 @@ function PhraseNode(phrase, parent) {
 
 }
 
-function MacaronicLine(lineid, rootPhraseNode) {
-    this.lineDiv = document.createElement("div");
-    this.lineDiv.id = "lineDiv" + srt(lineid);
-    this.rootPhraseNode = rootPhraseNode
+function MacaronicLine(lineid, rootPhraseNode, numNT) {
+    var self = this
+    self.id = lineid
+    self["numSteps"] = numNT * 2
+    self["stepSize"] = parseInt(100 / self.numSteps)
+    self["previewDiv"] = null
+    self["prevDirection"] = "going forward"
+    self["prevZone"] = 0
+    self["prevValNum"] = 0
+    self["timer"] = null;
+    self["lineDiv"] = document.createElement("div");
+    self["isPreviewState"] = false
+
+    this.lineDiv.id = "lineDiv" + lineid.toString()
+    self["rootPhraseNode"] = rootPhraseNode
 
 
-    this.addToDoc = function () {
-        document.appendChild(this.lineDiv)
+    self.addToDoc = function () {
+        document.body.appendChild(this.lineDiv)
     }
-    this.removeFromDoc = function () {
+    self.removeFromDoc = function () {
         this.lineDiv.parentNode.removeChild(this.lineDiv)
     }
 
-    this.displayPhrases = function () {
-        this.addToDoc()
+    self.displayPhrases = function () {
+        self.addToDoc()
         var phraseLeaves = getleaves(this.rootPhraseNode);
         for (var i = 0; i < phraseLeaves.length; i++) {
             var pn = phraseLeaves[i];
             //var elem = tableCreate(i, 3, 1, stringarr[i]);
-            var elem = createWordTable(i, pn);
-            this.lineDiv.appendChild(elem);
+            var elem = createWordTable(i, pn, this);
+            self.lineDiv.appendChild(elem);
         }
 
     }
 
-    this.spanClicked = function (e) {
+    self.spanClicked = function (e) {
         console.log("a span has been clicked:" + e.target.id);
-        var tablenum = e.target.id.split(",")[1];
-        var wordTable = document.getElementById(tablenum);
+        var wordTable = e.target.wordtable
+        console.log("span clicked event: its wt is ml class:" + wordTable.id);
+        var rownum = e.target.rownum
         var pn = wordTable.phraseNode;
-        var rownum = parseInt(e.target.id.split(",")[2]);
         if (rownum == 0) {
             console.log("phrase: " + pn.phrase + "clicked, go up to parent");
-            //goUpToParent(wordTable);
+            self.goUpToParent(wordTable);
         } else {
             var pn = wordTable.phraseNode;
             console.log("phrase: " + pn.phrase + "clicked, go down to children")
-            //goDonwToChildren(wordTable);
+            self.goDownToChildren(wordTable);
 
         }
-        this.unhighlight(e);
+        self.unhighlight(e);
         e.stopPropagation();
     }
 
-    this.highlight = function (e) {
-        console.log("a span has been hovered over:" + e.target.id);
-        //e.target.style.opacity = 0.5
-        //e.target.style.backgroundColor = "grey"
-        var tablenum = e.target.id.split(",")[1];
-        var rownum = parseInt(e.target.id.split(",")[2]);
-        var wordTable = document.getElementById(tablenum);
-        //highlightWordTable(wordTable, rownum)
+    self.previewParent = function (wordTable, top, left) {
 
+
+        if (self.previewDiv != null) {
+            self.previewDiv.wordTable.unLightHighlight(0)
+            self.previewDiv.wordTable.unLightHighlight(2)
+            var p = self.previewDiv.parentNode
+            if (p != null) {
+                p.removeChild(self.previewDiv);
+            }
+            self.isPreviewState = false;
+            self.previewDiv = null;
+        }
+
+        var parentPhraseNode = wordTable.phraseNode.parent;
+        if (parentPhraseNode != null) {
+            self.previewDiv = document.createElement("div")
+            self.previewDiv["wordTable"] = wordTable
+            //self.previewDiv.style.border = "1px solid black";
+            var previewSpan = document.createElement("span")
+            self.previewDiv.id = "previewOverlay" + self.id.toString()
+            $("body").append(self.previewDiv);
+            self.isPreviewState = true;
+            self.previewDiv.appendChild(previewSpan)
+
+            previewSpan.innerHTML = parentPhraseNode.phrase.replace(/_/g, " ")
+            var elem = $(self.previewDiv);
+            elem.css({
+                position: 'absolute',
+                top: top,
+                left: left,
+                zIndex: -1
+            });
+        }
+
+    }
+
+    self.previewChildren = function (wordTable) {
+
+        if (self.previewDiv != null) {
+            self.previewDiv.wordTable.unLightHighlight(0)
+            self.previewDiv.wordTable.unLightHighlight(2)
+            var p = self.previewDiv.parentNode
+            if (p != null) {
+                p.removeChild(self.previewDiv);
+            }
+            self.isPreviewState = false;
+            self.previewDiv = null;
+        }
+
+        if (wordTable.phraseNode.phraseChildren.length > 0) {
+            self.previewDiv = document.createElement("div")
+            self.previewDiv["wordTable"] = wordTable
+            self.previewDiv.id = "previewOverlay" + self.id.toString();
+            //self.previewDiv.style.border = "1px solid black";
+            for (var i = 0; i < wordTable.phraseNode.phraseChildren.length; i++) {
+                var pn = wordTable.phraseNode.phraseChildren[i];
+                var previewSpan = document.createElement("span")
+                //previewSpan.style.border = "1px solid black";
+                previewSpan.innerHTML = pn.phrase.replace(/_/g, " ")
+                self.previewDiv.appendChild(previewSpan)
+
+                if (i == wordTable.phraseNode.phraseChildren.length - 1) {
+
+                } else {
+                    var previewSpan = document.createElement("span")
+                    previewSpan.innerHTML = "-"
+                    self.previewDiv.appendChild(previewSpan)
+
+                }
+            }
+            $("body").append(self.previewDiv);
+            self.isPreviewState = true;
+            var elem = $(self.previewDiv);
+            //var jtd = $(e.currentTarget)
+            var pos = wordTable.getBottomCellCoordinate()
+            console.log("mouse over box location is" + 0 + "," + 0)
+            elem.css({
+                position: 'absolute',
+                top: pos.top,
+                left: pos.left,
+                zIndex: -1
+            });
+        } else {
+            console.log("phrase node:" + wordTable.phraseNode.phrase + " has no children");
+        }
+    }
+
+    self.highlightWordTable = function (wordTable, rownum) {
+        if (rownum == 0) {
+            var left = 10000
+            var top = 10000
+            var parentWordTable = wordTable.phraseNode.parent;
+            var containerDiv = wordTable.parentNode;
+            var children = containerDiv.childNodes;
+            NodeList.prototype.forEach = Array.prototype.forEach
+            children.forEach(function (item) {
+                var pn = item.phraseNode;
+                if (pn.isMyAncestor(parentWordTable)) {
+                    item.lightHighlight(rownum);
+                    var jtdpos = item.getTopLeftCoordinate();
+                    if (jtdpos.left < left) {
+                        left = jtdpos.left
+                    }
+                    if (jtdpos.top < top) {
+                        top = jtdpos.top
+                    }
+                }
+            });
+            self.previewParent(wordTable, top, left);
+        } else {
+            wordTable.lightHighlight(rownum);
+            self.previewChildren(wordTable)
+        }
+    }
+
+    self.highlight = function (e) {
+        var wordTable = e.target.wordtable
+        console.log("highlight event: its wt is ml class:" + wordTable.id);
+        self.highlightWordTable(wordTable, e.target.rownum)
+        e.stopImmediatePropagation();
+
+    }
+
+    self.goDownToChildren = function (wordTable) {
+        self.previewDiv = document.getElementById("previewOverlay" + self.id.toString())
+        if (self.previewDiv != null) {
+            self.previewDiv.parentNode.removeChild(self.previewDiv);
+        }
+        if (wordTable.phraseNode.phraseChildren.length > 0) {
+            var currentid = parseInt(wordTable.id);
+            var containerDiv = wordTable.parentNode;
+            for (var i = 0; i < wordTable.phraseNode.phraseChildren.length; i++) {
+                var pn = wordTable.phraseNode.phraseChildren[i];
+                var cwt = createWordTable(currentid + i, pn, self);
+                containerDiv.insertBefore(cwt, wordTable);
+            }
+            containerDiv.removeChild(wordTable);
+            self.redoIds(containerDiv);
+        } else {
+            console.log("phrase node:" + wordTable.phraseNode.phrase + " has no children");
+        }
+    }
+    self.goUpToParent = function (wordTable) {
+        self.previewDiv = document.getElementById("previewOverlay" + self.id.toString())
+        if (self.previewDiv != null) {
+            self.previewDiv.parentNode.removeChild(self.previewDiv);
+        }
+        var pn = wordTable.phraseNode;
+        pn.isMyAncestor(pn);
+        var parentPhraseNode = wordTable.phraseNode.parent;
+        if (parentPhraseNode != null) {
+            var containerDiv = wordTable.parentNode;
+            var parentWordTable = createWordTable(wordTable.id, parentPhraseNode, self);
+            containerDiv.insertBefore(parentWordTable, wordTable);
+            self.removeDescents(parentWordTable);
+        } else {
+            console.log("parent phrase node seems to be null.... nothing to do..")
+        }
+        self.redoIds(containerDiv);
+    }
+
+    self.removeDescents = function (wordTable) {
+        var containerDiv = wordTable.parentNode;
+        var setForRemoval = []
+        NodeList.prototype.forEach = Array.prototype.forEach
+        var children = containerDiv.childNodes;
+        children.forEach(function (item) {
+            if (item.phraseNode.isMyAncestor(wordTable.phraseNode)) {
+                setForRemoval.push(item);
+            }
+        });
+
+        for (var i = 0; i < setForRemoval.length; i++) {
+            var rem = setForRemoval[i];
+            //console.log(rem.phraseNode.phrase + " is being removed");
+            containerDiv.removeChild(rem);
+        }
+    }
+
+
+    self.redoIds = function (containerDiv) {
+        NodeList.prototype.forEach = Array.prototype.forEach
+        var children = containerDiv.childNodes;
+        var i = 0;
+        children.forEach(function (item) {
+            item.setNewId(i);
+            item.setPhraseNode(item.phraseNode);//just for debugging
+            i++;
+        });
+    }
+
+
+    self.unhighlight = function (e) {
+        var wordTable = e.target.wordtable
+        console.log("unhiligh event: its wt is ml class:" + wordTable.id);
+        self.unhighlightWordTable(wordTable, e.target.rownum)
+        e.stopImmediatePropagation()
+    }
+
+    self.unhighlightWordTable = function (wordTable, rownum) {
+        var containerDiv = wordTable.parentNode;
+        if (containerDiv != null) {
+            var children = containerDiv.childNodes;
+            NodeList.prototype.forEach = Array.prototype.forEach
+            children.forEach(function (item) {
+                var pn = item.phraseNode;
+                item.unLightHighlight(0);
+                item.unLightHighlight(2);
+            });
+        }
+
+
+        self.previewDiv = document.getElementById("previewOverlay" + self.id.toString())
+        if (self.previewDiv != null) {
+            self.previewDiv.parentNode.removeChild(self.previewDiv);
+        }
+    }
+
+    self.stepclickUp = function () {
+        self.previewDiv = document.getElementById("previewOverlay" + self.id.toString())
+        if (self.previewDiv != null) {
+            self.previewDiv.parentNode.removeChild(self.previewDiv);
+        }
+        //console.log("something stepclick")
+        var maxnum = 0
+        var maxid = -1
+        var children = self.lineDiv.childNodes;
+        NodeList.prototype.forEach = Array.prototype.forEach
+        children.forEach(function (item) {
+            var pn = item.phraseNode;
+            if (pn.num > maxnum) {
+                maxnum = pn.num;
+                maxid = item.id
+            }
+
+        });
+        var wordTable = document.getElementById(maxid);
+        if (wordTable != null) {
+            //console.log("max num right now is" + maxnum + " with phrase " + wordTable.phraseNode.phrase)
+            if (wordTable.highlighted) {
+                self.goUpToParent(wordTable);
+            } else {
+                self.highlightWordTable(wordTable, 0);
+            }
+        } else {
+            console.log("word table is null..")
+        }
+
+
+    }
+
+    self.stepclickDown = function () {
+        //console.log("go down automated...")
+
+        var minnum = 100000
+        var minid = -1
+        var children = self.lineDiv.childNodes;
+        NodeList.prototype.forEach = Array.prototype.forEach
+        children.forEach(function (item) {
+            var pn = item.phraseNode;
+            if (pn.num < minnum && pn.phraseChildren.length > 0) {
+                minnum = pn.num;
+                minid = item.id
+            }
+
+        });
+
+        var wordTable = document.getElementById(minid);
+        if (wordTable != null) {
+            //console.log("min num right now is" + minnum + " with phrase " + wordTable.phraseNode.phrase)
+            if (wordTable.highlighted) {
+                self.goDownToChildren(wordTable)
+            } else {
+                self.highlightWordTable(wordTable, 2)
+            }
+        } else {
+            console.log("word table is null..")
+        }
+
+    }
+
+
+    self.tickDown = function () {
+        self.currentCellNum--;
+        self.stepclickDown();
+        if (Math.abs(self.currentCellNum - self.sliderNum) < 1) {
+            self.stop()
+        } else {
+            self.timer = null;
+            self.goDown();        // restart the timer
+        }
+    }
+    self.tickUp = function () {
+        self.stepclickUp();
+        self.currentCellNum++;
+        console.log("from timer:  current" + self.currentCellNum + " slider:" + self.sliderNum)
+        if (Math.abs(self.currentCellNum - self.sliderNum) < 1) {
+            self.stop()
+        } else {
+            self.timer = null;
+            self.goUp();        // restart the timer
+        }
+
+    }
+    self.setSliderNum = function (valnum) {
+
+        var direction = "going forward"
+        if (valnum < self.prevValNum) {
+            direction = "going back"
+
+        } else {
+            direction = "going foward"
+
+        }
+
+        //console.log(direction)
+        var zone = Math.floor(valnum / self.stepSize)
+        if (self.prevZone == zone) {
+            console.log("same zone.." + direction + " zone:" + zone.toString())
+        } else if (self.prevZone < zone) {
+            console.log("new zone.." + direction + " zone:" + zone.toString() + " prevZone:" + self.prevZone.toString())
+            var zonediff = Math.abs(self.prevZone - zone)
+            if (self.isPreviewState && self.prevDirection == "going back") {
+                console.log("is a preview state.. so must undo the last preview...")
+                zonediff = zonediff - 1;
+                self.undoStepClick();
+            } else {
+                console.log("1:prevzone < zone not undoing preview... " + self.isPreviewState + " prevdi:" + self.prevDirection)
+            }
+
+            for (var s = 0; s < zonediff; s++) {
+                self.stepclickUp();
+            }
+            self.prevZone = zone;
+            self.prevDirection = direction;
+        } else {
+            console.log("new zone.." + direction + " zone:" + zone.toString() + " prevZone:" + self.prevZone.toString())
+            var zonediff = Math.abs(self.prevZone - zone)
+
+            if (self.isPreviewState && self.prevDirection == "going foward") {
+                console.log("is a preview state.. so must undo the last preview...")
+                zonediff = zonediff - 1;
+                self.undoStepClick();
+            } else {
+                console.log("2:prevzone > zone not undoing preview... " + self.isPreviewState + " prevdi:" + self.prevDirection)
+            }
+
+            for (var s = 0; s < zonediff; s++) {
+                self.stepclickDown();
+            }
+            self.prevZone = zone;
+            self.prevDirection = direction;
+
+
+        }
+
+        self.prevValNum = valnum;
+
+        if (valnum == 0) {
+            direction = "going forward"
+            self.prevDirection = direction
+        }
+        if (valnum == 100) {
+            direction = "going back"
+            self.prevDirection = direction;
+        }
+    }
+
+    self.undoStepClick = function () {
+        var wt = null
+        if (self.previewDiv != null) {
+            self.previewDiv.wordTable.unLightHighlight(0)
+            self.previewDiv.wordTable.unLightHighlight(2)
+            wt = self.previewDiv.wordTable
+            var p = self.previewDiv.parentNode
+            if (p != null) {
+                p.removeChild(self.previewDiv);
+            }
+            self.previewDiv = null
+            self.isPreviewState = false
+        }
+        if (wt != null) {
+            self.unhighlightWordTable(wt, 0)
+        }
+
+    }
+    self.stop = function () {
+        clearTimeout(self.timer);
+        self.timer = null;
+    }
+
+    self.goDown = function () {
+        if (self.timer == null) {
+            self.timer = setTimeout(self.tickDown, 4);
+        }
+    }
+
+    self.goUp = function () {
+        if (self.timer == null) {
+            self.timer = setTimeout(self.tickUp, 4);
+        }
     }
 
 
