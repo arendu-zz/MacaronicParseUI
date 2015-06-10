@@ -53,13 +53,16 @@ class Node(object):
 
 
 if __name__ == "__main__":
-    hp = open('web/data-for-visualization.txt').read().split('\n\n')
+    #hp = open('web/data-for-visualization.txt').read().split('\n\n')
+    hp = open('web/Wien.txt').read().split('---')
     for f_idx, f in enumerate(hp):
+        f = f.strip()
         f = f.split('\n')
         Q = []
         root = None
         for idx, line in enumerate(f):
             line = line.strip()
+            line = ' '.join(line.split())
             #print idx, line
             divs = line.split('|')
             for n in divs:
