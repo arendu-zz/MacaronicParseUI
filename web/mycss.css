@@ -38,8 +38,8 @@
 }
 
 div {
-    border: #00ff00;
-    border-style: solid;
+    /*border: #00ff00;
+    border-style: solid;*/
     display: block;
     clear: both;
     height: auto;

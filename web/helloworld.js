@@ -35,7 +35,7 @@ function ready() {
     macline.displayPhrases()
     mllist.push(macline)
 
-    var items = parsePhraseTree("(S (NP (I)) (VP (V (saw)) (X (him))))");
+    var items = parsePhraseTree("(But_there_remains_a_big_question_how? (But_there_remains_a_big_question (But (Aber))  (there_remains_a_big_question (remains_a_big_question (a_big_question (a (eine))  (big_question (big (große))  (question (Frage))))  (remains (bleibt)))))  (how? (Wie?)))");
     var rootPhraseNode = items[0]
     var numNT = items[1]
     var macline = new MacaronicLine(1, rootPhraseNode, numNT)
@@ -43,13 +43,37 @@ function ready() {
     macline.displayPhrases();
     mllist.push(macline)
 
-    var items = parsePhraseTree("(S (NP (I)) (VP (V (saw)) (X (him))))");
+    var items = parsePhraseTree("(Growth_and_jobs_need_to_be_promoted_with_equal_zeal. (Growth_and_jobs_need_to_be_promoted_with_equal_zeal (Growth_and_jobs (Growth (Wachstum))  (and_jobs (and (und))  (jobs (Arbeitsplätze))))  (need_to_be_promoted_with_equal_zeal (must (müssen))  (to_be_promoted_with_equal_zeal (be_promoted_with_equal_zeal (with_equal_zeal (with (mit))  (equal_zeal (equal (gleicher))  (resolve (Entschlossenheit))))  (be_promoted (promoted (gefördert))  (be (werden)))))))  (.))")
     var rootPhraseNode = items[0]
     var numNT = items[1]
     var macline = new MacaronicLine(2, rootPhraseNode, numNT)
     macline.addToDoc()
     macline.displayPhrases();
     mllist.push(macline)
+
+    var items = parsePhraseTree("(The_need_for_immediate_action_is_clear. (The_need_for_immediate_action_is_clear (The_need_for_immediate_action (The (That (Dass)))  (need_for_immediate_action (immediate_action (immediate (immediately (sofort)))  (action (acted (gehandelt))))  (need_for (be_must, (be (werden))  (must, (must (muss))  (,))))))  (is_clear (is (ist))  (clear (eindeutig))))  (.))")
+    var rootPhraseNode = items[0]
+    var numNT = items[1]
+    var macline = new MacaronicLine(3, rootPhraseNode, numNT)
+    macline.addToDoc()
+    macline.displayPhrases();
+    mllist.push(macline)
+
+    var items = parsePhraseTree("(A_big_new_push_for_growth_is_therefore_vital. (A_big_new_push_for_growth_is_therefore_vital (A_big_new_push_for_growth (A (Ein))  (big_new_push_for_growth (big_new (strong_new (new (neuer))  (strong (,)  (strong (starker)))))  (push_for_growth (Wachstumsanschub))))  (is_therefore_vital (is (ist))  (therefore_vital (therefore (daher))  (vital (unverzichtbar)))))  (.))")
+    var rootPhraseNode = items[0]
+    var numNT = items[1]
+    var macline = new MacaronicLine(4, rootPhraseNode, numNT)
+    macline.addToDoc()
+    macline.displayPhrases();
+    mllist.push(macline)
+
+    /*var items = parsePhraseTree("(S (NP (I)) (VP (V (saw)) (X (him))))");
+     var rootPhraseNode = items[0]
+     var numNT = items[1]
+     var macline = new MacaronicLine(5, rootPhraseNode, numNT)
+     macline.addToDoc()
+     macline.displayPhrases();
+     mllist.push(macline)*/
 
 }
 function removeEmptyStrings(val) {
