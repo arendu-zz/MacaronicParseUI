@@ -1,5 +1,6 @@
 __author__ = 'arenduchintala'
-import pdb,sys
+
+import sys
 
 
 class Node(object):
@@ -41,36 +42,48 @@ class Node(object):
             else:
                 c1.remove_redundant()
 
-            #print 'removed', c1.phrase
+            # print 'removed', c1.phrase
             for nc in self.children:
                 nc.remove_redundant()
         elif len(self.children) == 2:
             for c in self.children:
                 c.remove_redundant()
         else:
-            #print 'reached leaf'
+            # print 'reached leaf'
             pass
 
 
 if __name__ == "__main__":
-    #hp = open('web/data-for-visualization.txt').read().split('\n\n')
+    # hp = open('web/data-for-visualization.txt').read().split('\n\n')
     hp = open('web/Wien.txt').read().split('---')
     for f_idx, f in enumerate(hp):
         f = f.strip()
         f = f.split('\n')
         Q = []
         root = None
+        prevPipeTeldaCount = 0
+        passed = True
         for idx, line in enumerate(f):
             line = line.strip()
+            # print idx, line
             line = ' '.join(line.split())
-            #print idx, line
+            pipeCount = line.count('|')
+            pipeTeldaCount = pipeCount + line.count('~')
+            if pipeCount == prevPipeTeldaCount:
+                pass
+            else:
+                msg = "pipe counts check failed: " + str(line) + "\n"
+                msg += "prevPipeTeldaCount:" + str(prevPipeTeldaCount) + ", pipeCount:" + str(pipeCount) + "\n"
+                sys.stderr.write(msg)
+                passed = False
+            prevPipeTeldaCount = pipeTeldaCount
             divs = line.split('|')
             for n in divs:
-                #print '\t', 'div', n
+                # print '\t', 'div', n
                 merges = n.split('~')
 
                 if len(merges) == 1:  # no actual merge yet
-                    #print '\t\t', 'merges', merges[0], Q
+                    # print '\t\t', 'merges', merges[0], Q
                     if len(Q) > 0:
                         top = Q.pop(0)
                     else:
@@ -82,7 +95,7 @@ if __name__ == "__main__":
                         root = child
                     Q.append(child)
                 elif len(merges) == 2:
-                    #print '\t\t', 'merges', merges[0], merges[1], Q
+                    # print '\t\t', 'merges', merges[0], merges[1], Q
                     top = Q.pop(0)
                     child1 = Node(merges[0])
                     child2 = Node(merges[1])
@@ -93,6 +106,8 @@ if __name__ == "__main__":
                 else:
                     sys.stderr.write("this should not happen\n")
         root.remove_redundant()
-        print root.get_bracketed_string().strip()
-        sys.stderr.write("\ndone with "+ str(f_idx)+ "\n\n")
-
+        if passed:
+            print root.get_bracketed_string().strip()
+            sys.stderr.write("completed:" + str(f_idx) + "\n\n")
+        else:
+            sys.stderr.write("failed:" + str(f_idx) + "\n\n")
