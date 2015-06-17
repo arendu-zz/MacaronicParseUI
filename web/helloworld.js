@@ -25,7 +25,6 @@ function startsWith(string1, string2) {
 
 function ready() {
     var sentence = "this is a test sentence";
-
     var phraseTreeStr = "(since_their_articles_appeared_,_the_price_of_gold_has_moved_up_still_further. (since_the_publication_of_their_article,_the_gold_price_has_risen_still_further (since (seit)) (the_publication_of_their_article,_the_gold_price_has_risen_still_further (the_publication_of_their_article,_the_gold_price_is_risen_still_further (the_publication_of_their_article (the_publication (the (der)) (publication (Veröffentlichung)) ) (their_article (their (ihrer)) (article (Artikel))))(the_gold_price_is_risen_still_further (the_gold_price_is (is (ist)) (the_gold_price (the (der)) (gold_price (Goldpreis)))) (risen_still_further (still_further (still (noch)) (further (weiter))) (risen (gestiegen))))))) (. (.)))"
     var items = parsePhraseTree(phraseTreeStr);
     var rootPhraseNode = items[0]
@@ -87,6 +86,7 @@ function getleaves(rootPhraseTree) {
     while (_stack.length > 0) {
         pn = _stack.pop();
         if (pn.phraseChildren.length == 0) {
+            pn.isLeaf = true;
             leaves.push(pn);
         } else {
             for (var i = pn.phraseChildren.length - 1; i > -1; i--) {
@@ -95,6 +95,7 @@ function getleaves(rootPhraseTree) {
             }
         }
     }
+
     return leaves;
 }
 function parsePhraseTree(phraseTreeStr) {
@@ -161,7 +162,6 @@ function parsePhraseTree(phraseTreeStr) {
     return [rootpn, numNT];
 }
 
-
 function createWordTable(numid, phraseNode, macaronicline) {
     var wordTable = document.createElement("table");
     wordTable.numid = numid
@@ -177,7 +177,14 @@ function createWordTable(numid, phraseNode, macaronicline) {
         for (var j = 0; j < 1; j++) {
             var td = tr.insertCell();
             if (i == 1) {
-                td.innerHTML = wordTable.phraseNode.phrase.replace(/_/g, " ") //+ "," + wordTable.phraseNode.num
+                if (wordTable.phraseNode.isLeaf) {
+                    td.innerHTML = wordTable.phraseNode.phrase.replace(/_/g, " ")
+                    td.style.color = "#E3530D";
+                } else {
+                    td.innerHTML = wordTable.phraseNode.phrase.replace(/_/g, " ") //+ "," + wordTable.phraseNode.num
+                }
+
+
             } else {
                 td.appendChild(document.createTextNode(""));
                 td.id = wordTable.id + ",c," + i.toString();
@@ -242,6 +249,7 @@ function PhraseNode(phrase, parent) {
     this.num = -1;
     this.parent = parent;
     this.wordTable = null;
+    this.isLeaf = false;
     this.phraseChildren = [];
     this.phraseSiblings = [];
     this.addPhraseChild = function (phraseNode) {
@@ -345,6 +353,8 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
 
         var parentPhraseNode = wordTable.phraseNode.parent;
         if (parentPhraseNode != null) {
+            self.isPreviewState = true;
+            //createAndAddPreview(wordTable, true, self)
             self.previewDiv = document.createElement("div")
             self.previewDiv["wordTable"] = wordTable
             //self.previewDiv.style.border = "1px solid black";
@@ -352,7 +362,7 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
             self.previewDiv.id = "previewOverlay" + self.id.toString()
             //$("body").append(self.previewDiv);
             self.lineDiv.appendChild(self.previewDiv)
-            self.isPreviewState = true;
+
             self.previewDiv.appendChild(previewSpan)
 
             previewSpan.innerHTML = parentPhraseNode.phrase.replace(/_/g, " ")
@@ -381,6 +391,9 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
         }
 
         if (wordTable.phraseNode.phraseChildren.length > 0) {
+            self.isPreviewState = true;
+            //createAndAddPreview(wordTable, false, self);
+
             self.previewDiv = document.createElement("div")
             self.previewDiv["wordTable"] = wordTable
             self.previewDiv.id = "previewOverlay" + self.id.toString();
