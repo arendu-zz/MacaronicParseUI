@@ -52,6 +52,34 @@ class Node(object):
             # print 'reached leaf'
             pass
 
+    def add_punct_child(self):
+        leaf_nodes = self.getleaves()
+        for l in leaf_nodes:
+            if l.phrase.strip() == "." or l.phrase.strip() == "!" or l.phrase.strip() == ",":
+                n = Node(l.phrase)
+                l.addchild(n)
+            else:
+                pass
+        return True
+
+
+    def getleaves(self):
+        leaves = []
+        if len(self.children) == 0:
+            leaves.append(self)
+        else:
+            stack = []
+            for c in reversed(self.children):
+                stack.append(c)
+            while len(stack) > 0:
+                pn = stack.pop()
+                if len(pn.children) == 0:
+                    leaves.append(pn)
+                else:
+                    for c in reversed(pn.children):
+                        stack.append(c)
+        return leaves
+
 
 if __name__ == "__main__":
     # hp = open('web/data-for-visualization.txt').read().split('\n\n')
@@ -106,6 +134,7 @@ if __name__ == "__main__":
                 else:
                     sys.stderr.write("this should not happen\n")
         root.remove_redundant()
+        root.add_punct_child()
         if passed:
             print root.get_bracketed_string().strip()
             sys.stderr.write("completed:" + str(f_idx) + "\n\n")

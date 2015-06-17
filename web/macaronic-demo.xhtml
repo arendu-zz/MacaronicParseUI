@@ -11,7 +11,7 @@
     <link href="mycss.css" type="text/css" rel="stylesheet"/>
     <script type="text/javascript" src="jquery-1.11.3.min.js"/>
     <script type="text/javascript" src="jquery-ui.js"/>
-    <script type="text/javascript" src="main.js"/>
+    <script type="text/javascript" src="main2.js"/>
     <script type="text/javascript">
 
         $(document).ready(function () {
@@ -25,6 +25,9 @@
                     slide: function (e, ui) {
 
                         mysliderfunc(ui.value)
+                    },
+                    change: function (e, ui) {
+                        mysliderup(ui.value)
                     }
                 })
             } else {
