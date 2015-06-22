@@ -43,22 +43,31 @@ function startsWith(string1, string2) {
     }
 }
 
+Node.prototype.insertAfter = function (newNode, referenceNode) {
+    return referenceNode.parentNode.insertBefore(
+        newNode, referenceNode.nextSibling);
+};
+
+
 function ready() {
     var i = 0
     NodeList.prototype.forEach = Array.prototype.forEach
     bracket_list.forEach(function (bracket_item) {
 
+        if (i == 4) {
+            console.log("processing ml:" + i.toString())
+            var items = parsePhraseTree(bracket_item);
+            var rootPhraseNode = items[0]
+            var numNT = items[1]
+            var macline = new MacaronicLine(i, rootPhraseNode, numNT)
+            var leaves = getleaves(macline.rootPhraseNode)
+            console.log("doing label swaps...")
+            labelSwaps(macline.rootPhraseNode)
+            console.log("done label swaps...")
+            macline.displayRoot()
+            mllist.push(macline)
 
-        console.log("processing ml:" + i.toString())
-        var items = parsePhraseTree(bracket_item);
-        var rootPhraseNode = items[0]
-        var numNT = items[1]
-        var macline = new MacaronicLine(i, rootPhraseNode, numNT)
-        var leaves = getleaves(macline.rootPhraseNode)
-        macline.displayRoot()
-        mllist.push(macline)
-
-
+        }
         i++
     });
 
@@ -68,88 +77,6 @@ function removeEmptyStrings(val) {
     return !(val == "" || val == " ");
 }
 
-function getleaves(rootPhraseTree) {
-    var _stack = [];
-    var leaves = [];
-    var pn;
-    _stack.push(rootPhraseTree);
-    while (_stack.length > 0) {
-        pn = _stack.pop();
-        if (pn.phraseChildren.length == 0) {
-            pn.isLeaf = true;
-            leaves.push(pn);
-        } else {
-            for (var i = pn.phraseChildren.length - 1; i > -1; i--) {
-                var c = pn.phraseChildren[i];
-                _stack.push(c);
-            }
-        }
-    }
-
-    return leaves;
-}
-function parsePhraseTree(phraseTreeStr) {
-    //"1、2、3".split(/()/g) == ["1", "、", "2", "、", "3"]
-    var numNT = 0;
-    var _phraseTreeList = phraseTreeStr.replace(/\s\s+/g, ' ').split(/(\(|\)|\s)/g).filter(removeEmptyStrings)
-    //console.log(_phraseTreeList);
-    _phraseTreeList.pop();
-    _phraseTreeList.shift(); //discard outter brackets
-    var _stack = [];
-    var item, nextItem, pn, toppn, rootpn;
-    nextItem = _phraseTreeList.shift()
-    pn = new PhraseNode(nextItem, null);
-    _stack.push(pn);
-
-    while (_stack.length > 0 && _phraseTreeList.length > 0) {
-        item = _phraseTreeList.shift()
-        if (item == "(") {
-            nextItem = _phraseTreeList.shift()
-            toppn = _stack[_stack.length - 1];
-
-            pn = new PhraseNode(nextItem, toppn);
-            toppn.addPhraseChild(pn);
-            _stack.push(pn);
-        } else if (item == ")") {
-            rootpn = _stack.pop();
-            for (var c = 0; c < rootpn.phraseChildren.length; c++) {
-                var pc = rootpn.phraseChildren[c];
-                pc.setPhraseSiblings(rootpn.phraseChildren);
-            }
-            //rootpn = _stack[_stack.length - 1];
-            //toppn = _stack[_stack.length - 1];
-            //toppn.addPhraseChild(pn);
-        } else {
-            console.log("should never come here now.....");
-            toppn = _stack[_stack.length - 1];
-            pn = new PhraseNode(item, toppn);
-            toppn.addPhraseChild(pn);
-            _stack.push(pn);
-        }
-    }
-    rootpn = _stack.pop();
-    for (var c = 0; c < rootpn.phraseChildren.length; c++) {
-        var pc = rootpn.phraseChildren[c];
-        pc.setPhraseSiblings(rootpn.phraseChildren);
-    }
-
-    var num = 0;
-    Q = []
-    Q.push(rootpn)
-    while (Q.length > 0) {
-        pn = Q.shift();
-        if (pn.phraseChildren.length > 0) {
-            numNT++;
-        }
-        pn.num = num;
-        num++
-        for (var c = 0; c < pn.phraseChildren.length; c++) {
-            pc = pn.phraseChildren[c]
-            Q.push(pc);
-        }
-    }
-    return [rootpn, numNT];
-}
 
 function createWordTable(numid, phraseNode, macaronicline) {
     var wordTable = document.createElement("table");
@@ -348,10 +275,10 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
             self.previewDiv.id = "previewOverlay" + self.id.toString()
             //$("body").append(self.previewDiv);
             self.lineDiv.appendChild(self.previewDiv)
-
             self.previewDiv.appendChild(previewSpan)
-
             previewSpan.innerHTML = parentPhraseNode.phrase.replace(/_/g, " ")
+            console.log("previewing parent areparentsswaped:" + parentPhraseNode.areParentsSwapped.toString())
+            console.log("previewing parent arechildrenswapped:" + parentPhraseNode.areChildrenSwapped.toString())
             previewSpan.className = 'nonleaf';
             var elem = $(self.previewDiv);
             elem.css({
@@ -386,6 +313,8 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
             self.previewDiv["previewType"] = "children"
             self.previewDiv.id = "previewOverlay" + self.id.toString();
             //self.previewDiv.style.border = "1px solid black";
+            console.log("previewing children areparentsswaped:" + wordTable.phraseNode.areParentsSwapped.toString())
+            console.log("previewing children arechildrenswapped:" + wordTable.phraseNode.areChildrenSwapped.toString())
             for (var i = 0; i < wordTable.phraseNode.phraseChildren.length; i++) {
                 var pn = wordTable.phraseNode.phraseChildren[i];
                 var previewSpan = document.createElement("span")
@@ -401,8 +330,6 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
                     previewSpan.innerHTML = "-"
                     previewSpan.className = "nonleaf"
                     self.previewDiv.appendChild(previewSpan)
-
-
                 }
             }
             //$("body").append(self.previewDiv);
@@ -453,6 +380,7 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
                 var pn = wordTable.phraseNode.phraseChildren[i];
                 var cwt = createWordTable(currentid + i, pn, self);
                 containerDiv.insertBefore(cwt, wordTable);
+                //containerDiv.insertAfter(cwt, wordTable);
             }
             containerDiv.removeChild(wordTable);
             self.redoIds(containerDiv);

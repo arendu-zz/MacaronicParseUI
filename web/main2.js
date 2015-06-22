@@ -5,9 +5,17 @@
 
 var mllist = []
 var bracket_list = ["(﻿Dear_parents, (Dear (Liebe))  (parents, (parents (Eltern))  (, (! (!)))))",
-    "(Now_I_really_have_to_write_you_again! (Now (Jetzt))  (I_really_have_to_write_you_again! (I_really_have_to_write_you_again (I_really_have_to (I_have_to (I_must (must (muss))  (I (ich)))))  (write_you_again (you (euch))  (write_again (really (but (aber))  (really (wirklich)))  (write_again (again (again (wieder))  (once (einmal)))  (write (schreiben))))))  (! (!))))",
-    "(I've_seen_so_many_things_that_I_don't_know_where_to_start (I've_seen_so_many_things_that_I_don't_know_where_to_start. (I've_seen_so_many_things_that_I_don't_know_where_to_start (I've_seen_so_many_things (I've (I_have (I (Ich))  (have (habe))))  (seen_so_many_things (seen_so_many_things (so_many_things (so_much (so)  (much (viel))))  (seen (gesehen)))  (, (,))))  (that_I_don't_know_where_to_start (that (dass))  (I_don't_know_where_to_start (I_don't_know_where_I_should_begin (I_don't_know (I_don't_know (I_don't (I (ich))  (not (really (gar))  (not (nicht))))  (know (weiß)))  (, (,)))  (where_I_should_begin (where (wo))  (I_should_begin (I (ich))  (should_begin (begin (beginnen))  (should (soll)))))))))  (. (.))))",
-    "(A_week_ago_I_was_still_with_our_student_group_in_Passau. (A_week_ago_I_was_still_with_our_student_group_in_Passau (A_week_ago (Ago (Vor))  (a_week (one_week (one (einer))  (week (Woche)))))  (I_was_still_with_our_student_group_in_Passau (I_was (was (war))  (I (ich)))  (still_with_our_student_group_in_Passau (still_with_our_student_group (with_our_student_group (with (mit))  (our_student_group (our (unserer))  (student_group (Studentengruppe))))  (still (noch)))  (in_Passau (in)  (Passau)))))  (. (.)))", "(From_there,_we_took_a_boat_trip_down_the_Danube. (From_there,_we_took_a_boat_trip_down_the_Danube (From_there (From (Von))  (there (dort)))  (we_took_a_boat_trip_down_the_Danube (we (are (sind))  (we (wir)))  (took_a_boat_trip_down_the_Danube (went_down_the_Danube_with_the_ship (with_the_ship (with (mit))  (the_ship (the (dem))  (ship (Schiff))))  (went_down_the_Danube (the_Danube (the (die))  (Danube (Donau)))  (went_down (hinuntergefahren)))))))  (. (.)))", "(I_really_liked_the_vineyards,_castles,_and_especially_Melk_Monastery. (I_really_liked_the_vineyards,_castles_and_especially_Melk_Monastery. (I_really_liked_the_vineyards,_castles_and_especially_Melk_Monastery (The_vineyards,_castles_and_especially_Melk_Monastery (The_vineyards, (The_vineyards (The (Die))  (vineyards (Weinberge)))  (, (,)))  (castles_and_especially_Melk_Monastery (castles (Burgen))  (and_especially_Melk_Monastery (and (und))  (especially_Melk_Monastery (especially (besonders))  (Melk_Monastery (Monastery (Kloster))  (Melk))))))  (I_really_liked (have (haben))  (I_really_liked (I_really (I (me (mir)))  (really (very_good (very (sehr))  (good (gut)))))  (liked (pleased (gefallen))))))  (. (.))))", "(The_weather_has_also_been_very_nice. (The_weather_has_also_been_very_nice (The_weather (The (Das))  (weather (Wetter)))  (has_also_been_very_nice (has (is (ist)))  (also_been_very_nice (also (auch))  (been_very_nice (very_nice (very (sehr))  (nice (schön)))  (been (gewesen))))))  (. (.)))", "(We_have_been_in_Vienna_for_a_couple_of_days. (We_have_been_in_Vienna_for_a_couple_of_days (We_have_been (Now (Jetzt))  (we_have_been (we_have_been (we_have (we_are (are (sind))  (we (wir)))))  (already (schon))))  (in_Vienna_for_a_couple_of_days (a_couple_of_days (a (ein))  (couple_of_days (couple (pair (paar)))  (days (Tage))))  (in_Vienna (in)  (Vienna (Wien)))))  (. (.)))", "(I_think_it_is_great_here! (I_think_it_is_great_here (I (Ich))  (think_it_is_great_here (think (find (finde)))  (it_is_great_here (it_is_great (it_is (it (es)))  (great (toll)))  (here (hier)))))  (! (!)))", "(Our_guest_house_is_very_centrally_located_and_we_can_get_everywhere_by_foot_or_by_subway. (Our_guest_house_is_very_centrally_located_and_we_can_get_everywhere_by_foot_or_by_subway (Our_guest_house_is_very_centrally_located (Our_guest_house (Our (Unser))  (guest_house (Gästehaus)))  (very_centrally_located (very_central_lies (lies (liegt))  (very_central (very (sehr))  (central (zentral))))))  (and_we_can_get_everywhere_by_foot_or_by_subway (and (und))  (we_can_get_everywhere_by_foot_or_by_subway (we (wir))  (can_get_everywhere_by_foot_or_by_subway (can (können))  (get_everywhere_by_foot_or_by_subway (reach_everywhere_by_foot_or_by_subway (everywhere_by_foot_or_by_subway (everywhere (all (alles)))  (by_foot_or_by_subway (by_foot (by (zu))  (foot (Fuß)))  (or_by_subway (or (oder))  (by_subway (with_the_subway (with (mit))  (the_subway (the (der))  (subway (U-Bahn))))))))  (reach (erreichen))))))))  (. (.)))", "(I_have_never_walked_so_much_in_my_life! (I_have_never_walked_so_much (So_much (So)  (much (viel)))  (I_have_never_walked (I_have_never (I_have (have (am (bin)))  (I (ich)))  (never (still (noch))  (never (nie))))  (walked (gelaufen))))  (! (!)))", "(On_Friday_we_spent_hours_strolling_around_the_city_center. (On_Friday_we_spent_hours_strolling_around_the_city_center (On_Friday (On (Am))  (Friday (Freitag)))  (we_spent_hours_strolling_around_the_city_center (we_spent_hours (we_spent (we_are (are (sind))  (we (wir))))  (hours_long (stundenlang)))  (strolling_around_the_city_center (strolled_around_the_city_center (around_the_city_center (through_the_city_center (through (durch))  (the_city_center (the (die))  (city_center (Innenstadt)))))  (strolled (gebummelt))))))  (. (.)))"]
+    "(Now_I_really_have_to_write_you_again_! (Now (Jetzt))  (I_really_have_to_write_you_again_! (I_really_have_to_write_you_again (I_really_have_to (I_have_to (I_must (must (muss))  (I (ich)))))  (write_you_again (you (euch))  (write_again (really (but (aber))  (really (wirklich)))  (write_again (again (again (wieder))  (once (einmal)))  (write (schreiben))))))  (! (!))))",
+    "(I've_seen_so_many_things_that_I_don't_know_where_to_start_. (I've_seen_so_many_things_that_I_don't_know_where_to_start (I've_seen_so_many_things (I've (I_have (I (Ich))  (have (habe))))  (seen_so_many_things (seen_so_many_things (so_many_things (so_much (so)  (much (viel))))  (seen (gesehen)))  (, (,))))  (that_I_don't_know_where_to_start (that (dass))  (I_don't_know_where_to_start (I_don't_know_where_I_should_begin (I_don't_know (I_don't_know (I_don't (I (ich))  (not (really (gar))  (not (nicht))))  (know (weiß)))  (, (,)))  (where_I_should_begin (where (wo))  (I_should_begin (I (ich))  (should_begin (begin (beginnen))  (should (soll)))))))))  (. (.)))",
+    "(A_week_ago_I_was_still_with_our_student_group_in_Passau_. (A_week_ago_I_was_still_with_our_student_group_in_Passau (A_week_ago (Ago (Vor))  (a_week (one_week (one (einer))  (week (Woche)))))  (I_was_still_with_our_student_group_in_Passau (I_was (was (war))  (I (ich)))  (still_with_our_student_group_in_Passau (still_with_our_student_group (with_our_student_group (with (mit))  (our_student_group (our (unserer))  (student_group (Studentengruppe))))  (still (noch)))  (in_Passau (in)  (Passau)))))  (. (.)))",
+    "(From_there,_we_took_a_boat_trip_down_the_Danube_. (From_there,_we_took_a_boat_trip_down_the_Danube (From_there (From (Von))  (there (dort)))  (we_took_a_boat_trip_down_the_Danube (we (are (sind))  (we (wir)))  (took_a_boat_trip_down_the_Danube (went_down_the_Danube_with_the_ship (with_the_ship (with (mit))  (the_ship (the (dem))  (ship (Schiff))))  (went_down_the_Danube (the_Danube (the (die))  (Danube (Donau)))  (went_down (hinuntergefahren)))))))  (. (.)))",
+    "(I_really_liked_the_vineyards,_castles_and_especially_Melk_Monastery_. (I_really_liked_the_vineyards,_castles_and_especially_Melk_Monastery (The_vineyards,_castles_and_especially_Melk_Monastery (The_vineyards, (The_vineyards (The (Die))  (vineyards (Weinberge)))  (, (,)))  (castles_and_especially_Melk_Monastery (castles (Burgen))  (and_especially_Melk_Monastery (and (und))  (especially_Melk_Monastery (especially (besonders))  (Melk_Monastery (Monastery (Kloster))  (Melk))))))  (I_really_liked (have (haben))  (I_really_liked (I_really (I (me (mir)))  (really (very_good (very (sehr))  (good (gut)))))  (liked (pleased (gefallen))))))  (. (.)))",
+    "(The_weather_has_also_been_very_nice_. (The_weather_has_also_been_very_nice (The_weather (The (Das))  (weather (Wetter)))  (has_also_been_very_nice (has (is (ist)))  (also_been_very_nice (also (auch))  (been_very_nice (very_nice (very (sehr))  (nice (schön)))  (been (gewesen))))))  (. (.)))",
+    "(We_have_been_in_Vienna_for_a_couple_of_days_. (We_have_been_in_Vienna_for_a_couple_of_days (We_have_been (Now (Jetzt))  (we_have_been (we_have_been (we_have (we_are (are (sind))  (we (wir)))))  (already (schon))))  (in_Vienna_for_a_couple_of_days (a_couple_of_days (a (ein))  (couple_of_days (couple (pair (paar)))  (days (Tage))))  (in_Vienna (in)  (Vienna (Wien)))))  (. (.)))",
+    "(I_think_it_is_great_here_! (I_think_it_is_great_here (I (Ich))  (think_it_is_great_here (think (find (finde)))  (it_is_great_here (it_is_great (it_is (it (es)))  (great (toll)))  (here (hier)))))  (! (!)))",
+    "(Our_guest_house_is_very_centrally_located_and_we_can_get_everywhere_by_foot_or_by_subway_. (Our_guest_house_is_very_centrally_located_and_we_can_get_everywhere_by_foot_or_by_subway (Our_guest_house_is_very_centrally_located (Our_guest_house (Our (Unser))  (guest_house (Gästehaus)))  (very_centrally_located (very_central_lies (lies (liegt))  (very_central (very (sehr))  (central (zentral))))))  (and_we_can_get_everywhere_by_foot_or_by_subway (and (und))  (we_can_get_everywhere_by_foot_or_by_subway (we (wir))  (can_get_everywhere_by_foot_or_by_subway (can (können))  (get_everywhere_by_foot_or_by_subway (reach_everywhere_by_foot_or_by_subway (everywhere_by_foot_or_by_subway (everywhere (all (alles)))  (by_foot_or_by_subway (by_foot (by (zu))  (foot (Fuß)))  (or_by_subway (or (oder))  (by_subway (with_the_subway (with (mit))  (the_subway (the (der))  (subway (U-Bahn))))))))  (reach (erreichen))))))))  (. (.)))",
+    "(I_have_never_walked_so_much_in_my_life_! (I_have_never_walked_so_much (So_much (So)  (much (viel)))  (I_have_never_walked (I_have_never (I_have (have (am (bin)))  (I (ich)))  (never (still (noch))  (never (nie))))  (walked (gelaufen))))  (! (!)))",
+    "(On_Friday_we_spent_hours_strolling_around_the_city_center_. (On_Friday_we_spent_hours_strolling_around_the_city_center (On_Friday (On (Am))  (Friday (Freitag)))  (we_spent_hours_strolling_around_the_city_center (we_spent_hours (we_spent (we_are (are (sind))  (we (wir))))  (hours_long (stundenlang)))  (strolling_around_the_city_center (strolled_around_the_city_center (around_the_city_center (through_the_city_center (through (durch))  (the_city_center (the (die))  (city_center (Innenstadt)))))  (strolled (gebummelt))))))  (. (.)))"]
 
 function mysliderup(valnum) {
     console.log("mouse up on slider" + valnum.toString())
@@ -220,7 +228,6 @@ function createWordTable(numid, phraseNode, macaronicline) {
 }
 
 
-
 function MacaronicLine(lineid, rootPhraseNode, numNT) {
     var self = this
     self.id = lineid
@@ -277,8 +284,34 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
         e.stopPropagation();
     }
 
-    self.previewParent = function (wordTable, top, left) {
+    self.previewParent = function (wordTable) {
+        var left = 10000
+        var top = 10000
+        var parentPhraseNode = wordTable.phraseNode.parent;
+        var containerDiv = wordTable.parentNode;
+        var children = containerDiv.childNodes;
+        /*
+         get the top and left position for preview box
+         */
+        NodeList.prototype.forEach = Array.prototype.forEach
+        children.forEach(function (item) {
+            if (startsWith(item.id, "previewOverlay")) {
 
+            } else {
+                var pn = item.phraseNode;
+                if (pn.isMyAncestor(parentPhraseNode)) {
+                    item.lightHighlight(0);
+                    var jtdpos = item.getTopLeftCoordinate();
+                    if (jtdpos.left < left) {
+                        left = jtdpos.left
+                    }
+                    if (jtdpos.top < top) {
+                        top = jtdpos.top
+                    }
+                }
+            }
+
+        });
 
         if (self.previewDiv != null) {
             self.previewDiv.wordTable.unLightHighlight(0)
@@ -376,34 +409,7 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
 
     self.highlightWordTable = function (wordTable, rownum) {
         if (rownum == 0) {
-            var left = 10000
-            var top = 10000
-            var parentWordTable = wordTable.phraseNode.parent;
-            var containerDiv = wordTable.parentNode;
-            var children = containerDiv.childNodes;
-            /*
-             get the top and left position for prevew box
-             */
-            NodeList.prototype.forEach = Array.prototype.forEach
-            children.forEach(function (item) {
-                if (startsWith(item.id, "previewOverlay")) {
-
-                } else {
-                    var pn = item.phraseNode;
-                    if (pn.isMyAncestor(parentWordTable)) {
-                        item.lightHighlight(rownum);
-                        var jtdpos = item.getTopLeftCoordinate();
-                        if (jtdpos.left < left) {
-                            left = jtdpos.left
-                        }
-                        if (jtdpos.top < top) {
-                            top = jtdpos.top
-                        }
-                    }
-                }
-
-            });
-            self.previewParent(wordTable, top, left);
+            self.previewParent(wordTable);
         } else {
             wordTable.lightHighlight(rownum);
             self.previewChildren(wordTable)

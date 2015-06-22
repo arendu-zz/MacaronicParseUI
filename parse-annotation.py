@@ -84,6 +84,7 @@ class Node(object):
 if __name__ == "__main__":
     # hp = open('web/data-for-visualization.txt').read().split('\n\n')
     hp = open('web/Wien.txt').read().split('---')
+    finallist = []
     for f_idx, f in enumerate(hp):
         f = f.strip()
         f = f.split('\n')
@@ -135,8 +136,10 @@ if __name__ == "__main__":
                     sys.stderr.write("this should not happen\n")
         root.remove_redundant()
         root.add_punct_child()
+
         if passed:
-            print root.get_bracketed_string().strip()
+            finallist.append('"' + root.get_bracketed_string().strip() + '"')
             sys.stderr.write("completed:" + str(f_idx) + "\n\n")
         else:
             sys.stderr.write("failed:" + str(f_idx) + "\n\n")
+    print '[' + ',\n'.join(finallist) + ']'
