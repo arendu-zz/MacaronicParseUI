@@ -53,21 +53,17 @@ function ready() {
     var i = 0
     NodeList.prototype.forEach = Array.prototype.forEach
     bracket_list.forEach(function (bracket_item) {
-
-        if (i == 4) {
-            console.log("processing ml:" + i.toString())
-            var items = parsePhraseTree(bracket_item);
-            var rootPhraseNode = items[0]
-            var numNT = items[1]
-            var macline = new MacaronicLine(i, rootPhraseNode, numNT)
-            var leaves = getleaves(macline.rootPhraseNode)
-            console.log("doing label swaps...")
-            labelSwaps(macline.rootPhraseNode)
-            console.log("done label swaps...")
-            macline.displayRoot()
-            mllist.push(macline)
-
-        }
+        console.log("processing ml:" + i.toString())
+        var items = parsePhraseTree(bracket_item);
+        var rootPhraseNode = items[0]
+        var numNT = items[1]
+        var macline = new MacaronicLine(i, rootPhraseNode, numNT)
+        var leaves = getleaves(macline.rootPhraseNode)
+        console.log("doing label swaps...")
+        labelSwaps(macline.rootPhraseNode)
+        console.log("done label swaps...")
+        macline.displayRoot()
+        mllist.push(macline)
         i++
     });
 
@@ -88,26 +84,54 @@ function createWordTable(numid, phraseNode, macaronicline) {
     wordTable.style.display = "inline-block";
     wordTable.style.float = "left";
     wordTable.highlighted = false;
+    wordTable["s1"] = null
+    wordTable["s2"] = null
+    var j_size = phraseNode.phrasePart2 == null ? 1 : 2;
     for (var i = 0; i < 3; i++) {
         var tr = wordTable.insertRow();
-        for (var j = 0; j < 1; j++) {
+        for (var j = 0; j < j_size; j++) {
             var td = tr.insertCell();
             if (i == 1) {
-
-                td.innerHTML = wordTable.phraseNode.phrase.replace(/_/g, " ")
-
+                //td.innerHTML = wordTable.phraseNode.phrase.replace(/_/g, " ")
+                var s
+                s = document.createElement("span")
+                if (j == 0) {
+                    s.innerHTML = wordTable.phraseNode.phrasePart1.replace(/_/g, " ")
+                    wordTable["s1"] = s
+                    s["s_phrasepart"] = wordTable.phraseNode.phrasePart1
+                } else {
+                    s.innerHTML = wordTable.phraseNode.phrasePart2.replace(/_/g, " ")
+                    wordTable["s2"] = s
+                    s["s_phrasepart"] = wordTable.phraseNode.phrasePart2
+                }
+                td.appendChild(s)
+                s.addEventListener("mouseover", macaronicline.showInternalArrow, false)
+                s.addEventListener("mouseout", macaronicline.removeInternalArrow, false)
+                s["wordTable"] = wordTable
                 td.className = wordTable.phraseNode.isLeaf ? 'leaf' : 'nonleaf'
-
                 td.height = "20px";
             } else {
                 td.appendChild(document.createTextNode(""));
                 td.id = wordTable.id + ",c," + i.toString();
                 td["rownum"] = i
                 td.addEventListener("click", macaronicline.spanClicked, false);
-                td.addEventListener("mouseover", macaronicline.highlight, false);
-                td.addEventListener("mouseout", macaronicline.unhighlight, false);
+
+                if (i == 0) {
+                    //td.addEventListener("mouseover", macaronicline.showInternalArrow, false)
+                    //td.addEventListener("mouseout", macaronicline.removeInternalArrow, false)
+                    td.addEventListener("mouseover", macaronicline.highlight, false);
+                    td.addEventListener("mouseout", macaronicline.unhighlight, false);
+                } else {
+                    td.addEventListener("mouseover", macaronicline.highlight, false);
+                    td.addEventListener("mouseout", macaronicline.unhighlight, false);
+                }
+                if (j == 0) {
+                    td["s_phrasepart"] = wordTable.phraseNode.phrasePart1
+                } else {
+                    td["s_phrasepart"] = wordTable.phraseNode.phrasePart2
+                }
                 td.height = "20px";
-                td["wordtable"] = wordTable;
+                td["wordTable"] = wordTable;
 
             }
             //td.style.border = "1px solid black";
@@ -121,6 +145,21 @@ function createWordTable(numid, phraseNode, macaronicline) {
     wordTable.getTopLeftCoordinate = function () {
         var jtd = $(this.rows[0].cells[0])
         return jtd.offset();
+    }
+
+    wordTable.getS1Coordinate = function () {
+        var jtd = $(this.s1)
+        return [jtd.offset().top, jtd.offset().left, this.s1.offsetHeight, this.s1.offsetWidth]
+    }
+
+    wordTable.getS2Coordinate = function () {
+        if (this.s2 != null) {
+            var jtd = $(this.s2)
+            return [jtd.offset().top, jtd.offset().left, this.s2.offsetHeight, this.s2.offsetWidth]
+        } else {
+            return null
+        }
+
     }
 
     wordTable.getBottomCellCoordinate = function () {
@@ -142,11 +181,6 @@ function createWordTable(numid, phraseNode, macaronicline) {
         this.rows[1].cells[0].style.opacity = 0.3
     }
 
-    wordTable.setPhraseNode = function (newPhraseNode) {
-        this.phraseNode = newPhraseNode;
-        this.rows[1].cells[0].innerHTML = this.phraseNode.phrase.replace(/_/g, " ") //+ "," + this.phraseNode.num
-    }
-
     wordTable.setNewId = function (newId) {
         this.numid = newId
         this.id = 'ml,' + this.macaronicline.id.toString() + ',wt,' + this.numid.toString();
@@ -165,6 +199,7 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
     self["numSteps"] = numNT * 2
     self["stepSize"] = parseInt(100 / self.numSteps)
     self["previewDiv"] = null
+    self["previewArrows"] = null
     self["prevDirection"] = "going forward"
     self["prevZone"] = 0
     self["prevValNum"] = 0
@@ -172,6 +207,8 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
     self["lineDiv"] = document.createElement("div");
     self.lineDiv.class = "macaronicLine"
     self["isPreviewState"] = false
+    self["source_span"] = null
+    self["dest_span"] = null
 
     this.lineDiv.id = "lineDiv" + lineid.toString()
     self["rootPhraseNode"] = rootPhraseNode
@@ -202,9 +239,82 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
 
     }
 
+    self.removeInternalArrow = function () {
+        console.log("trying to remove arrow")
+        if (self.previewArrows != null) {
+            //delete self.previewArrows
+
+            $(self.previewArrows).remove()
+            self.previewArrows = null
+        }
+
+        if (self.source_span != null) {
+            self.source_span.className = "hasNoArrow"
+            self.source_span = null
+        }
+
+        if (self.dest_span != null) {
+            self.dest_span.className = "hasNoArrow"
+            self.dest_span = null
+        }
+    }
+
+    self.showInternalArrow = function (e) {
+        var wordTable = e.target.wordTable
+        var source_span, dest_span
+        var source_offset, dest_offset
+        if (e.target.s_phrasepart == wordTable.phraseNode.phrasePart1) {
+            console.log("s1 is the source of the arrow")
+            source_span = wordTable.s1
+            dest_span = wordTable.s2
+            source_offset = wordTable.getS1Coordinate();
+            dest_offset = wordTable.getS2Coordinate();
+        } else if (e.target.s_phrasepart == wordTable.phraseNode.phrasePart2) {
+            console.log("s2 is the source of the arrow")
+            source_span = wordTable.s2
+            dest_span = wordTable.s1
+            source_offset = wordTable.getS2Coordinate();
+            dest_offset = wordTable.getS1Coordinate();
+        } else {
+            console.log(e.target.s_phrasepart + " compared to phrase part 1 " + wordTable.phrasePart1)
+            console.log(e.target.s_phrasepart + " compared to phrase part 2 " + wordTable.phrasePart2)
+        }
+
+        if (dest_span != null && source_span != null) {
+            console.log("draw a arraw from source:" + source_span.innerText + " to " + dest_span.innerText)
+
+            if (self.previewArrows != null) {
+                var p = self.previewArrows.parentNode
+                if (p != null) {
+                    p.removeChild(self.previewArrows);
+                }
+                self.previewArrows = null
+            }
+            var curve_point_x = dest_offset[1] > source_offset[1] ? dest_offset[1] : source_offset[1]
+            self.previewArrows = $(self.lineDiv).curvedArrow({
+                p0x: source_offset[1] + source_offset[3] / 2,
+                p0y: source_offset[0],
+                p1x: curve_point_x,
+                p1y: source_offset[0] - 50,
+                p2x: dest_offset[1] + dest_offset[3] / 2,
+                p2y: dest_offset[0],
+                id: "previewOverlayArrow"
+            })
+            $(self.lineDiv).append(self.previewArrows)
+            source_span.className = "hasarrow"
+            dest_span.className = "hasarrow"
+            self.source_span = source_span
+            self.dest_span = dest_span
+        } else {
+            console.log("no internal arrow can be drawn")
+        }
+
+    }
+
+
     self.spanClicked = function (e) {
         console.log("a span has been clicked:" + e.target.id);
-        var wordTable = e.target.wordtable
+        var wordTable = e.target.wordTable
         console.log("span clicked event: its wt is ml class:" + wordTable.id);
         var rownum = e.target.rownum
         var pn = wordTable.phraseNode;
@@ -220,9 +330,13 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
             self.goUpToParent(wordTable);
         }
         self.unhighlight(e);
+        self.removeInternalArrow()
         e.stopPropagation();
     }
 
+    self.showExternalArrow = function (e) {
+
+    }
     self.previewParent = function (wordTable) {
         var left = 10000
         var top = 10000
@@ -277,8 +391,7 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
             self.lineDiv.appendChild(self.previewDiv)
             self.previewDiv.appendChild(previewSpan)
             previewSpan.innerHTML = parentPhraseNode.phrase.replace(/_/g, " ")
-            console.log("previewing parent areparentsswaped:" + parentPhraseNode.areParentsSwapped.toString())
-            console.log("previewing parent arechildrenswapped:" + parentPhraseNode.areChildrenSwapped.toString())
+            console.log("previewing parent areparentsswaped:" + wordTable.phraseNode.areParentsSwapped.toString())
             previewSpan.className = 'nonleaf';
             var elem = $(self.previewDiv);
             elem.css({
@@ -289,6 +402,33 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
             });
         }
 
+    }
+
+    self.previewChildrenInternalSwapArrows = function (wordTable) {
+        if (self.previewArrows != null) {
+            var p = self.previewArrows.parentNode
+            if (p != null) {
+                p.removeChild(self.previewArrows)
+            }
+            self.previewArrows = null
+        }
+
+        var pn = wordTable.phraseNode
+        var s1offset = wordTable.getS1Coordinate();
+        var s2offset = wordTable.getS2Coordinate();
+
+        console.log("cmon draw an arrow!!")
+        //[jtd.offset().top, jtd.offset().left, this.s1.offsetHeight, this.s1.offsetWidth]
+        self.previewArrows = $(self.lineDiv).curvedArrow({
+            p0x: s1offset[1] + s1offset[3] / 2,
+            p0y: s1offset[0],
+            p1x: s2offset[1],
+            p1y: s1offset[0] - 50,
+            p2x: s2offset[1] + s2offset[3] / 2,
+            p2y: s2offset[0],
+            id: "previewOverlayArrow"
+        })
+        $(self.lineDiv).append(self.previewArrows)
     }
 
     self.previewChildren = function (wordTable) {
@@ -313,8 +453,8 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
             self.previewDiv["previewType"] = "children"
             self.previewDiv.id = "previewOverlay" + self.id.toString();
             //self.previewDiv.style.border = "1px solid black";
-            console.log("previewing children areparentsswaped:" + wordTable.phraseNode.areParentsSwapped.toString())
             console.log("previewing children arechildrenswapped:" + wordTable.phraseNode.areChildrenSwapped.toString())
+
             for (var i = 0; i < wordTable.phraseNode.phraseChildren.length; i++) {
                 var pn = wordTable.phraseNode.phraseChildren[i];
                 var previewSpan = document.createElement("span")
@@ -361,7 +501,7 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
     }
 
     self.highlight = function (e) {
-        var wordTable = e.target.wordtable
+        var wordTable = e.target.wordTable
         console.log("highlight event: its wt is ml class:" + wordTable.id);
         self.highlightWordTable(wordTable, e.target.rownum)
         e.stopImmediatePropagation();
@@ -437,7 +577,7 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
 
             } else {
                 item.setNewId(i);
-                item.setPhraseNode(item.phraseNode);//just for debugging
+                //item.setPhraseNode(item.phraseNode);//just for debugging
                 i++;
             }
 
@@ -446,7 +586,7 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
 
 
     self.unhighlight = function (e) {
-        var wordTable = e.target.wordtable
+        var wordTable = e.target.wordTable
         console.log("unhiligh event: its wt is ml class:" + wordTable.id);
         self.unhighlightWordTable(wordTable, e.target.rownum)
         e.stopImmediatePropagation()

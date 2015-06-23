@@ -12,8 +12,10 @@
     <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"/>
     <script type="text/javascript"
             src="jquery.curvedarrow.js"/>
-    <script type="text/javascript" src="main-inverse.js"/>
+    <script type="text/javascript" src="treemethods.js"/>
+    <script type="text/javascript" src="main-arrow.js"/>
     <script type="text/javascript" src="phrasenode.js"/>
+    <script type="text/javascript" src="jquery.curvedarrow.js"/>
     <script type="text/javascript">
 
         $(document).ready(function () {
@@ -35,8 +37,19 @@
                 alert("no jquery ui")
             }
             $("#slider").slider('value', 100);
-            ready();
 
+            ready();
+            var curvedLine = $('#arrowdiv').curvedArrow({
+                p0x: 100,
+                p0y: 0,
+                p1x: 200,
+                p1y: 500,
+                p2x: 100,
+                p2y: 900,
+                id: "thisarrow"
+            })
+
+            //$('#arrowdiv').append(curvedLine)
 
         });
 
