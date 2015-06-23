@@ -7,12 +7,13 @@
             p1y: 10,
             p2x: 100,
             p2y: 100,
-            size: 30,
-            lineWidth: 1,
-            strokeStyle: 'blue'
+            size: 12,
+            lineWidth: 2,
+            strokeStyle: 'grey'
         }, options);
 
         var canvas = document.createElement('canvas');
+        canvas.id = options.id
         //$(canvas).appendTo(this); I should be in control of how/when it adds
 
         var x_min_max = quadraticCurveMinMax(settings.p0x, settings.p1x, settings.p2x);

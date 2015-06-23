@@ -106,7 +106,9 @@ function createWordTable(numid, phraseNode, macaronicline) {
                 }
                 td.appendChild(s)
                 s.addEventListener("mouseover", macaronicline.showInternalArrow, false)
-                s.addEventListener("mouseout", macaronicline.removeInternalArrow, false)
+                s.addEventListener("mouseover", macaronicline.showExternalArrow, false)
+                s.addEventListener("mouseout", macaronicline.removeExternalArrow, false)
+                td.addEventListener("mouseout", macaronicline.removeInternalArrow, false)
                 s["wordTable"] = wordTable
                 td.className = wordTable.phraseNode.isLeaf ? 'leaf' : 'nonleaf'
                 td.height = "20px";
@@ -117,13 +119,15 @@ function createWordTable(numid, phraseNode, macaronicline) {
                 td.addEventListener("click", macaronicline.spanClicked, false);
 
                 if (i == 0) {
-                    //td.addEventListener("mouseover", macaronicline.showInternalArrow, false)
-                    //td.addEventListener("mouseout", macaronicline.removeInternalArrow, false)
-                    td.addEventListener("mouseover", macaronicline.highlight, false);
-                    td.addEventListener("mouseout", macaronicline.unhighlight, false);
+                    td.addEventListener("mouseover", macaronicline.showInternalArrow, false)
+                    td.addEventListener("mouseout", macaronicline.removeInternalArrow, false)
+                    //td.addEventListener("mouseover", macaronicline.highlight, false);
+                    //td.addEventListener("mouseout", macaronicline.unhighlight, false);
                 } else {
-                    td.addEventListener("mouseover", macaronicline.highlight, false);
-                    td.addEventListener("mouseout", macaronicline.unhighlight, false);
+                    //td.addEventListener("mouseover", macaronicline.highlight, false);
+                    //td.addEventListener("mouseout", macaronicline.unhighlight, false);
+                    td.addEventListener("mouseover", macaronicline.showExternalArrow, false)
+                    td.addEventListener("mouseout", macaronicline.removeExternalArrow, false)
                 }
                 if (j == 0) {
                     td["s_phrasepart"] = wordTable.phraseNode.phrasePart1
@@ -162,6 +166,11 @@ function createWordTable(numid, phraseNode, macaronicline) {
 
     }
 
+    wordTable.getMiddleRowCooordinate = function () {
+        var jtd = $(this.rows[1])
+        return [jtd.offset().top, jtd.offset().left, this.rows[1].offsetHeight, this.rows[1].offsetWidth]
+    }
+
     wordTable.getBottomCellCoordinate = function () {
         var jtd = $(this.rows[2].cells[0])
         return jtd.offset();
@@ -179,6 +188,14 @@ function createWordTable(numid, phraseNode, macaronicline) {
         this.rows[position].cells[0].style.opacity = 0.0
         this.rows[position].cells[0].style.backgroundColor = "grey"
         this.rows[1].cells[0].style.opacity = 0.3
+    }
+
+    wordTable.setHasArrowOnRow = function () {
+        this.rows[1].className = "hasarrow"
+    }
+
+    wordTable.removeHasArrowOnRow = function () {
+        this.rows[1].className = "hasNoarrow"
     }
 
     wordTable.setNewId = function (newId) {
@@ -199,7 +216,8 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
     self["numSteps"] = numNT * 2
     self["stepSize"] = parseInt(100 / self.numSteps)
     self["previewDiv"] = null
-    self["previewArrows"] = null
+    self["previewArrowsToChildrenNodes"] = null
+    self["previewArrowsToParentNodes"] = null
     self["prevDirection"] = "going forward"
     self["prevZone"] = 0
     self["prevValNum"] = 0
@@ -209,6 +227,8 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
     self["isPreviewState"] = false
     self["source_span"] = null
     self["dest_span"] = null
+    self["source_wordTable"] = null
+    self["dest_wordTable"] = null
 
     this.lineDiv.id = "lineDiv" + lineid.toString()
     self["rootPhraseNode"] = rootPhraseNode
@@ -240,12 +260,12 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
     }
 
     self.removeInternalArrow = function () {
-        console.log("trying to remove arrow")
-        if (self.previewArrows != null) {
-            //delete self.previewArrows
+        console.log("trying to remove internal arrow")
+        if (self.previewArrowsToChildren != null) {
+            //delete self.previewArrowsToChildren
 
-            $(self.previewArrows).remove()
-            self.previewArrows = null
+            $(self.previewArrowsToChildren).remove()
+            self.previewArrowsToChildren = null
         }
 
         if (self.source_span != null) {
@@ -258,6 +278,82 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
             self.dest_span = null
         }
     }
+
+    self.removeExternalArrow = function () {
+        console.log("trying to remove external arrow")
+        if (self.previewArrowsToParentNodes != null) {
+            $(self.previewArrowsToParentNodes).remove()
+            self.previewArrowsToParentNodes = null
+        }
+
+        if (self.source_wordTable != null) {
+            self.source_wordTable.removeHasArrowOnRow()
+            self.source_wordTable = null
+        }
+
+        if (self.dest_wordTable != null) {
+            self.dest_wordTable.removeHasArrowOnRow()
+            self.dest_wordTable = null
+        }
+    }
+
+
+    self.showExternalArrow = function (e) {
+        var source_wordTable = e.target.wordTable
+        var pn = source_wordTable.phraseNode
+        var parentPhraseNode = source_wordTable.phraseNode.parent;
+        var containerDiv = source_wordTable.parentNode;
+        var children = containerDiv.childNodes;
+        var sibling_pn = pn.phraseSiblings
+
+        var dest_wordTable = null
+        NodeList.prototype.forEach = Array.prototype.forEach
+        children.forEach(function (item) {
+            if (startsWith(item.id, "previewOverlay")) {
+
+            } else {
+                var pn_item = item.phraseNode;
+                if (pn_item.isMyAncestor(parentPhraseNode) && pn_item != pn) {
+
+                    console.log("in show external arrow: this is a sibling: " + pn_item.phrase)
+                    dest_wordTable = item
+
+                }
+            }
+
+        });
+        if (source_wordTable != null && dest_wordTable != null) {
+            console.log("external arrow from: " + source_wordTable.phraseNode.phrase + " -> " + dest_wordTable.phraseNode.phrase)
+            var source_offset = source_wordTable.getMiddleRowCooordinate()
+            var dest_offset = dest_wordTable.getMiddleRowCooordinate()
+
+            if (self.previewArrowsToParentNodes != null) {
+                var p = self.previewArrowsToParentNodes.parentNode
+                if (p != null) {
+                    p.removeChild(self.previewArrowsToParentNodes);
+                }
+                self.previewArrowsToParentNodes = null
+            }
+            var curve_point_x = dest_offset[1] > source_offset[1] ? dest_offset[1] : source_offset[1]
+            self.previewArrowsToParentNodes = $(self.lineDiv).curvedArrow({
+                p0x: source_offset[1] + source_offset[3] / 2,
+                p0y: source_offset[0] + source_offset[2],
+                p1x: curve_point_x + source_offset[2],
+                p1y: source_offset[0] + source_offset[2] + 50,
+                p2x: dest_offset[1] + dest_offset[3] / 2,
+                p2y: dest_offset[0] + dest_offset[2],
+                id: "previewOverlayArrow"
+            })
+            $(self.lineDiv).append(self.previewArrowsToParentNodes)
+            source_wordTable.setHasArrowOnRow()
+            dest_wordTable.setHasArrowOnRow()
+            self.source_wordTable = source_wordTable
+            self.dest_wordTable = dest_wordTable
+        } else {
+            console.log("no external arrow can be drawn")
+        }
+    }
+
 
     self.showInternalArrow = function (e) {
         var wordTable = e.target.wordTable
@@ -283,15 +379,15 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
         if (dest_span != null && source_span != null) {
             console.log("draw a arraw from source:" + source_span.innerText + " to " + dest_span.innerText)
 
-            if (self.previewArrows != null) {
-                var p = self.previewArrows.parentNode
+            if (self.previewArrowsToChildren != null) {
+                var p = self.previewArrowsToChildren.parentNode
                 if (p != null) {
-                    p.removeChild(self.previewArrows);
+                    p.removeChild(self.previewArrowsToChildren);
                 }
-                self.previewArrows = null
+                self.previewArrowsToChildren = null
             }
             var curve_point_x = dest_offset[1] > source_offset[1] ? dest_offset[1] : source_offset[1]
-            self.previewArrows = $(self.lineDiv).curvedArrow({
+            self.previewArrowsToChildren = $(self.lineDiv).curvedArrow({
                 p0x: source_offset[1] + source_offset[3] / 2,
                 p0y: source_offset[0],
                 p1x: curve_point_x,
@@ -300,7 +396,7 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
                 p2y: dest_offset[0],
                 id: "previewOverlayArrow"
             })
-            $(self.lineDiv).append(self.previewArrows)
+            $(self.lineDiv).append(self.previewArrowsToChildren)
             source_span.className = "hasarrow"
             dest_span.className = "hasarrow"
             self.source_span = source_span
@@ -334,9 +430,7 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
         e.stopPropagation();
     }
 
-    self.showExternalArrow = function (e) {
 
-    }
     self.previewParent = function (wordTable) {
         var left = 10000
         var top = 10000
@@ -405,12 +499,12 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
     }
 
     self.previewChildrenInternalSwapArrows = function (wordTable) {
-        if (self.previewArrows != null) {
-            var p = self.previewArrows.parentNode
+        if (self.previewArrowsToChildren != null) {
+            var p = self.previewArrowsToChildren.parentNode
             if (p != null) {
-                p.removeChild(self.previewArrows)
+                p.removeChild(self.previewArrowsToChildren)
             }
-            self.previewArrows = null
+            self.previewArrowsToChildren = null
         }
 
         var pn = wordTable.phraseNode
@@ -419,7 +513,7 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
 
         console.log("cmon draw an arrow!!")
         //[jtd.offset().top, jtd.offset().left, this.s1.offsetHeight, this.s1.offsetWidth]
-        self.previewArrows = $(self.lineDiv).curvedArrow({
+        self.previewArrowsToChildren = $(self.lineDiv).curvedArrow({
             p0x: s1offset[1] + s1offset[3] / 2,
             p0y: s1offset[0],
             p1x: s2offset[1],
@@ -428,7 +522,7 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
             p2y: s2offset[0],
             id: "previewOverlayArrow"
         })
-        $(self.lineDiv).append(self.previewArrows)
+        $(self.lineDiv).append(self.previewArrowsToChildren)
     }
 
     self.previewChildren = function (wordTable) {

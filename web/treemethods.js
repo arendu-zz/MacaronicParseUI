@@ -32,6 +32,7 @@ function labelSwaps(rootPhraseTree) {
         pn = _stack.pop();
         if (pn.phraseChildren.length == 0) {
             pn.areChildrenSwapped = false
+            pn.phrasePart1 = pn.phrase
         } else {
             for (var i = pn.phraseChildren.length - 1; i > -1; i--) {
                 var c = pn.phraseChildren[i];
@@ -40,26 +41,10 @@ function labelSwaps(rootPhraseTree) {
 
             if (pn.phraseChildren.length == 1) {
                 pn.areChildrenSwapped = false
+                pn.phrasePart1 = pn.phrase
                 var c1 = pn.phraseChildren[0]
                 c1.areParentsSwapped = false
             } else {
-                /*var c1 = pn.phraseChildren[0]
-                 var c2 = pn.phraseChildren[1]
-                 var unswappedphrase = c1.phrase + "_" + c2.phrase
-                 var swappedphrase = c2.phrase + "_" + c1.phrase
-                 var unswappeded = getEditDistance(pn.phrase, unswappedphrase)
-                 var swappeded = getEditDistance(pn.phrase, swappedphrase)
-                 if (unswappeded > swappeded) {
-                 //has swapped
-                 pn.areChildrenSwapped = true
-                 c1.areParentsSwapped = true
-                 c2.areParentsSwapped = true
-                 console.log("a swap registered " + pn.phrase + " swapped:" + swappedphrase + " unswapped:" + unswappedphrase)
-                 } else if (unswappeded != swappeded) {
-                 //console.log("no swap registered " + pn.phrase + " swapped:" + swappedphrase + " unswapped:" + unswappedphrase)
-                 } else {
-                 console.log("ed are same");
-                 }*/
 
                 //find best split
                 var unswapSplit = getBestSplit(pn.phrase, pn.phraseChildren, false)
@@ -70,12 +55,17 @@ function labelSwaps(rootPhraseTree) {
                     console.log(pn.phraseChildren[0].phrase + " + " + pn.phraseChildren[1].phrase)
                     pn.phrasePart1 = swapSplit[1]
                     pn.phrasePart2 = swapSplit[2]
+                    pn.areChildrenSwapped = true
+                    var c1 = pn.phraseChildren[0]
+                    var c2 = pn.phraseChildren[1]
+                    c1.areParentsSwapped = true
+                    c2.areParentsSwapped = true
                 } else {
                     console.log("there is no swap")
                     console.log(unswapSplit[1] + " + " + unswapSplit[2]);
                     console.log(pn.phraseChildren[0].phrase + " + " + pn.phraseChildren[1].phrase);
-                    pn.phrasePart1 = unswapSplit[1]
-                    pn.phrasePart2 = unswapSplit[2]
+                    pn.phrasePart1 = pn.phrase
+                    pn.phrasePart2 = null
                 }
 
             }

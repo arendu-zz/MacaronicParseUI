@@ -39,9 +39,45 @@
 
 div {
     /*border: #00ff00;
-    border-style: solid;*/
+    border-style: solid;
     display: block;
+    overflow: auto;*/
     clear: both;
     height: auto;
-    overflow: auto
+}
+
+table {
+    /*border: 1px solid black;*/
+
+}
+
+tr, td {
+    border-collapse: collapse;
+    padding: 0px;
+    border-spacing: 0px;
+}
+
+.leaf {
+    color: black;
+}
+
+.nonleaf {
+    color: #E3530D;
+}
+
+.hasarrow {
+    background-color: lightgray;
+    border: 1px solid lightgray;
+}
+
+.hasNoArrow {
+    background-color: transparent;
+    border: transparent;
+
+}
+
+canvas {
+    position: absolute;
+    z-index: -1000;
+    pointer-event: none;
 }
