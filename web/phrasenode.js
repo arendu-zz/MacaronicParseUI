@@ -3,8 +3,8 @@
  */
 function PhraseNode(phrase, parent) {
     this.phrase = phrase;
-    this.phrasePart1 = null
-    this.phrasePart2 = null
+    this.phrasePart1 = ""
+    this.phrasePart2 = ""
     this.num = -1;
     this.parent = parent;
     this.areChildrenSwapped = false

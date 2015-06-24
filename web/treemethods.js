@@ -42,35 +42,69 @@ function labelSwaps(rootPhraseTree) {
             if (pn.phraseChildren.length == 1) {
                 pn.areChildrenSwapped = false
                 pn.phrasePart1 = pn.phrase
+                pn.phrasePart2 = ""
                 var c1 = pn.phraseChildren[0]
                 c1.areParentsSwapped = false
             } else {
 
                 //find best split
-                var unswapSplit = getBestSplit(pn.phrase, pn.phraseChildren, false)
-                var swapSplit = getBestSplit(pn.phrase, pn.phraseChildren, true)
-                if (swapSplit[0] < unswapSplit[0]) {
-                    console.log("there is a swap between current node:" + pn.phrase + " and its children")
-                    console.log(swapSplit[1] + " + " + swapSplit[2])
-                    console.log(pn.phraseChildren[0].phrase + " + " + pn.phraseChildren[1].phrase)
-                    pn.phrasePart1 = swapSplit[1]
-                    pn.phrasePart2 = swapSplit[2]
+
+                var unswapSplit = getBestSplit(pn.phrase, pn.phraseChildren, "noswap")
+                var swapSplit = getBestSplit(pn.phrase, pn.phraseChildren, "swap")
+                var drop1Split = getBestSplit(pn.phrase, pn.phraseChildren, "drop1")
+                var drop2Split = getBestSplit(pn.phrase, pn.phraseChildren, "drop2")
+                /*console.log("best action is:" + pn.phrase)
+                 console.log("child1:" + pn.phraseChildren[0].phrase)
+                 console.log("child2:" + pn.phraseChildren[1].phrase)
+                 console.log("unswap:\t" + unswapSplit[0] + "\tsplit:" + unswapSplit[1] + " + " + unswapSplit[2])
+                 console.log("drop1:\t" + drop1Split[0] + "\tsplit:" + drop1Split[1] + " + " + drop1Split[2])
+                 console.log("drop2:\t" + drop2Split[0] + "\tsplit:" + drop2Split[1] + " + " + drop2Split[2])*/
+                var things = [unswapSplit, swapSplit, drop1Split, drop2Split]
+                var mined = 10000
+                var min_thing
+                NodeList.prototype.forEach = Array.prototype.forEach
+                things.forEach(function (thing) {
+                    if (thing[0] < mined) {
+                        min_thing = thing
+                        mined = thing[0]
+                    }
+                });
+
+                if (min_thing[3] == "swap") {
+                    pn.phrasePart1 = min_thing[1]
+                    pn.phrasePart2 = min_thing[2]
                     pn.areChildrenSwapped = true
                     var c1 = pn.phraseChildren[0]
                     var c2 = pn.phraseChildren[1]
                     c1.areParentsSwapped = true
                     c2.areParentsSwapped = true
-                } else {
-                    console.log("there is no swap")
-                    console.log(unswapSplit[1] + " + " + unswapSplit[2]);
-                    console.log(pn.phraseChildren[0].phrase + " + " + pn.phraseChildren[1].phrase);
-                    pn.phrasePart1 = pn.phrase
-                    pn.phrasePart2 = null
+                    //console.log("swap at children " + pn.phrase)
+                }
+
+                if (min_thing[3] == "drop1" || min_thing[3] == "drop2") {
+                    pn.phrasePart1 = min_thing[1]
+                    pn.phrasePart2 = min_thing[2]
+                    pn.areChildrenSwapped = false
+                    var c1 = pn.phraseChildren[0]
+                    var c2 = pn.phraseChildren[1]
+                    c1.areParentsSwapped = false
+                    c2.areParentsSwapped = false
+                }
+
+                if (min_thing[3] == "noswap") {
+                    pn.phrasePart1 = min_thing[1]
+                    pn.phrasePart2 = min_thing[2]
+                    pn.areChildrenSwapped = false
+                    var c1 = pn.phraseChildren[0]
+                    var c2 = pn.phraseChildren[1]
+                    c1.areParentsSwapped = false
+                    c2.areParentsSwapped = false
                 }
 
             }
 
         }
+        //console.log("node: " + pn.phrase + "\tSWAPPED: " + pn.areChildrenSwapped.toString() + " " + pn.areParentsSwapped.toString())
     }
     return true
 }
@@ -139,35 +173,81 @@ function parsePhraseTree(phraseTreeStr) {
 }
 
 function getSplits(fullstringarray, breakpoint) {
-    var s1 = fullstringarray.slice(0, breakpoint).join("_")
-    var s2 = fullstringarray.slice(breakpoint, fullstringarray.length).join("_")
+    var s1, s2
+    var joined = ""
+    if (breakpoint == 0) {
+        s1 = ""
+    } else {
+        s1 = fullstringarray.slice(0, breakpoint).join("_")
+        joined = s1
+    }
+
+    if (breakpoint == fullstringarray.length) {
+        s2 = ""
+    } else {
+        s2 = fullstringarray.slice(breakpoint, fullstringarray.length).join("_")
+        if (joined == "") {
+            joined = joined + s2
+        } else {
+            joined = joined + "_" + s2
+        }
+
+    }
+
+    /*console.log("splits:" + s1 + "|||" + s2)
+     console.log("2checking splits:" + fullstringarray.join("_"))*/
+
+    assert(joined == fullstringarray.join("_"), "Checking the split function")
     return [s1, s2]
 }
 
-function getBestSplit(fullstring, childrenNodes, doSwap) {
+function checkChildDropped(fullstring, childrenNodes) {
+
+}
+
+function assert(condition, message) {
+    if (!condition) {
+        message = message || "Assertion failed";
+        if (typeof Error !== "undefined") {
+            throw new Error(message);
+        }
+        throw message; // Fallback
+    }
+}
+
+function getBestSplit(fullstring, childrenNodes, action) {
+    //console.log("full string is: " + fullstring)
     var c1, c2
-    if (doSwap) {
+    if (action == "swap") {
         c1 = childrenNodes[1].phrase
         c2 = childrenNodes[0].phrase
-    } else {
+    } else if (action == "noswap") {
         c1 = childrenNodes[0].phrase
+        c2 = childrenNodes[1].phrase
+    } else if (action == "drop2") {
+        c1 = childrenNodes[0].phrase
+        c2 = ""
+    } else if (action == "drop1") {
+        c1 = ""
         c2 = childrenNodes[1].phrase
     }
 
     var bestsplit = ["", ""]
     var ed = 100000
     var fullStringArray = fullstring.split("_")
-    for (var bp = 1; bp < fullStringArray.length; bp++) {
+    for (var bp = 0; bp <= fullStringArray.length; bp++) {
         var splits = getSplits(fullStringArray, bp)
         var s1 = splits[0]
         var s2 = splits[1]
-        var ced = getEditDistance(c1, s1) + getEditDistance(c2, s2)
-        if (ced < ed) {
-            ed = ced
+        var ced1 = getEditDistance(c1, s1)
+        var ced2 = getEditDistance(c2, s2)
+        if (ced1 + ced2 < ed) {
+            ed = ced1 + ced2
             bestsplit[0] = s1
             bestsplit[1] = s2
+
         }
     }
-    return [ed, bestsplit[0], bestsplit[1]]
+    return [ed, bestsplit[0], bestsplit[1], action]
 }
 

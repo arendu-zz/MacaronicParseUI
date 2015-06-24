@@ -47,13 +47,16 @@ div {
 }
 
 table {
-    border: 1px solid black;
-
+    border: 0px solid black;
+    padding: 0px;
+    margin: 0px;
 }
 
 tr, td {
-    border-collapse: collapse;
+    /*border-collapse: collapse;*/
+    border: 0px solid black;
     padding: 0px;
+    margin: 0px;
     border-spacing: 0px;
 }
 
@@ -80,4 +83,8 @@ canvas {
     position: absolute;
     z-index: -1000;
     pointer-event: none;
+}
+
+span {
+    display: inline-block;
 }

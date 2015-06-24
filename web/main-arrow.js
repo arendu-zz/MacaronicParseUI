@@ -53,6 +53,7 @@ function ready() {
     var i = 0
     NodeList.prototype.forEach = Array.prototype.forEach
     bracket_list.forEach(function (bracket_item) {
+
         console.log("processing ml:" + i.toString())
         var items = parsePhraseTree(bracket_item);
         var rootPhraseNode = items[0]
@@ -64,6 +65,7 @@ function ready() {
         console.log("done label swaps...")
         macline.displayRoot()
         mllist.push(macline)
+
         i++
     });
 
@@ -86,23 +88,31 @@ function createWordTable(numid, phraseNode, macaronicline) {
     wordTable.highlighted = false;
     wordTable["s1"] = null
     wordTable["s2"] = null
-    var j_size = phraseNode.phrasePart2 == null ? 1 : 2;
+    var j_size = 2 //phraseNode.phrasePart2 == null ? 1 : 2;
     for (var i = 0; i < 3; i++) {
         var tr = wordTable.insertRow();
         for (var j = 0; j < j_size; j++) {
+
             var td = tr.insertCell();
             if (i == 1) {
                 //td.innerHTML = wordTable.phraseNode.phrase.replace(/_/g, " ")
                 var s
                 s = document.createElement("span")
+
                 if (j == 0) {
-                    s.innerHTML = wordTable.phraseNode.phrasePart1.replace(/_/g, " ")
-                    wordTable["s1"] = s
-                    s["s_phrasepart"] = wordTable.phraseNode.phrasePart1
+                    if ($.trim(wordTable.phraseNode.phrasePart1) != "") {
+                        s.innerHTML = wordTable.phraseNode.phrasePart1.replace(/_/g, " ")
+                        wordTable["s1"] = s
+                        s["s_phrasepart"] = wordTable.phraseNode.phrasePart1
+                    }
+
                 } else {
-                    s.innerHTML = wordTable.phraseNode.phrasePart2.replace(/_/g, " ")
-                    wordTable["s2"] = s
-                    s["s_phrasepart"] = wordTable.phraseNode.phrasePart2
+                    if ($.trim(wordTable.phraseNode.phrasePart2) != "") {
+                        s.innerHTML = wordTable.phraseNode.phrasePart2.replace(/_/g, " ")
+                        wordTable["s2"] = s
+                        s["s_phrasepart"] = wordTable.phraseNode.phrasePart2
+                    }
+
                 }
                 td.appendChild(s)
                 s.addEventListener("mouseover", macaronicline.showInternalArrow, false)
@@ -121,13 +131,11 @@ function createWordTable(numid, phraseNode, macaronicline) {
                 if (i == 0) {
                     td.addEventListener("mouseover", macaronicline.showInternalArrow, false)
                     td.addEventListener("mouseout", macaronicline.removeInternalArrow, false)
-                    //td.addEventListener("mouseover", macaronicline.highlight, false);
                     td.addEventListener("mouseout", macaronicline.unhighlight, false);
                 } else {
 
                     td.addEventListener("mouseover", macaronicline.showExternalArrow, false)
                     td.addEventListener("mouseout", macaronicline.removeExternalArrow, false)
-                    //td.addEventListener("mouseover", macaronicline.highlight, false);
                     td.addEventListener("mouseout", macaronicline.unhighlight, false);
                 }
                 if (j == 0) {
@@ -153,8 +161,13 @@ function createWordTable(numid, phraseNode, macaronicline) {
     }
 
     wordTable.getS1Coordinate = function () {
-        var jtd = $(this.s1)
-        return [jtd.offset().top, jtd.offset().left, this.s1.offsetHeight, this.s1.offsetWidth]
+        if (this.s1 != null) {
+            var jtd = $(this.s1)
+            return [jtd.offset().top, jtd.offset().left, this.s1.offsetHeight, this.s1.offsetWidth]
+        } else {
+            return this.getS2Coordinate()
+        }
+
     }
 
     wordTable.getS2Coordinate = function () {
@@ -199,11 +212,25 @@ function createWordTable(numid, phraseNode, macaronicline) {
     }
 
     wordTable.setHasArrowOnRow = function () {
-        this.rows[1].className = "hasarrow"
+        //this.rows[1].className = "hasarrow"
+        if (this.phraseNode.phrasePart1 != "") {
+            this.s1.className = "hasarrow"
+        }
+
+        if (this.phraseNode.phrasePart2 != "") {
+            this.s2.className = "hasarrow"
+        }
     }
 
     wordTable.removeHasArrowOnRow = function () {
-        this.rows[1].className = "hasNoarrow"
+        //this.rows[1].className = "hasNoarrow"
+        if (this.phraseNode.phrasePart1 != "") {
+            this.s1.className = "hasNoarrow"
+        }
+
+        if (this.phraseNode.phrasePart2 != "") {
+            this.s2.className = "hasNoarrow"
+        }
     }
 
     wordTable.setNewId = function (newId) {
@@ -336,7 +363,7 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
             }
 
         });
-        if (source_wordTable != null && dest_wordTable != null) {
+        if (source_wordTable != null && dest_wordTable != null && source_wordTable.phraseNode.areParentsSwapped) {
             console.log("external arrow from: " + source_wordTable.phraseNode.phrase + " -> " + dest_wordTable.phraseNode.phrase)
             var source_offset = source_wordTable.getMiddleRowCooordinate()
             var dest_offset = dest_wordTable.getMiddleRowCooordinate()
@@ -349,13 +376,12 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
                 self.previewArrowsToParentNodes = null
             }
             var dest_point_x = dest_offset[1] < source_offset[1] + source_offset[3] / 2 ? dest_offset[1] : dest_offset[1] + dest_offset[3]
-            var curve_point_x = (dest_point_x + ( source_offset[1] + source_offset[3] / 2)) * 0.5
-
+            var curve_point_x = (dest_point_x + ( source_offset[1] + source_offset[3] / 2)) / 2
 
             self.previewArrowsToParentNodes = $(self.lineDiv).curvedArrow({
                 p0x: source_offset[1] + source_offset[3] / 2,
                 p0y: source_offset[0] + source_offset[2],
-                p1x: source_offset[2] + curve_point_x,
+                p1x: curve_point_x,
                 p1y: source_offset[0] + source_offset[2] + 50,
                 p2x: dest_point_x,
                 p2y: dest_offset[0] + dest_offset[2],
@@ -405,7 +431,7 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
             console.log(e.target.s_phrasepart + " compared to phrase part 2 " + wordTable.phrasePart2)
         }
 
-        if (dest_span != null && source_span != null) {
+        if (dest_span != null && source_span != null && wordTable.phraseNode.areChildrenSwapped) {
             console.log("draw a arraw from source:" + source_span.innerText + " to " + dest_span.innerText)
 
             if (self.previewArrowsToChildren != null) {
@@ -691,10 +717,11 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
             var parentWordTable = createWordTable(wordTable.id, parentPhraseNode, self);
             containerDiv.insertBefore(parentWordTable, wordTable);
             self.removeDescents(parentWordTable);
+            self.redoIds(containerDiv);
         } else {
             console.log("parent phrase node seems to be null.... nothing to do..")
         }
-        self.redoIds(containerDiv);
+
     }
 
     self.removeDescents = function (wordTable) {
