@@ -122,12 +122,13 @@ function createWordTable(numid, phraseNode, macaronicline) {
                     td.addEventListener("mouseover", macaronicline.showInternalArrow, false)
                     td.addEventListener("mouseout", macaronicline.removeInternalArrow, false)
                     //td.addEventListener("mouseover", macaronicline.highlight, false);
-                    //td.addEventListener("mouseout", macaronicline.unhighlight, false);
+                    td.addEventListener("mouseout", macaronicline.unhighlight, false);
                 } else {
-                    //td.addEventListener("mouseover", macaronicline.highlight, false);
-                    //td.addEventListener("mouseout", macaronicline.unhighlight, false);
+
                     td.addEventListener("mouseover", macaronicline.showExternalArrow, false)
                     td.addEventListener("mouseout", macaronicline.removeExternalArrow, false)
+                    //td.addEventListener("mouseover", macaronicline.highlight, false);
+                    td.addEventListener("mouseout", macaronicline.unhighlight, false);
                 }
                 if (j == 0) {
                     td["s_phrasepart"] = wordTable.phraseNode.phrasePart1
@@ -178,16 +179,23 @@ function createWordTable(numid, phraseNode, macaronicline) {
 
     wordTable.unLightHighlight = function (position) {
         this.highlighted = false
-        this.rows[position].cells[0].style.opacity = 0.0
-        this.rows[position].cells[0].style.backgroundColor = "grey"
-        this.rows[1].cells[0].style.opacity = 1
+        var j_size = this.phraseNode.phrasePart2 == null ? 1 : 2;
+        for (var i = 0; i < j_size; i++) {
+            this.rows[position].cells[i].style.opacity = 0.0
+            this.rows[position].cells[i].style.backgroundColor = "grey"
+            this.rows[1].cells[i].style.opacity = 1
+        }
     }
 
     wordTable.lightHighlight = function (position) {
         this.highlighted = true
-        this.rows[position].cells[0].style.opacity = 0.0
-        this.rows[position].cells[0].style.backgroundColor = "grey"
-        this.rows[1].cells[0].style.opacity = 0.3
+        var j_size = this.phraseNode.phrasePart2 == null ? 1 : 2;
+        for (var i = 0; i < j_size; i++) {
+            this.rows[position].cells[i].style.opacity = 0.0
+            this.rows[position].cells[i].style.backgroundColor = "grey"
+            this.rows[1].cells[i].style.opacity = 0.3
+        }
+
     }
 
     wordTable.setHasArrowOnRow = function () {
@@ -277,6 +285,8 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
             self.dest_span.className = "hasNoArrow"
             self.dest_span = null
         }
+
+        self.removePreviewDiv()
     }
 
     self.removeExternalArrow = function () {
@@ -287,6 +297,8 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
         }
 
         if (self.source_wordTable != null) {
+            self.unhighlightWordTable(self.source_wordTable, 0)
+            self.unhighlightWordTable(self.source_wordTable, 2)
             self.source_wordTable.removeHasArrowOnRow()
             self.source_wordTable = null
         }
@@ -295,6 +307,8 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
             self.dest_wordTable.removeHasArrowOnRow()
             self.dest_wordTable = null
         }
+
+        self.removePreviewDiv()
     }
 
 
@@ -351,7 +365,19 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
             self.dest_wordTable = dest_wordTable
         } else {
             console.log("no external arrow can be drawn")
+            if (e.target.rownum == null) {
+                console.log("checking rownum after attempt at EXTERNAL arrow : null")
+
+            } else if (e.target.rownum == 0) {
+                console.log("checking rownum after attempt at EXTERNAL arrow : 0")
+
+            } else if (e.target.rownum == 2) {
+                console.log("checking rownum after attempt at EXTERNAL arrow : 2")
+                self.highlightWordTable(source_wordTable, 2)
+            }
+
         }
+        e.stopImmediatePropagation()
     }
 
 
@@ -403,8 +429,20 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
             self.dest_span = dest_span
         } else {
             console.log("no internal arrow can be drawn")
-        }
+            if (e.target.rownum == null) {
+                console.log("checking rownum after attempt at internal arrow : null")
 
+            } else if (e.target.rownum == 0) {
+                console.log("checking rownum after attempt at internal arrow : 0")
+                self.highlightWordTable(wordTable, 0)
+
+            } else if (e.target.rownum == 2) {
+                console.log("checking rownum after attempt at internal arrow : 2")
+            }
+            //self.previewChildren(wordTable)
+
+        }
+        e.stopImmediatePropagation()
     }
 
 
@@ -427,7 +465,7 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
         }
         self.unhighlight(e);
         self.removeInternalArrow()
-        e.stopPropagation();
+        e.stopImmediatePropagation()
     }
 
 
@@ -525,6 +563,18 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
         $(self.lineDiv).append(self.previewArrowsToChildren)
     }
 
+    self.removePreviewDiv = function () {
+        if (self.previewDiv != null) {
+            self.previewDiv.wordTable.unLightHighlight(0)
+            self.previewDiv.wordTable.unLightHighlight(2)
+            var p = self.previewDiv.parentNode
+            if (p != null) {
+                p.removeChild(self.previewDiv);
+            }
+            self.isPreviewState = false;
+            self.previewDiv = null;
+        }
+    }
     self.previewChildren = function (wordTable) {
 
         if (self.previewDiv != null) {
@@ -682,11 +732,11 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
     self.unhighlight = function (e) {
         var wordTable = e.target.wordTable
         console.log("unhiligh event: its wt is ml class:" + wordTable.id);
-        self.unhighlightWordTable(wordTable, e.target.rownum)
+        self.unhighlightWordTable(wordTable)
         e.stopImmediatePropagation()
     }
 
-    self.unhighlightWordTable = function (wordTable, rownum) {
+    self.unhighlightWordTable = function (wordTable) {
         var containerDiv = wordTable.parentNode;
         if (containerDiv != null) {
             var children = containerDiv.childNodes;
