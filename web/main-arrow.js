@@ -348,13 +348,16 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
                 }
                 self.previewArrowsToParentNodes = null
             }
-            var curve_point_x = dest_offset[1] > source_offset[1] ? dest_offset[1] : source_offset[1]
+            var dest_point_x = dest_offset[1] < source_offset[1] + source_offset[3] / 2 ? dest_offset[1] : dest_offset[1] + dest_offset[3]
+            var curve_point_x = (dest_point_x + ( source_offset[1] + source_offset[3] / 2)) * 0.5
+
+
             self.previewArrowsToParentNodes = $(self.lineDiv).curvedArrow({
                 p0x: source_offset[1] + source_offset[3] / 2,
                 p0y: source_offset[0] + source_offset[2],
-                p1x: curve_point_x + source_offset[2],
+                p1x: source_offset[2] + curve_point_x,
                 p1y: source_offset[0] + source_offset[2] + 50,
-                p2x: dest_offset[1] + dest_offset[3] / 2,
+                p2x: dest_point_x,
                 p2y: dest_offset[0] + dest_offset[2],
                 id: "previewOverlayArrow"
             })
@@ -412,13 +415,15 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
                 }
                 self.previewArrowsToChildren = null
             }
-            var curve_point_x = dest_offset[1] > source_offset[1] ? dest_offset[1] : source_offset[1]
+
+            var dest_point_x = dest_offset[1] < source_offset[1] + source_offset[3] / 2 ? dest_offset[1] : dest_offset[1] + dest_offset[3]
+            var curve_point_x = (dest_point_x + ( source_offset[1] + source_offset[3] / 2)) / 2
             self.previewArrowsToChildren = $(self.lineDiv).curvedArrow({
                 p0x: source_offset[1] + source_offset[3] / 2,
                 p0y: source_offset[0],
                 p1x: curve_point_x,
                 p1y: source_offset[0] - 50,
-                p2x: dest_offset[1] + dest_offset[3] / 2,
+                p2x: dest_point_x,
                 p2y: dest_offset[0],
                 id: "previewOverlayArrow"
             })
@@ -465,6 +470,7 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
         }
         self.unhighlight(e);
         self.removeInternalArrow()
+        self.removeExternalArrow()
         e.stopImmediatePropagation()
     }
 
