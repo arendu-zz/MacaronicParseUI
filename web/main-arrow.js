@@ -62,10 +62,11 @@ function ready() {
         var leaves = getleaves(macline.rootPhraseNode)
         console.log("doing label swaps...")
         labelSwaps(macline.rootPhraseNode)
+        labelDescendentSwaps(macline.rootPhraseNode)
         console.log("done label swaps...")
         macline.displayRoot()
         mllist.push(macline)
-
+        
         i++
     });
 
@@ -88,9 +89,14 @@ function createWordTable(numid, phraseNode, macaronicline) {
     wordTable.highlighted = false;
     wordTable["s1"] = null
     wordTable["s2"] = null
+    wordTable["r1"] = null
     var j_size = 2 //phraseNode.phrasePart2 == null ? 1 : 2;
     for (var i = 0; i < 3; i++) {
         var tr = wordTable.insertRow();
+        if (i == 1) {
+            wordTable["r1"] = tr
+
+        }
         for (var j = 0; j < j_size; j++) {
 
             var td = tr.insertCell();
@@ -104,6 +110,10 @@ function createWordTable(numid, phraseNode, macaronicline) {
                         s.innerHTML = wordTable.phraseNode.phrasePart1.replace(/_/g, " ")
                         wordTable["s1"] = s
                         s["s_phrasepart"] = wordTable.phraseNode.phrasePart1
+                        if (wordTable.phraseNode.areAnyDescendentsSwapping || wordTable.phraseNode.areChildrenSwapped) {
+                            $(s).addClass("hasSwapDescendent")
+                        }
+
                     }
 
                 } else {
@@ -111,6 +121,9 @@ function createWordTable(numid, phraseNode, macaronicline) {
                         s.innerHTML = wordTable.phraseNode.phrasePart2.replace(/_/g, " ")
                         wordTable["s2"] = s
                         s["s_phrasepart"] = wordTable.phraseNode.phrasePart2
+                        if (wordTable.phraseNode.areAnyDescendentsSwapping || wordTable.phraseNode.areChildrenSwapped) {
+                            $(s).addClass("hasSwapDescendent")
+                        }
                     }
 
                 }
@@ -120,7 +133,7 @@ function createWordTable(numid, phraseNode, macaronicline) {
                 s.addEventListener("mouseout", macaronicline.removeExternalArrow, false)
                 td.addEventListener("mouseout", macaronicline.removeInternalArrow, false)
                 s["wordTable"] = wordTable
-                td.className = wordTable.phraseNode.isLeaf ? 'leaf' : 'nonleaf'
+                //td.className = wordTable.phraseNode.isLeaf ? 'leaf' : 'nonleaf'
                 td.height = "20px";
             } else {
                 td.appendChild(document.createTextNode(""));
@@ -213,24 +226,38 @@ function createWordTable(numid, phraseNode, macaronicline) {
 
     wordTable.setHasArrowOnRow = function () {
         //this.rows[1].className = "hasarrow"
-        if (this.phraseNode.phrasePart1 != "") {
-            this.s1.className = "hasarrow"
-        }
+        /*if (this.phraseNode.phrasePart1 != "" && isInternal) {
+         //this.s1.className = "hasarrow"
+         this.s1.className = getNewClassNAme(this.s1, "hasNoarrow", "hasarrow")
+         }
 
-        if (this.phraseNode.phrasePart2 != "") {
-            this.s2.className = "hasarrow"
-        }
+         if (this.phraseNode.phrasePart2 != "" && isInternal) {
+         //this.s2.className = "hasarrow"
+         this.s2.className = getNewClassNAme(this.s2, "hasNoarrow", "hasarrow")
+         }
+         */
+
+        $(this.r1).addClass("hasarrow")
+        console.log("set arrow for row: class r1:" + this.r1.className)
+
     }
 
     wordTable.removeHasArrowOnRow = function () {
         //this.rows[1].className = "hasNoarrow"
-        if (this.phraseNode.phrasePart1 != "") {
-            this.s1.className = "hasNoarrow"
-        }
+        /*if (this.phraseNode.phrasePart1 != "") {
+         //this.s1.className = "hasNoarrow"
+         this.s1.className = getNewClassNAme(this.s1, "hasarrow", "hasNoarrow")
+         }
 
-        if (this.phraseNode.phrasePart2 != "") {
-            this.s2.className = "hasNoarrow"
-        }
+         if (this.phraseNode.phrasePart2 != "" && isInternal) {
+         //this.s2.className = "hasNoarrow"
+         this.s2.className = getNewClassNAme(this.s2, "hasarrow", "hasNoarrow")
+         }
+         */
+
+        $(this.r1).removeClass("hasarrow")
+        console.log("removed arrow for row: class r1:" + this.r1.className)
+
     }
 
     wordTable.setNewId = function (newId) {
@@ -304,12 +331,12 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
         }
 
         if (self.source_span != null) {
-            self.source_span.className = "hasNoArrow"
+            $(self.source_span).removeClass("hasarrow")
             self.source_span = null
         }
 
         if (self.dest_span != null) {
-            self.dest_span.className = "hasNoArrow"
+            $(self.dest_span).removeClass("hasarrow")
             self.dest_span = null
         }
 
@@ -454,8 +481,8 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
                 id: "previewOverlayArrow"
             })
             $(self.lineDiv).append(self.previewArrowsToChildren)
-            source_span.className = "hasarrow"
-            dest_span.className = "hasarrow"
+            $(source_span).addClass("hasarrow")
+            $(dest_span).addClass("hasarrow")
             self.source_span = source_span
             self.dest_span = dest_span
         } else {
@@ -556,7 +583,7 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
             self.previewDiv.appendChild(previewSpan)
             previewSpan.innerHTML = parentPhraseNode.phrase.replace(/_/g, " ")
             console.log("previewing parent areparentsswaped:" + wordTable.phraseNode.areParentsSwapped.toString())
-            previewSpan.className = 'nonleaf';
+            //previewSpan.className = 'nonleaf';
             var elem = $(self.previewDiv);
             elem.css({
                 position: 'absolute',
@@ -636,7 +663,7 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
                 var previewSpan = document.createElement("span")
                 //previewSpan.style.border = "1px solid black";
                 previewSpan.innerHTML = pn.phrase.replace(/_/g, " ")
-                previewSpan.className = pn.phraseChildren.length == 0 ? 'leaf' : 'nonleaf';
+                //previewSpan.className = pn.phraseChildren.length == 0 ? 'leaf' : 'nonleaf';
                 self.previewDiv.appendChild(previewSpan)
 
                 if (i == wordTable.phraseNode.phraseChildren.length - 1) {
@@ -644,7 +671,7 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
                 } else {
                     var previewSpan = document.createElement("span")
                     previewSpan.innerHTML = "-"
-                    previewSpan.className = "nonleaf"
+                    //previewSpan.className = "nonleaf"
                     self.previewDiv.appendChild(previewSpan)
                 }
             }

@@ -24,6 +24,30 @@ function getleaves(rootPhraseTree) {
 }
 
 
+function labelDescendentSwaps(rootPhraseTree) {
+    var _stack = []
+    var leaves = getleaves(rootPhraseTree)
+    for (var i = 0; i < leaves.length; i++) {
+        var pn = leaves[i]
+        pn.areAnyDescendentsSwapping = false //leaves can not have any children that swap
+        pn.areChildrenSwapped = false
+        _stack.push(pn)
+
+    }
+    while (_stack.length > 0) {
+        pn = _stack.shift() //pops from the front of the array
+        var parent = pn.parent
+        if (pn.parent != null && $.inArray(pn.parent, _stack) == -1) {
+            _stack.push(parent)
+        } else {
+            //root has no parent.. so do nothing
+        }
+        for (var c = 0; c < pn.phraseChildren.length; c++) {
+            pn.areAnyDescendentsSwapping = pn.areAnyDescendentsSwapping || pn.phraseChildren[c].areChildrenSwapped || pn.phraseChildren[c].areAnyDescendentsSwapping
+        }
+    }
+}
+
 function labelSwaps(rootPhraseTree) {
     var _stack = [];
     var pn;
@@ -53,12 +77,6 @@ function labelSwaps(rootPhraseTree) {
                 var swapSplit = getBestSplit(pn.phrase, pn.phraseChildren, "swap")
                 var drop1Split = getBestSplit(pn.phrase, pn.phraseChildren, "drop1")
                 var drop2Split = getBestSplit(pn.phrase, pn.phraseChildren, "drop2")
-                /*console.log("best action is:" + pn.phrase)
-                 console.log("child1:" + pn.phraseChildren[0].phrase)
-                 console.log("child2:" + pn.phraseChildren[1].phrase)
-                 console.log("unswap:\t" + unswapSplit[0] + "\tsplit:" + unswapSplit[1] + " + " + unswapSplit[2])
-                 console.log("drop1:\t" + drop1Split[0] + "\tsplit:" + drop1Split[1] + " + " + drop1Split[2])
-                 console.log("drop2:\t" + drop2Split[0] + "\tsplit:" + drop2Split[1] + " + " + drop2Split[2])*/
                 var things = [unswapSplit, swapSplit, drop1Split, drop2Split]
                 var mined = 10000
                 var min_thing
@@ -250,4 +268,3 @@ function getBestSplit(fullstring, childrenNodes, action) {
     }
     return [ed, bestsplit[0], bestsplit[1], action]
 }
-

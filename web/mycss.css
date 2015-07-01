@@ -47,17 +47,12 @@ div {
 }
 
 table {
-    border: 0px solid black;
-    padding: 0px;
-    margin: 0px;
+    border-collapse: collapse;
 }
 
-tr, td {
-    /*border-collapse: collapse;*/
-    border: 0px solid black;
-    padding: 0px;
-    margin: 0px;
-    border-spacing: 0px;
+table td {
+    border: 2px transparent;
+
 }
 
 .leaf {
@@ -65,18 +60,18 @@ tr, td {
 }
 
 .nonleaf {
-    color: #E3530D;
+    /*color: #E3530D;*/
+
+}
+
+.hasSwapDescendent {
+    background: url(images/underline.gif) bottom repeat-x;
 }
 
 .hasarrow {
     background-color: lightgray;
-    border: 1px solid lightgray;
-}
-
-.hasNoArrow {
-    background-color: transparent;
-    border: transparent;
-
+    border-left: 2px solid white;
+    border-right: 2px solid white;
 }
 
 canvas {
@@ -87,4 +82,8 @@ canvas {
 
 span {
     display: inline-block;
+}
+
+.curly-underline {
+
 }
