@@ -65,7 +65,7 @@ table td {
 }
 
 .hasSwapDescendent {
-    background: url(web/images/underline.gif) bottom repeat-x;
+    background: url(../web/images/underline.gif) bottom repeat-x;
 }
 
 .hasarrow {
