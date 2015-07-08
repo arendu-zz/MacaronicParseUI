@@ -478,6 +478,7 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
                 p1y: source_offset[0] - 50,
                 p2x: dest_point_x,
                 p2y: dest_offset[0],
+                strokeStyle: 'coral',
                 id: "previewOverlayArrow"
             })
             $(self.lineDiv).append(self.previewArrowsToChildren)
