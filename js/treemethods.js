@@ -29,7 +29,8 @@ function labelDescendentSwaps(rootPhraseTree) {
     var leaves = getleaves(rootPhraseTree)
     for (var i = 0; i < leaves.length; i++) {
         var pn = leaves[i]
-        pn.areAnyDescendentsSwapping = false //leaves can not have any children that swap
+        pn.areLeftDescendentsSwapping = false //leaves can not have any children that swap
+        pn.areRgihtDescendentsSwapping = false
         pn.areChildrenSwapped = false
         _stack.push(pn)
 
@@ -43,7 +44,12 @@ function labelDescendentSwaps(rootPhraseTree) {
             //root has no parent.. so do nothing
         }
         for (var c = 0; c < pn.phraseChildren.length; c++) {
-            pn.areAnyDescendentsSwapping = pn.areAnyDescendentsSwapping || pn.phraseChildren[c].areChildrenSwapped || pn.phraseChildren[c].areAnyDescendentsSwapping
+            if (c == 0) {
+                pn.areLeftDescendentsSwapping = pn.phraseChildren[c].areChildrenSwapped || pn.phraseChildren[c].areLeftDescendentsSwapping || pn.phraseChildren[c].areRightDescendentsSwapping
+            } else {
+                pn.areRightDescendentsSwapping = pn.phraseChildren[c].areChildrenSwapped || pn.phraseChildren[c].areLeftDescendentsSwapping || pn.phraseChildren[c].areRightDescendentsSwapping
+            }
+
         }
     }
 }

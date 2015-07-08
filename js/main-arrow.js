@@ -109,8 +109,8 @@ function createWordTable(numid, phraseNode, macaronicline) {
                     if ($.trim(wordTable.phraseNode.phrasePart1) != "") {
                         s.innerHTML = wordTable.phraseNode.phrasePart1.replace(/_/g, " ")
                         wordTable["s1"] = s
-                        s["s_phrasepart"] = wordTable.phraseNode.phrasePart1
-                        if (wordTable.phraseNode.areAnyDescendentsSwapping || wordTable.phraseNode.areChildrenSwapped) {
+                        s["source_phrasepart"] = wordTable.phraseNode.phrasePart1
+                        if (wordTable.phraseNode.areLeftDescendentsSwapping || wordTable.phraseNode.areChildrenSwapped) {
                             $(s).addClass("hasSwapDescendent")
                         }
 
@@ -120,8 +120,8 @@ function createWordTable(numid, phraseNode, macaronicline) {
                     if ($.trim(wordTable.phraseNode.phrasePart2) != "") {
                         s.innerHTML = wordTable.phraseNode.phrasePart2.replace(/_/g, " ")
                         wordTable["s2"] = s
-                        s["s_phrasepart"] = wordTable.phraseNode.phrasePart2
-                        if (wordTable.phraseNode.areAnyDescendentsSwapping || wordTable.phraseNode.areChildrenSwapped) {
+                        s["source_phrasepart"] = wordTable.phraseNode.phrasePart2
+                        if (wordTable.phraseNode.areRightDescendentsSwapping || wordTable.phraseNode.areChildrenSwapped) {
                             $(s).addClass("hasSwapDescendent")
                         }
                     }
@@ -152,9 +152,9 @@ function createWordTable(numid, phraseNode, macaronicline) {
                     td.addEventListener("mouseout", macaronicline.unhighlight, false);
                 }
                 if (j == 0) {
-                    td["s_phrasepart"] = wordTable.phraseNode.phrasePart1
+                    td["source_phrasepart"] = wordTable.phraseNode.phrasePart1
                 } else {
-                    td["s_phrasepart"] = wordTable.phraseNode.phrasePart2
+                    td["source_phrasepart"] = wordTable.phraseNode.phrasePart2
                 }
                 td.height = "20px";
                 td["wordTable"] = wordTable;
@@ -441,21 +441,21 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
         var wordTable = e.target.wordTable
         var source_span, dest_span
         var source_offset, dest_offset
-        if (e.target.s_phrasepart == wordTable.phraseNode.phrasePart1) {
+        if (e.target.source_phrasepart == wordTable.phraseNode.phrasePart1) {
             console.log("s1 is the source of the arrow")
             source_span = wordTable.s1
             dest_span = wordTable.s2
             source_offset = wordTable.getS1Coordinate();
             dest_offset = wordTable.getS2Coordinate();
-        } else if (e.target.s_phrasepart == wordTable.phraseNode.phrasePart2) {
+        } else if (e.target.source_phrasepart == wordTable.phraseNode.phrasePart2) {
             console.log("s2 is the source of the arrow")
             source_span = wordTable.s2
             dest_span = wordTable.s1
             source_offset = wordTable.getS2Coordinate();
             dest_offset = wordTable.getS1Coordinate();
         } else {
-            console.log(e.target.s_phrasepart + " compared to phrase part 1 " + wordTable.phrasePart1)
-            console.log(e.target.s_phrasepart + " compared to phrase part 2 " + wordTable.phrasePart2)
+            console.log(e.target.source_phrasepart + " compared to phrase part 1 " + wordTable.phrasePart1)
+            console.log(e.target.source_phrasepart + " compared to phrase part 2 " + wordTable.phrasePart2)
         }
 
         if (dest_span != null && source_span != null && wordTable.phraseNode.areChildrenSwapped) {

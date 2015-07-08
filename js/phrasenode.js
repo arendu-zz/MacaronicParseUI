@@ -13,7 +13,8 @@ function PhraseNode(phrase, parent) {
     this.isLeaf = false;
     this.phraseChildren = [];
     this.phraseSiblings = [];
-    this.areAnyDescendentsSwapping = false
+    this.areLeftDescendentsSwapping = false
+    this.areRightDescendentsSwapping = false
 
 
     this.addPhraseChild = function (phraseNode) {
