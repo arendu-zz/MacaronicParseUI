@@ -1,0 +1,53 @@
+A B C D
+A B ~ C D
+B ~ A | C D
+B | A | C ~ D
+B | A |  C | D
+2 | 1 | 3 | 4
+---
+Now I really have to write you again !
+Now ~ I really have to write you again !
+Now | I really have to write you again ~ !
+Now | I really have to ~ write you again | !
+Now | I really have to | write you again | !
+Now | I really have to | you ~ write again | !
+Now | I really have to | you | write again | !
+Now | I have to | you | really ~ write again | !
+Now | I have to | you | really | write again | !
+Now | I have to | you | really | again ~ write | !
+Now | I have to | you | really | again | write | !
+Now | I must | you | really | again | write | !
+Now | must ~ I | you | really | again | write | !
+Now | must | I | you | but ~ really | again | write | !
+Now | must | I | you | but | really | again ~ once | write | !
+Now | must | I | you | but | really | again | once | write | !
+Jetzt | muss | ich | euch | aber | wirklich | wieder | einmal | schreiben | !
+---
+I don't know where I should begin
+I don't know ~ where I should begin
+I don't know ~ , | where I should begin
+I don't ~ know | , | where I should begin
+I don't | know | , | where I should begin
+I ~ not | know | , | where I should begin
+I | not | know | , | where I should begin
+I | really ~ not | know | , | where I should begin
+I | really | not | know | , | where ~ I should begin
+I | really | not | know | , | where | I ~ should begin
+I | really | not | know | , | where | I | begin ~ should
+I | really | not | know | , | where | I | begin | should
+ich | gar | nicht | weiß | , | wo | ich | beginnen | soll
+---
+From there, we took a boat trip down the Danube .
+From there, we took a boat trip down the Danube ~ .
+From there ~ we took a boat trip down the Danube | .
+From there | we ~ took a boat trip down the Danube | .
+From there | we | took a boat trip down the Danube | .
+From there | we | went down the Danube with the ship | .
+From there | are ~ we | went down the Danube with the ship | .
+From there | are | we | with the ship ~ went down the Danube | .
+From there | are | we | with ~ the ship | went down the Danube | .
+From ~ there | are | we | with | the ship | went down the Danube | .
+From | there | are | we | with | the ship | the Danube ~ went down | .
+From | there | are | we | with | the ~ ship | the Danube | went down | .
+From | there | are | we | with | the | ship | the ~ Danube | went down | .
+Von | dort | sind | wir | mit | dem | Schiff | die | Donau | hinuntergefahren | .

@@ -64,6 +64,11 @@ table td {
 
 }
 
+.separator {
+    color: coral;
+    fontSize: 20pt
+}
+
 .hasSwapDescendent {
     background: url(../web/images/underline.gif) bottom repeat-x;
 }

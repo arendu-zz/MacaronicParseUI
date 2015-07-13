@@ -8,9 +8,11 @@ class Node(object):
         self.phrase = p
         self.children = []
         self.parent = None
+        self.removed = False
 
     def addchild(self, node):
         self.children.append(node)
+        node.parent = self
 
     def __str__(self):
         return self.phrase
@@ -21,15 +23,44 @@ class Node(object):
     def get_bracketed_string(self):
         if len(self.children) == 0:
             return " (" + self.get_phrase_underscore() + ")"
-        elif len(self.children) == 1:
-            b0 = self.children[0].get_bracketed_string()
-            return " (" + self.get_phrase_underscore() + b0 + ")"
-        elif len(self.children) == 2:
-            b0 = self.children[0].get_bracketed_string()
-            b1 = self.children[1].get_bracketed_string()
-            return " (" + self.get_phrase_underscore() + b0 + " " + b1 + ")"
+        elif len(self.children) >= 1:
+            bkt = []
+            for child in self.children:
+                bkt.append(child.get_bracketed_string())
+            return " (" + self.get_phrase_underscore() + (" ").join(bkt) + ")"
         else:
             return ""
+
+
+    def flag_redundant_binary_nodes(self):
+        current_txt = self.phrase.strip()
+        child_txt = []
+        if len(self.children) > 1:
+            for child in self.children:
+                child_txt.append(child.phrase.strip())
+
+            if ' '.join(current_txt.split()) == ' '.join(child_txt):
+                sys.stderr.write("redundant bn:" + ' '.join(current_txt.split()) + " -> " + '|'.join(child_txt) + "\n")
+                if self.parent is not None:
+                    '''sys.stderr.write("parent is:" + self.parent.phrase + "\n")
+                    sys.stderr.write("parents children are: " + str(self.parent.children) + "\n")
+                    sys.stderr.write("self is" + str([self]) + "\n")'''
+                    idx = self.parent.children.index(self)
+                    self.parent.children.remove(self)
+                    self.removed = True
+                    for child in reversed(self.children):
+                        self.parent.children.insert(idx, child)
+                else:
+                    pass  # sys.stderr.write("cant do anything no parent of redundant\n")
+            else:
+                pass  # sys.stderr.write("not redundant bn:" + current_txt + " -> " + '|'.join(child_txt) + "\n")
+        else:
+            pass  # sys.stderr.write("ignoring uniary node\n")
+
+        for child in self.children:
+            if not child.removed:
+                child.flag_redundant_binary_nodes()
+
 
     def remove_redundant(self):
         if len(self.children) == 1:
@@ -45,7 +76,7 @@ class Node(object):
             # print 'removed', c1.phrase
             for nc in self.children:
                 nc.remove_redundant()
-        elif len(self.children) == 2:
+        elif len(self.children) >= 1:
             for c in self.children:
                 c.remove_redundant()
         else:
@@ -83,7 +114,7 @@ class Node(object):
 
 if __name__ == "__main__":
     # hp = open('web/data-for-visualization.txt').read().split('\n\n')
-    hp = open('web/Wien.txt').read().split('---')
+    hp = open(sys.argv[1]).read().split('---')
     finallist = []
     for f_idx, f in enumerate(hp):
         f = f.strip()
@@ -136,6 +167,7 @@ if __name__ == "__main__":
                     sys.stderr.write("this should not happen\n")
         root.remove_redundant()
         root.add_punct_child()
+        root.flag_redundant_binary_nodes()
 
         if passed:
             finallist.append('"' + root.get_bracketed_string().strip() + '"')
