@@ -16,40 +16,43 @@
     <script type="text/javascript" src="js/jquery.curvedarrow.js"/>
     <script type="text/javascript">
 
-        $(document).ready(function () {
-            $("#status").html("")
+        $(document).ready(
+                function () {
+                    $("#status").html("")
 
-            if (jQuery.ui) {
-                $("#slider").slider({
-                    step: 1,
-                    min: 0,
-                    max: 100,
-                    slide: function (e, ui) {
-                        mysliderfunc(ui.value)
-                    },
-                    change: function (e, ui) {
-                        mysliderup(ui.value)
+                    if (jQuery.ui) {
+                        $("#slider").slider(
+                                {
+                                    step: 1,
+                                    min: 0,
+                                    max: 100,
+                                    slide: function (e, ui) {
+                                        mysliderfunc(ui.value)
+                                    },
+                                    change: function (e, ui) {
+                                        mysliderup(ui.value)
+                                    }
+                                })
+                    } else {
+                        alert("no jquery ui")
                     }
-                })
-            } else {
-                alert("no jquery ui")
-            }
-            $("#slider").slider('value', 100);
+                    $("#slider").slider('value', 100);
 
-            ready();
-            var curvedLine = $('#arrowdiv').curvedArrow({
-                p0x: 100,
-                p0y: 0,
-                p1x: 200,
-                p1y: 500,
-                p2x: 400,
-                p2y: 400,
-                id: "thisarrow"
-            })
+                    ready();
+                    var curvedLine = $('#arrowdiv').curvedArrow(
+                            {
+                                p0x: 100,
+                                p0y: 0,
+                                p1x: 200,
+                                p1y: 500,
+                                p2x: 400,
+                                p2y: 400,
+                                id: "thisarrow"
+                            })
 
-            //$('#arrowdiv').append(curvedLine)
+                    //$('#arrowdiv').append(curvedLine)
 
-        });
+                });
 
 
     </script>

@@ -1,6 +1,13 @@
 /**
  * Created by arenduchintala on 6/18/15.
  */
+
+function MyNone(data1, data2) {
+    this.a1 = data1
+    this.a2 = data2
+    this.children = []
+}
+
 function PhraseNode(phrase, parent) {
     this.phrase = phrase;
     this.phrasePart1 = ""
@@ -15,6 +22,8 @@ function PhraseNode(phrase, parent) {
     this.phraseSiblings = [];
     this.areLeftDescendentsSwapping = false
     this.areRightDescendentsSwapping = false
+    this.transient_from_top = false
+    this.transient_from_bottom = false
 
 
     this.addPhraseChild = function (phraseNode) {
@@ -42,6 +51,18 @@ function PhraseNode(phrase, parent) {
             a_parent = a_parent.parent;
         }
         return isAncestor;
+    }
+
+    this.get_non_transient_children = function () {
+        var non_transient_children = []
+        for (var c = 0; c < this.phraseChildren.length; c++) {
+            if (this.phraseChildren[c].transient_from_top) {
+                non_transient_children = non_transient_children.concat(this.phraseChildren[c].get_non_transient_children())
+            } else {
+                non_transient_children = non_transient_children.concat([this.phraseChildren[c]])
+            }
+        }
+        return non_transient_children
     }
 }
 

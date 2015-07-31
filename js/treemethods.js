@@ -13,7 +13,7 @@ function getleaves(rootPhraseTree) {
             pn.isLeaf = true;
             leaves.push(pn);
         } else {
-            for (var i = pn.phraseChildren.length - 1; i > -1; i--) {
+            for (var i = pn.phraseChildren.length - 1; i > - 1; i --) {
                 var c = pn.phraseChildren[i];
                 _stack.push(c);
             }
@@ -23,11 +23,32 @@ function getleaves(rootPhraseTree) {
     return leaves;
 }
 
+function label_transient_from_bottom(leaves) {
+
+}
+
+function label_transient_from_top(root) {
+    var _stack = []
+    _stack.push(root)
+
+    while (_stack.length > 0) {
+        var pn = _stack.pop()
+        var children_phrases = []
+        for (var c = 0; c < pn.phraseChildren.length; c ++) {
+            children_phrases.push(pn.phraseChildren[c].phrase)
+            _stack.push(pn.phraseChildren[c])
+        }
+        var full_children_phrase_str = children_phrases.join('_')
+        if (pn.phrase == full_children_phrase_str) {
+            pn.transient_from_top = true
+        }
+    }
+}
 
 function labelDescendentSwaps(rootPhraseTree) {
     var _stack = []
     var leaves = getleaves(rootPhraseTree)
-    for (var i = 0; i < leaves.length; i++) {
+    for (var i = 0; i < leaves.length; i ++) {
         var pn = leaves[i]
         pn.areLeftDescendentsSwapping = false //leaves can not have any children that swap
         pn.areRgihtDescendentsSwapping = false
@@ -38,12 +59,12 @@ function labelDescendentSwaps(rootPhraseTree) {
     while (_stack.length > 0) {
         pn = _stack.shift() //pops from the front of the array
         var parent = pn.parent
-        if (pn.parent != null && $.inArray(pn.parent, _stack) == -1) {
+        if (pn.parent != null && $.inArray(pn.parent, _stack) == - 1) {
             _stack.push(parent)
         } else {
             //root has no parent.. so do nothing
         }
-        for (var c = 0; c < pn.phraseChildren.length; c++) {
+        for (var c = 0; c < pn.phraseChildren.length; c ++) {
             if (c == 0) {
                 pn.areLeftDescendentsSwapping = pn.phraseChildren[c].areChildrenSwapped || pn.phraseChildren[c].areLeftDescendentsSwapping || pn.phraseChildren[c].areRightDescendentsSwapping
             } else {
@@ -64,7 +85,7 @@ function labelSwaps(rootPhraseTree) {
             pn.areChildrenSwapped = false
             pn.phrasePart1 = pn.phrase
         } else {
-            for (var i = pn.phraseChildren.length - 1; i > -1; i--) {
+            for (var i = pn.phraseChildren.length - 1; i > - 1; i --) {
                 var c = pn.phraseChildren[i];
                 _stack.push(c);
             }
@@ -87,12 +108,13 @@ function labelSwaps(rootPhraseTree) {
                 var mined = 10000
                 var min_thing
                 NodeList.prototype.forEach = Array.prototype.forEach
-                things.forEach(function (thing) {
-                    if (thing[0] < mined) {
-                        min_thing = thing
-                        mined = thing[0]
-                    }
-                });
+                things.forEach(
+                    function (thing) {
+                        if (thing[0] < mined) {
+                            min_thing = thing
+                            mined = thing[0]
+                        }
+                    });
 
                 if (min_thing[3] == "swap") {
                     pn.phrasePart1 = min_thing[1]
@@ -157,7 +179,7 @@ function parsePhraseTree(phraseTreeStr) {
             _stack.push(pn);
         } else if (item == ")") {
             rootpn = _stack.pop();
-            for (var c = 0; c < rootpn.phraseChildren.length; c++) {
+            for (var c = 0; c < rootpn.phraseChildren.length; c ++) {
                 var pc = rootpn.phraseChildren[c];
                 pc.setPhraseSiblings(rootpn.phraseChildren);
             }
@@ -173,7 +195,7 @@ function parsePhraseTree(phraseTreeStr) {
         }
     }
     rootpn = _stack.pop();
-    for (var c = 0; c < rootpn.phraseChildren.length; c++) {
+    for (var c = 0; c < rootpn.phraseChildren.length; c ++) {
         var pc = rootpn.phraseChildren[c];
         pc.setPhraseSiblings(rootpn.phraseChildren);
     }
@@ -184,11 +206,11 @@ function parsePhraseTree(phraseTreeStr) {
     while (Q.length > 0) {
         pn = Q.shift();
         if (pn.phraseChildren.length > 0) {
-            numNT++;
+            numNT ++;
         }
         pn.num = num;
-        num++
-        for (var c = 0; c < pn.phraseChildren.length; c++) {
+        num ++
+        for (var c = 0; c < pn.phraseChildren.length; c ++) {
             pc = pn.phraseChildren[c]
             Q.push(pc);
         }
@@ -228,16 +250,20 @@ function getSplits(fullstringarray, breakpoint) {
 function checkChildDropped(fullstring, childrenNodes) {
 
 }
-
+assert = function (condition, message) {
+    if (! condition)
+        throw Error("Assert failed" + (typeof message !== "undefined" ? ": " + message : ""));
+}
+/*
 function assert(condition, message) {
-    if (!condition) {
+    if (! condition) {
         message = message || "Assertion failed";
         if (typeof Error !== "undefined") {
             throw new Error(message);
         }
         throw message; // Fallback
     }
-}
+}*/
 
 function getBestSplit(fullstring, childrenNodes, action) {
     //console.log("full string is: " + fullstring)
@@ -259,7 +285,7 @@ function getBestSplit(fullstring, childrenNodes, action) {
     var bestsplit = ["", ""]
     var ed = 100000
     var fullStringArray = fullstring.split("_")
-    for (var bp = 0; bp <= fullStringArray.length; bp++) {
+    for (var bp = 0; bp <= fullStringArray.length; bp ++) {
         var splits = getSplits(fullStringArray, bp)
         var s1 = splits[0]
         var s2 = splits[1]

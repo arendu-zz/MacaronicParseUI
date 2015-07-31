@@ -66,7 +66,7 @@ table td {
 
 .separator {
     color: coral;
-    fontSize: 20pt
+    /*fontSize: 20pt*/
 }
 
 .hasSwapDescendent {
@@ -82,7 +82,7 @@ table td {
 canvas {
     position: absolute;
     z-index: -1000;
-    pointer-event: none;
+    /*pointer-event: none;*/
 }
 
 span {

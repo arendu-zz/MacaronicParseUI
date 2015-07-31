@@ -423,7 +423,7 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
         }
     }
 
-    self.highlightWordTable = function (wordTable, rownum) {
+    self.highlightAndPreview = function (wordTable, rownum) {
         if (rownum == 0) {
 
             wordTable.lightHighlight(0);
@@ -436,7 +436,7 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
     self.highlight = function (e) {
         var wordTable = e.target.wordtable
         console.log("highlight event: its wt is ml class:" + wordTable.id);
-        self.highlightWordTable(wordTable, e.target.rownum)
+        self.highlightAndPreview(wordTable, e.target.rownum)
         e.stopImmediatePropagation();
 
     }
@@ -576,7 +576,7 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
             if (wordTable.highlighted) {
                 self.goUpToParent(wordTable);
             } else {
-                self.highlightWordTable(wordTable, 2);
+                self.highlightAndPreview(wordTable, 2);
             }
         } else {
             console.log("word table is null..")
@@ -612,7 +612,7 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
             if (wordTable.highlighted) {
                 self.goDownToChildren(wordTable)
             } else {
-                self.highlightWordTable(wordTable, 0)
+                self.highlightAndPreview(wordTable, 0)
             }
         } else {
             console.log("word table is null..")

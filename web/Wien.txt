@@ -77,7 +77,7 @@ Vor | einer | Woche | war | ich | mit | unserer | Studentengruppe | noch | in | 
 ---
 From there, we took a boat trip down the Danube .
 From there, we took a boat trip down the Danube ~ .
-From there ~ we took a boat trip down the Danube | .
+From there, ~ we took a boat trip down the Danube | .
 From there | we ~ took a boat trip down the Danube | .
 From there | we | took a boat trip down the Danube | .
 From there | we | went down the Danube with the ship | .

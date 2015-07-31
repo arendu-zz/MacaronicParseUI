@@ -3,15 +3,83 @@ __author__ = 'arenduchintala'
 import sys
 
 
+'''
+this.phrase = phrase;
+    this.phrasePart1 = ""
+    this.phrasePart2 = ""
+    this.num = -1;
+    this.parent = parent;
+    this.areChildrenSwapped = false
+    this.areParentsSwapped = false
+    this.wordTable = null;
+    this.isLeaf = false;
+    this.phraseChildren = [];
+    this.phraseSiblings = [];
+    this.areLeftDescendentsSwapping = false
+    this.areRightDescendentsSwapping = false
+    '''
+
+
+def get_splits(fullstr_list, bp):
+    s1 = ''
+    s2 = ''
+    joined = ''
+    if bp == 0:
+        s1 = ''
+    else:
+        s1 = '_'.join(fullstr_list[:bp])
+        joined = s1
+    if bp == len(fullstr_list):
+        s2 = ''
+    else:
+        s2 = '_'.join(fullstr_list[bp:])
+        if joined == '':
+            joined = joined + s2
+        else:
+            joined = joined + '_' + s2
+    assert joined == '_'.join(fullstr_list)
+    return s1, s2
+
+
+def get_best_split(fullstring, childrenNodes, action):
+    c1 = ''
+    c2 = ''
+    if action == "swap":
+        c1 = childrenNodes[1].phrase
+        c2 = childrenNodes[0].phrase
+    elif action == "noswap":
+        c1 = childrenNodes[0].phrase
+        c2 = childrenNodes[1].phrase
+    elif action == "drop2":
+        c1 = childrenNodes[0].phrase
+        c2 = ''
+    elif action == "drop1":
+        c1 = ''
+        c2 = childrenNodes[1].phrase
+
+    else:
+        pass
+    fullstring_list = fullstring.split('_')
+    for bp in range(len(fullstring) + 1):
+        s1, s2 = get_splits(fullstring_list, bp)
+        ced1 = ''
+    return None
+
+
 class Node(object):
     def __init__(self, p):
         self.phrase = p
-        self.children = []
+        self.phraseChildren = []
         self.parent = None
         self.removed = False
+        self.areChildrenSwapped = False
+        self.areLeftDescendentsSwapping = False
+        self.areRightDescendentsSwapping = False
+        self.pass_over = False
+
 
     def addchild(self, node):
-        self.children.append(node)
+        self.phraseChildren.append(node)
         node.parent = self
 
     def __str__(self):
@@ -21,11 +89,11 @@ class Node(object):
         return '_'.join(self.phrase.strip().split())
 
     def get_bracketed_string(self):
-        if len(self.children) == 0:
+        if len(self.phraseChildren) == 0:
             return " (" + self.get_phrase_underscore() + ")"
-        elif len(self.children) >= 1:
+        elif len(self.phraseChildren) >= 1:
             bkt = []
-            for child in self.children:
+            for child in self.phraseChildren:
                 bkt.append(child.get_bracketed_string())
             return " (" + self.get_phrase_underscore() + (" ").join(bkt) + ")"
         else:
@@ -35,8 +103,8 @@ class Node(object):
     def flag_redundant_binary_nodes(self):
         current_txt = self.phrase.strip()
         child_txt = []
-        if len(self.children) > 1:
-            for child in self.children:
+        if len(self.phraseChildren) > 1:
+            for child in self.phraseChildren:
                 child_txt.append(child.phrase.strip())
 
             if ' '.join(current_txt.split()) == ' '.join(child_txt):
@@ -48,7 +116,7 @@ class Node(object):
                     idx = self.parent.children.index(self)
                     self.parent.children.remove(self)
                     self.removed = True
-                    for child in reversed(self.children):
+                    for child in reversed(self.phraseChildren):
                         self.parent.children.insert(idx, child)
                 else:
                     pass  # sys.stderr.write("cant do anything no parent of redundant\n")
@@ -57,27 +125,31 @@ class Node(object):
         else:
             pass  # sys.stderr.write("ignoring uniary node\n")
 
-        for child in self.children:
+        for child in self.phraseChildren:
             if not child.removed:
                 child.flag_redundant_binary_nodes()
 
 
+    def mark_swaps(self):
+        pass
+
+
     def remove_redundant(self):
-        if len(self.children) == 1:
-            c1 = self.children[0]
+        if len(self.phraseChildren) == 1:
+            c1 = self.phraseChildren[0]
             if self.phrase.strip() == c1.phrase.strip():
-                self.children = []
-                for gc in c1.children:
-                    self.children.append(gc)
+                self.phraseChildren = []
+                for gc in c1.phraseChildren:
+                    self.phraseChildren.append(gc)
                 self.remove_redundant()
             else:
                 c1.remove_redundant()
 
             # print 'removed', c1.phrase
-            for nc in self.children:
+            for nc in self.phraseChildren:
                 nc.remove_redundant()
-        elif len(self.children) >= 1:
-            for c in self.children:
+        elif len(self.phraseChildren) >= 1:
+            for c in self.phraseChildren:
                 c.remove_redundant()
         else:
             # print 'reached leaf'
@@ -96,18 +168,18 @@ class Node(object):
 
     def getleaves(self):
         leaves = []
-        if len(self.children) == 0:
+        if len(self.phraseChildren) == 0:
             leaves.append(self)
         else:
             stack = []
-            for c in reversed(self.children):
+            for c in reversed(self.phraseChildren):
                 stack.append(c)
             while len(stack) > 0:
                 pn = stack.pop()
-                if len(pn.children) == 0:
+                if len(pn.phraseChildren) == 0:
                     leaves.append(pn)
                 else:
-                    for c in reversed(pn.children):
+                    for c in reversed(pn.phraseChildren):
                         stack.append(c)
         return leaves
 
@@ -167,11 +239,14 @@ if __name__ == "__main__":
                     sys.stderr.write("this should not happen\n")
         root.remove_redundant()
         root.add_punct_child()
-        root.flag_redundant_binary_nodes()
+        root.mark_swaps()
+        # root.flag_redundant_binary_nodes() todo: this was causing issues with underline
 
         if passed:
             finallist.append('"' + root.get_bracketed_string().strip() + '"')
             sys.stderr.write("completed:" + str(f_idx) + "\n\n")
         else:
             sys.stderr.write("failed:" + str(f_idx) + "\n\n")
+
+    sys.stderr.write("done.\n")
     print '[' + ',\n'.join(finallist) + ']'
