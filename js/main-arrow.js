@@ -3,7 +3,7 @@
  *
  */
 var mllist = []
-
+/*
 var bracket_list = ["(A_B_C_D (A_B (A (1))  (B (2)))  (C_D (C (3))  (D (4))))",
     "(A_B_C_D (A_B (B (2))  (A (1)))  (C_D (C (3))  (D (4))))",
     "(A_B_C_D (C_D (C (3))  (D (4)))  (A_B (A (1))  (B (2))))",
@@ -12,8 +12,8 @@ var bracket_list = ["(A_B_C_D (A_B (A (1))  (B (2)))  (C_D (C (3))  (D (4))))",
     "(I_don't_know_where_I_should_begin (I_don't_know (I_don't_know (I_don't (I (ich))  (not (really (gar))  (not (nicht))))  (know (weiß)))  (, (,)))  (where_I_should_begin (where (wo))  (I_should_begin (I (ich))  (should_begin (begin (beginnen))  (should (soll))))))",
     "(From_there,_we_took_a_boat_trip_down_the_Danube_. (From_there,_we_took_a_boat_trip_down_the_Danube (From_there (From (Von))  (there (dort)))  (we_took_a_boat_trip_down_the_Danube (we (are (sind))  (we (wir)))  (took_a_boat_trip_down_the_Danube (went_down_the_Danube_with_the_ship (with_the_ship (with (mit))  (the_ship (the (dem))  (ship (Schiff))))  (went_down_the_Danube (the_Danube (the (die))  (Danube (Donau)))  (went_down (hinuntergefahren)))))))  (. (.)))",
     "(We_have_been_in_Vienna_for_a_couple_of_days_. (We_have_been_in_Vienna_for_a_couple_of_days (We_have_been (Now (Jetzt))  (we_have_been (we_have_been (we_have (we_are (are (sind))  (we (wir)))))  (already (schon))))  (in_Vienna_for_a_couple_of_days (a_couple_of_days (a (ein))  (couple_of_days (couple (pair (paar)))  (days (Tage))))  (in_Vienna (in)  (Vienna (Wien)))))  (. (.)))"]
+*/
 
-/*
 var bracket_list = ["(﻿Dear_parents, (Dear (Liebe))  (parents, (parents (Eltern))  (, (! (!)))))",
     "(Now_I_really_have_to_write_you_again_! (Now (Jetzt))  (I_really_have_to_write_you_again_! (I_really_have_to_write_you_again (I_really_have_to (I_have_to (I_must (must (muss))  (I (ich)))))  (write_you_again (you (euch))  (write_again (really (but (aber))  (really (wirklich)))  (write_again (again (again (wieder))  (once (einmal)))  (write (schreiben))))))  (! (!))))",
     "(I've_seen_so_many_things_that_I_don't_know_where_to_start_. (I've_seen_so_many_things_that_I_don't_know_where_to_start (I've_seen_so_many_things (I've (I_have (I (Ich))  (have (habe))))  (seen_so_many_things (seen_so_many_things (so_many_things (so_much (so)  (much (viel))))  (seen (gesehen)))  (, (,))))  (that_I_don't_know_where_to_start (that (dass))  (I_don't_know_where_to_start (I_don't_know_where_I_should_begin (I_don't_know (I_don't_know (I_don't (I (ich))  (not (really (gar))  (not (nicht))))  (know (weiß)))  (, (,)))  (where_I_should_begin (where (wo))  (I_should_begin (I (ich))  (should_begin (begin (beginnen))  (should (soll)))))))))  (. (.)))",
@@ -26,7 +26,7 @@ var bracket_list = ["(﻿Dear_parents, (Dear (Liebe))  (parents, (parents (Elter
     "(Our_guest_house_is_very_centrally_located_and_we_can_get_everywhere_by_foot_or_by_subway_. (Our_guest_house_is_very_centrally_located_and_we_can_get_everywhere_by_foot_or_by_subway (Our_guest_house_is_very_centrally_located (Our_guest_house (Our (Unser))  (guest_house (Gästehaus)))  (very_centrally_located (very_central_lies (lies (liegt))  (very_central (very (sehr))  (central (zentral))))))  (and_we_can_get_everywhere_by_foot_or_by_subway (and (und))  (we_can_get_everywhere_by_foot_or_by_subway (we (wir))  (can_get_everywhere_by_foot_or_by_subway (can (können))  (get_everywhere_by_foot_or_by_subway (reach_everywhere_by_foot_or_by_subway (everywhere_by_foot_or_by_subway (everywhere (all (alles)))  (by_foot_or_by_subway (by_foot (by (zu))  (foot (Fuß)))  (or_by_subway (or (oder))  (by_subway (with_the_subway (with (mit))  (the_subway (the (der))  (subway (U-Bahn))))))))  (reach (erreichen))))))))  (. (.)))",
     "(I_have_never_walked_so_much_in_my_life_! (I_have_never_walked_so_much (So_much (So)  (much (viel)))  (I_have_never_walked (I_have_never (I_have (have (am (bin)))  (I (ich)))  (never (still (noch))  (never (nie))))  (walked (gelaufen))))  (! (!)))",
     "(On_Friday_we_spent_hours_strolling_around_the_city_center_. (On_Friday_we_spent_hours_strolling_around_the_city_center (On_Friday (On (Am))  (Friday (Freitag)))  (we_spent_hours_strolling_around_the_city_center (we_spent_hours (we_spent (we_are (are (sind))  (we (wir))))  (hours_long (stundenlang)))  (strolling_around_the_city_center (strolled_around_the_city_center (around_the_city_center (through_the_city_center (through (durch))  (the_city_center (the (die))  (city_center (Innenstadt)))))  (strolled (gebummelt))))))  (. (.)))"]
-*/
+
 function mysliderup(valnum) {
     console.log("mouse up on slider" + valnum.toString())
     NodeList.prototype.forEach = Array.prototype.forEach
@@ -71,7 +71,7 @@ function ready() {
             var rootPhraseNode = items[0]
             var numNT = items[1]
             var macline = new MacaronicLine(i, rootPhraseNode, numNT)
-            var leaves = getleaves(macline.rootPhraseNode)
+            //var leaves = getleaves(macline.rootPhraseNode)
             console.log("doing label swaps...")
             labelSwaps(macline.rootPhraseNode)
             labelDescendentSwaps(macline.rootPhraseNode)
