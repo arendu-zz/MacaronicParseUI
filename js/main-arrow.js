@@ -3,7 +3,7 @@
  *
  */
 var mllist = []
-/*
+
 var bracket_list = ["(A_B_C_D (A_B (A (1))  (B (2)))  (C_D (C (3))  (D (4))))",
     "(A_B_C_D (A_B (B (2))  (A (1)))  (C_D (C (3))  (D (4))))",
     "(A_B_C_D (C_D (C (3))  (D (4)))  (A_B (A (1))  (B (2))))",
@@ -12,21 +12,21 @@ var bracket_list = ["(A_B_C_D (A_B (A (1))  (B (2)))  (C_D (C (3))  (D (4))))",
     "(I_don't_know_where_I_should_begin (I_don't_know (I_don't_know (I_don't (I (ich))  (not (really (gar))  (not (nicht))))  (know (weiß)))  (, (,)))  (where_I_should_begin (where (wo))  (I_should_begin (I (ich))  (should_begin (begin (beginnen))  (should (soll))))))",
     "(From_there,_we_took_a_boat_trip_down_the_Danube_. (From_there,_we_took_a_boat_trip_down_the_Danube (From_there (From (Von))  (there (dort)))  (we_took_a_boat_trip_down_the_Danube (we (are (sind))  (we (wir)))  (took_a_boat_trip_down_the_Danube (went_down_the_Danube_with_the_ship (with_the_ship (with (mit))  (the_ship (the (dem))  (ship (Schiff))))  (went_down_the_Danube (the_Danube (the (die))  (Danube (Donau)))  (went_down (hinuntergefahren)))))))  (. (.)))",
     "(We_have_been_in_Vienna_for_a_couple_of_days_. (We_have_been_in_Vienna_for_a_couple_of_days (We_have_been (Now (Jetzt))  (we_have_been (we_have_been (we_have (we_are (are (sind))  (we (wir)))))  (already (schon))))  (in_Vienna_for_a_couple_of_days (a_couple_of_days (a (ein))  (couple_of_days (couple (pair (paar)))  (days (Tage))))  (in_Vienna (in)  (Vienna (Wien)))))  (. (.)))"]
-*/
 
+/*
 var bracket_list = ["(﻿Dear_parents, (Dear (Liebe))  (parents, (parents (Eltern))  (, (! (!)))))",
-"(Now_I_really_have_to_write_you_again_! (Now (Jetzt))  (I_really_have_to_write_you_again_! (I_really_have_to_write_you_again (I_really_have_to (I_have_to (I_must (must (muss))  (I (ich)))))  (write_you_again (you (euch))  (write_again (really (but (aber))  (really (wirklich)))  (write_again (again (again (wieder))  (once (einmal)))  (write (schreiben))))))  (! (!))))",
-"(I've_seen_so_many_things_that_I_don't_know_where_to_start_. (I've_seen_so_many_things_that_I_don't_know_where_to_start (I've_seen_so_many_things (I've (I_have (I (Ich))  (have (habe))))  (seen_so_many_things (seen_so_many_things (so_many_things (so_much (so)  (much (viel))))  (seen (gesehen)))  (, (,))))  (that_I_don't_know_where_to_start (that (dass))  (I_don't_know_where_to_start (I_don't_know_where_I_should_begin (I_don't_know (I_don't_know (I_don't (I (ich))  (not (really (gar))  (not (nicht))))  (know (weiß)))  (, (,)))  (where_I_should_begin (where (wo))  (I_should_begin (I (ich))  (should_begin (begin (beginnen))  (should (soll)))))))))  (. (.)))",
-"(A_week_ago_I_was_still_with_our_student_group_in_Passau_. (A_week_ago_I_was_still_with_our_student_group_in_Passau (A_week_ago (Ago (Vor))  (a_week (one_week (one (einer))  (week (Woche)))))  (I_was_still_with_our_student_group_in_Passau (I_was (was (war))  (I (ich)))  (still_with_our_student_group_in_Passau (still_with_our_student_group (with_our_student_group (with (mit))  (our_student_group (our (unserer))  (student_group (Studentengruppe))))  (still (noch)))  (in_Passau (in)  (Passau)))))  (. (.)))",
-"(From_there,_we_took_a_boat_trip_down_the_Danube_. (From_there,_we_took_a_boat_trip_down_the_Danube (From_there, (From_there (From (Von))  (there (dort))))  (we_took_a_boat_trip_down_the_Danube (we (are (sind))  (we (wir)))  (took_a_boat_trip_down_the_Danube (went_down_the_Danube_with_the_ship (with_the_ship (with (mit))  (the_ship (the (dem))  (ship (Schiff))))  (went_down_the_Danube (the_Danube (the (die))  (Danube (Donau)))  (went_down (hinuntergefahren)))))))  (. (.)))",
-"(I_really_liked_the_vineyards,_castles_and_especially_Melk_Monastery_. (I_really_liked_the_vineyards,_castles_and_especially_Melk_Monastery (The_vineyards,_castles_and_especially_Melk_Monastery (The_vineyards, (The_vineyards (The (Die))  (vineyards (Weinberge)))  (, (,)))  (castles_and_especially_Melk_Monastery (castles (Burgen))  (and_especially_Melk_Monastery (and (und))  (especially_Melk_Monastery (especially (besonders))  (Melk_Monastery (Monastery (Kloster))  (Melk))))))  (I_really_liked (have (haben))  (I_really_liked (I_really (I (me (mir)))  (really (very_good (very (sehr))  (good (gut)))))  (liked (pleased (gefallen))))))  (. (.)))",
-"(The_weather_has_also_been_very_nice_. (The_weather_has_also_been_very_nice (The_weather (The (Das))  (weather (Wetter)))  (has_also_been_very_nice (has (is (ist)))  (also_been_very_nice (also (auch))  (been_very_nice (very_nice (very (sehr))  (nice (schön)))  (been (gewesen))))))  (. (.)))",
-"(We_have_been_in_Vienna_for_a_couple_of_days_. (We_have_been_in_Vienna_for_a_couple_of_days (We_have_been (Now (Jetzt))  (we_have_been (we_have_been (we_have (we_are (are (sind))  (we (wir)))))  (already (schon))))  (in_Vienna_for_a_couple_of_days (a_couple_of_days (a (ein))  (couple_of_days (couple (pair (paar)))  (days (Tage))))  (in_Vienna (in)  (Vienna (Wien)))))  (. (.)))",
-"(I_think_it_is_great_here_! (I_think_it_is_great_here (I (Ich))  (think_it_is_great_here (think (find (finde)))  (it_is_great_here (it_is_great (it_is (it (es)))  (great (toll)))  (here (hier)))))  (! (!)))",
-"(Our_guest_house_is_very_centrally_located_and_we_can_get_everywhere_by_foot_or_by_subway_. (Our_guest_house_is_very_centrally_located_and_we_can_get_everywhere_by_foot_or_by_subway (Our_guest_house_is_very_centrally_located (Our_guest_house (Our (Unser))  (guest_house (Gästehaus)))  (very_centrally_located (very_central_lies (lies (liegt))  (very_central (very (sehr))  (central (zentral))))))  (and_we_can_get_everywhere_by_foot_or_by_subway (and (und))  (we_can_get_everywhere_by_foot_or_by_subway (we (wir))  (can_get_everywhere_by_foot_or_by_subway (can (können))  (get_everywhere_by_foot_or_by_subway (reach_everywhere_by_foot_or_by_subway (everywhere_by_foot_or_by_subway (everywhere (all (alles)))  (by_foot_or_by_subway (by_foot (by (zu))  (foot (Fuß)))  (or_by_subway (or (oder))  (by_subway (with_the_subway (with (mit))  (the_subway (the (der))  (subway (U-Bahn))))))))  (reach (erreichen))))))))  (. (.)))",
-"(I_have_never_walked_so_much_in_my_life_! (I_have_never_walked_so_much (So_much (So)  (much (viel)))  (I_have_never_walked (I_have_never (I_have (have (am (bin)))  (I (ich)))  (never (still (noch))  (never (nie))))  (walked (gelaufen))))  (! (!)))",
-"(On_Friday_we_spent_hours_strolling_around_the_city_center_. (On_Friday_we_spent_hours_strolling_around_the_city_center (On_Friday (On (Am))  (Friday (Freitag)))  (we_spent_hours_strolling_around_the_city_center (we_spent_hours (we_spent (we_are (are (sind))  (we (wir))))  (hours_long (stundenlang)))  (strolling_around_the_city_center (strolled_around_the_city_center (around_the_city_center (through_the_city_center (through (durch))  (the_city_center (the (die))  (city_center (Innenstadt)))))  (strolled (gebummelt))))))  (. (.)))"]
-
+    "(Now_I_really_have_to_write_you_again_! (Now (Jetzt))  (I_really_have_to_write_you_again_! (I_really_have_to_write_you_again (I_really_have_to (I_have_to (I_must (must (muss))  (I (ich)))))  (write_you_again (you (euch))  (write_again (really (but (aber))  (really (wirklich)))  (write_again (again (again (wieder))  (once (einmal)))  (write (schreiben))))))  (! (!))))",
+    "(I've_seen_so_many_things_that_I_don't_know_where_to_start_. (I've_seen_so_many_things_that_I_don't_know_where_to_start (I've_seen_so_many_things (I've (I_have (I (Ich))  (have (habe))))  (seen_so_many_things (seen_so_many_things (so_many_things (so_much (so)  (much (viel))))  (seen (gesehen)))  (, (,))))  (that_I_don't_know_where_to_start (that (dass))  (I_don't_know_where_to_start (I_don't_know_where_I_should_begin (I_don't_know (I_don't_know (I_don't (I (ich))  (not (really (gar))  (not (nicht))))  (know (weiß)))  (, (,)))  (where_I_should_begin (where (wo))  (I_should_begin (I (ich))  (should_begin (begin (beginnen))  (should (soll)))))))))  (. (.)))",
+    "(A_week_ago_I_was_still_with_our_student_group_in_Passau_. (A_week_ago_I_was_still_with_our_student_group_in_Passau (A_week_ago (Ago (Vor))  (a_week (one_week (one (einer))  (week (Woche)))))  (I_was_still_with_our_student_group_in_Passau (I_was (was (war))  (I (ich)))  (still_with_our_student_group_in_Passau (still_with_our_student_group (with_our_student_group (with (mit))  (our_student_group (our (unserer))  (student_group (Studentengruppe))))  (still (noch)))  (in_Passau (in)  (Passau)))))  (. (.)))",
+    "(From_there,_we_took_a_boat_trip_down_the_Danube_. (From_there,_we_took_a_boat_trip_down_the_Danube (From_there, (From_there (From (Von))  (there (dort))))  (we_took_a_boat_trip_down_the_Danube (we (are (sind))  (we (wir)))  (took_a_boat_trip_down_the_Danube (went_down_the_Danube_with_the_ship (with_the_ship (with (mit))  (the_ship (the (dem))  (ship (Schiff))))  (went_down_the_Danube (the_Danube (the (die))  (Danube (Donau)))  (went_down (hinuntergefahren)))))))  (. (.)))",
+    "(I_really_liked_the_vineyards,_castles_and_especially_Melk_Monastery_. (I_really_liked_the_vineyards,_castles_and_especially_Melk_Monastery (The_vineyards,_castles_and_especially_Melk_Monastery (The_vineyards, (The_vineyards (The (Die))  (vineyards (Weinberge)))  (, (,)))  (castles_and_especially_Melk_Monastery (castles (Burgen))  (and_especially_Melk_Monastery (and (und))  (especially_Melk_Monastery (especially (besonders))  (Melk_Monastery (Monastery (Kloster))  (Melk))))))  (I_really_liked (have (haben))  (I_really_liked (I_really (I (me (mir)))  (really (very_good (very (sehr))  (good (gut)))))  (liked (pleased (gefallen))))))  (. (.)))",
+    "(The_weather_has_also_been_very_nice_. (The_weather_has_also_been_very_nice (The_weather (The (Das))  (weather (Wetter)))  (has_also_been_very_nice (has (is (ist)))  (also_been_very_nice (also (auch))  (been_very_nice (very_nice (very (sehr))  (nice (schön)))  (been (gewesen))))))  (. (.)))",
+    "(We_have_been_in_Vienna_for_a_couple_of_days_. (We_have_been_in_Vienna_for_a_couple_of_days (We_have_been (Now (Jetzt))  (we_have_been (we_have_been (we_have (we_are (are (sind))  (we (wir)))))  (already (schon))))  (in_Vienna_for_a_couple_of_days (a_couple_of_days (a (ein))  (couple_of_days (couple (pair (paar)))  (days (Tage))))  (in_Vienna (in)  (Vienna (Wien)))))  (. (.)))",
+    "(I_think_it_is_great_here_! (I_think_it_is_great_here (I (Ich))  (think_it_is_great_here (think (find (finde)))  (it_is_great_here (it_is_great (it_is (it (es)))  (great (toll)))  (here (hier)))))  (! (!)))",
+    "(Our_guest_house_is_very_centrally_located_and_we_can_get_everywhere_by_foot_or_by_subway_. (Our_guest_house_is_very_centrally_located_and_we_can_get_everywhere_by_foot_or_by_subway (Our_guest_house_is_very_centrally_located (Our_guest_house (Our (Unser))  (guest_house (Gästehaus)))  (very_centrally_located (very_central_lies (lies (liegt))  (very_central (very (sehr))  (central (zentral))))))  (and_we_can_get_everywhere_by_foot_or_by_subway (and (und))  (we_can_get_everywhere_by_foot_or_by_subway (we (wir))  (can_get_everywhere_by_foot_or_by_subway (can (können))  (get_everywhere_by_foot_or_by_subway (reach_everywhere_by_foot_or_by_subway (everywhere_by_foot_or_by_subway (everywhere (all (alles)))  (by_foot_or_by_subway (by_foot (by (zu))  (foot (Fuß)))  (or_by_subway (or (oder))  (by_subway (with_the_subway (with (mit))  (the_subway (the (der))  (subway (U-Bahn))))))))  (reach (erreichen))))))))  (. (.)))",
+    "(I_have_never_walked_so_much_in_my_life_! (I_have_never_walked_so_much (So_much (So)  (much (viel)))  (I_have_never_walked (I_have_never (I_have (have (am (bin)))  (I (ich)))  (never (still (noch))  (never (nie))))  (walked (gelaufen))))  (! (!)))",
+    "(On_Friday_we_spent_hours_strolling_around_the_city_center_. (On_Friday_we_spent_hours_strolling_around_the_city_center (On_Friday (On (Am))  (Friday (Freitag)))  (we_spent_hours_strolling_around_the_city_center (we_spent_hours (we_spent (we_are (are (sind))  (we (wir))))  (hours_long (stundenlang)))  (strolling_around_the_city_center (strolled_around_the_city_center (around_the_city_center (through_the_city_center (through (durch))  (the_city_center (the (die))  (city_center (Innenstadt)))))  (strolled (gebummelt))))))  (. (.)))"]
+*/
 function mysliderup(valnum) {
     console.log("mouse up on slider" + valnum.toString())
     NodeList.prototype.forEach = Array.prototype.forEach
@@ -42,7 +42,7 @@ function mysliderfunc(valnum) {
     mllist.forEach(
         function (item) {
             item.setSliderNum(valnum)
-        });
+        })
 }
 
 function startsWith(string1, string2) {
@@ -53,12 +53,6 @@ function startsWith(string1, string2) {
         return false
     }
 }
-
-Node.prototype.insertAfter = function (newNode, referenceNode) {
-    return referenceNode.parentNode.insertBefore(
-        newNode, referenceNode.nextSibling);
-};
-
 
 function sortByID(a, b) {
     var aName = a.id.toLowerCase();
@@ -276,8 +270,8 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
     self["numSteps"] = numNT * 2
     self["stepSize"] = parseInt(100 / self.numSteps)
     self["previewDiv"] = null
-    self["previewArrowsToChildrenNodes"] = null
-    self["previewArrowsToParentNodes"] = null
+    self.previewArrowsToChildrenNodes = null
+    self.previewArrowsToParentNodes = null
     self["prevDirection"] = "going forward"
     self["prevZone"] = 0
     self["prevValNum"] = 0
@@ -325,8 +319,11 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
         //console.log("trying to remove internal arrow")
         if (self.previewArrowsToChildren != null) {
             //delete self.previewArrowsToChildren
+            for (var i = 0; i < self.previewArrowsToChildren.length; i ++) {
+                $(self.previewArrowsToChildren[i]).remove()
+            }
 
-            $(self.previewArrowsToChildren).remove()
+            //$(self.previewArrowsToChildren).remove()
             self.previewArrowsToChildren = null
         }
 
@@ -346,7 +343,10 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
     self.removeExternalArrow = function () {
         //console.log("trying to remove external arrow")
         if (self.previewArrowsToParentNodes != null) {
-            $(self.previewArrowsToParentNodes).remove()
+            for (var i = 0; i < self.previewArrowsToParentNodes.length; i ++) {
+                $(self.previewArrowsToParentNodes[i]).remove()
+            }
+            //$(self.previewArrowsToParentNodes).remove()
             self.previewArrowsToParentNodes = null
         }
 
@@ -390,7 +390,7 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
             return previous_n
         } else {
             console.log("I cat NOT secretly go up...")
-            return n
+            return original_n
         }
     }
 
@@ -414,7 +414,7 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
 
     self.getBoxPositions = function (list_visible_of_wt) {
         var left_most = 10000
-        var padding = 5 //TODO: find out what this actually is and where it is set
+        var padding = 0 //TODO: find out what this actually is and where it is set
         var top = 0
         var height = 20
         var sum_widths = 0
@@ -438,11 +438,13 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
     }
 
     self.showExternalArrow = function (e) {
+        self.removeExternalArrow()
         var source_wordTable = e.target.wordTable
         var containerDiv = source_wordTable.parentNode
         var children_nl = containerDiv.childNodes
         var pesudo_source = null
         var pp = source_wordTable.phraseNode.parent
+        var pp1 = self.secretly_goUpToParent(source_wordTable)
         if (pp != null) {
 
             if (pp.areChildrenSwapped) {
@@ -477,17 +479,28 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
 
                     var dest_offset = self.getBoxPositions(all_dest)
                     var source_offset = self.getBoxPositions(all_sources)
-                    if (self.previewArrowsToParentNodes != null) {
-                        var p = self.previewArrowsToParentNodes.parentNode
-                        if (p != null) {
-                            p.removeChild(self.previewArrowsToParentNodes);
-                        }
-                        self.previewArrowsToParentNodes = null
-                    }
+
+
                     var dest_point_x = dest_offset[1] < source_offset[1] + source_offset[3] / 2 ? dest_offset[1] : dest_offset[1] + dest_offset[3]
                     var curve_point_x = (dest_point_x + ( source_offset[1] + source_offset[3] / 2)) / 2
+                    var source_box = $(self.lineDiv).MyBox(
+                        {
+                            px: source_offset[1],
+                            py: source_offset[0],
+                            b_width: source_offset[3],
+                            b_height: source_offset[2] - 2,
+                            id: "previewOverlayBox"
+                        })
 
-                    self.previewArrowsToParentNodes = $(self.lineDiv).curvedArrow(
+                    var dest_box = $(self.lineDiv).MyBox(
+                        {
+                            px: dest_offset[1],
+                            py: dest_offset[0],
+                            b_width: dest_offset[3],
+                            b_height: dest_offset[2] - 2,
+                            id: "previewOverlayBox"
+                        })
+                    var arrow = $(self.lineDiv).curvedArrow(
                         {
                             p0x: source_offset[1] + source_offset[3] / 2,
                             p0y: source_offset[0] + source_offset[2],
@@ -497,13 +510,19 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
                             p2y: dest_offset[0] + dest_offset[2],
                             id: "previewOverlayArrow"
                         })
-                    $(self.lineDiv).append(self.previewArrowsToParentNodes)
-                    for (var i = 0; i < all_sources.length; i ++) {
+                    self.previewArrowsToParentNodes = []
+                    self.previewArrowsToParentNodes.push(arrow)
+                    self.previewArrowsToParentNodes.push(source_box)
+                    self.previewArrowsToParentNodes.push(dest_box)
+                    $(self.lineDiv).append(arrow)
+                    $(self.lineDiv).append(source_box)
+                    $(self.lineDiv).append(dest_box)
+                    /*for (var i = 0; i < all_sources.length; i ++) {
                         all_sources[i].setHasArrowOnRow()
                     }
                     for (var i = 0; i < all_dest.length; i ++) {
                         all_dest[i].setHasArrowOnRow()
-                    }
+                    }*/
 
                     self.source_wordTable = all_sources
                     self.dest_wordTable = all_dest
@@ -522,6 +541,7 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
 
 
     self.showInternalArrow = function (e) {
+        self.removeInternalArrow()
         var wordTable = e.target.wordTable
         var source_span, dest_span
         var source_offset, dest_offset
@@ -545,17 +565,37 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
         if (dest_span != null && source_span != null && wordTable.phraseNode.areChildrenSwapped) {
             console.log("draw a arraw from source:" + source_span.innerText + " to " + dest_span.innerText)
 
-            if (self.previewArrowsToChildren != null) {
+            /*if (self.previewArrowsToChildren != null) {
                 var p = self.previewArrowsToChildren.parentNode
                 if (p != null) {
                     p.removeChild(self.previewArrowsToChildren);
                 }
                 self.previewArrowsToChildren = null
-            }
+            }*/
 
             var dest_point_x = dest_offset[1] < source_offset[1] + source_offset[3] / 2 ? dest_offset[1] : dest_offset[1] + dest_offset[3]
             var curve_point_x = (dest_point_x + ( source_offset[1] + source_offset[3] / 2)) / 2
-            self.previewArrowsToChildren = $(self.lineDiv).curvedArrow(
+            var source_box = $(self.lineDiv).MyBox(
+                {
+                    px: source_offset[1],
+                    py: source_offset[0],
+                    b_width: source_offset[3],
+                    b_height: source_offset[2],
+                    strokeStyle: 'coral',
+                    id: "previewOverlayBox"
+                })
+
+            var dest_box = $(self.lineDiv).MyBox(
+                {
+                    px: dest_offset[1],
+                    py: dest_offset[0],
+                    b_width: dest_offset[3],
+                    b_height: dest_offset[2],
+                    strokeStyle: 'coral',
+                    id: "previewOverlayBox"
+                })
+
+            var arrow = $(self.lineDiv).curvedArrow(
                 {
                     p0x: source_offset[1] + source_offset[3] / 2,
                     p0y: source_offset[0],
@@ -566,9 +606,15 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
                     strokeStyle: 'coral',
                     id: "previewOverlayArrow"
                 })
-            $(self.lineDiv).append(self.previewArrowsToChildren)
-            $(source_span).addClass("hasarrow")
-            $(dest_span).addClass("hasarrow")
+            self.previewArrowsToChildren = []
+            self.previewArrowsToChildren.push(arrow)
+            self.previewArrowsToChildren.push(source_box)
+            self.previewArrowsToChildren.push(dest_box)
+            $(self.lineDiv).append(arrow)
+            $(self.lineDiv).append(source_box)
+            $(self.lineDiv).append(dest_box)
+            //$(source_span).addClass("hasarrow")
+            //$(dest_span).addClass("hasarrow")
             self.source_span = source_span
             self.dest_span = dest_span
         } else {

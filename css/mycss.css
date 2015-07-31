@@ -51,7 +51,8 @@ table {
 }
 
 table td {
-    border: 2px transparent;
+    border: 2px;
+    /*border-style: solid;*/
 
 }
 

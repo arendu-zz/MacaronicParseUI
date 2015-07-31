@@ -1,18 +1,19 @@
 (function ($) {
     $.fn.curvedArrow = function (options) {
-        var settings = $.extend({
-            p0x: 50,
-            p0y: 50,
-            p1x: 70,
-            p1y: 10,
-            p2x: 100,
-            p2y: 100,
-            p3x: 150,
-            p3y: 300,
-            size: 12,
-            lineWidth: 2,
-            strokeStyle: 'grey'
-        }, options);
+        var settings = $.extend(
+            {
+                p0x: 50,
+                p0y: 50,
+                p1x: 70,
+                p1y: 10,
+                p2x: 100,
+                p2y: 100,
+                p3x: 150,
+                p3y: 300,
+                size: 12,
+                lineWidth: 2,
+                strokeStyle: 'grey'
+            }, options);
 
         var canvas = document.createElement('canvas');
         canvas.id = options.id
@@ -67,13 +68,13 @@
         ctx.stroke();
 
         // Left side
-        ctx.rotate(-2);
-        ctx.lineTo(0, -settings.size);
+        ctx.rotate(- 2);
+        ctx.lineTo(0, - settings.size);
         ctx.stroke();
 
         // Restore context
         ctx.rotate(1 - angle);
-        ctx.translate(-p2x, -p2y);
+        ctx.translate(- p2x, - p2y);
 
         return $(canvas).addClass('curved_arrow');
     }
