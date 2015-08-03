@@ -106,7 +106,7 @@ function createWordTable(numid, phraseNode, macaronicline) {
     wordTable["s1"] = null
     wordTable["s2"] = null
     wordTable["r1"] = null
-    var j_size = 2 //phraseNode.phrasePart2 == null ? 1 : 2;
+    var j_size = phraseNode.phrasePart2 == null ? 1 : 2;
     for (var i = 0; i < 3; i ++) {
         var tr = wordTable.insertRow();
         if (i == 1) {
@@ -224,7 +224,7 @@ function createWordTable(numid, phraseNode, macaronicline) {
         var j_size = this.phraseNode.phrasePart2 == null ? 1 : 2;
         for (var i = 0; i < j_size; i ++) {
             this.rows[position].cells[i].style.opacity = 0.0
-            this.rows[position].cells[i].style.backgroundColor = "grey"
+            /*this.rows[position].cells[i].style.backgroundColor = "grey"*/
             this.rows[1].cells[i].style.opacity = 1
         }
     }
@@ -234,8 +234,8 @@ function createWordTable(numid, phraseNode, macaronicline) {
         var j_size = this.phraseNode.phrasePart2 == null ? 1 : 2;
         for (var i = 0; i < j_size; i ++) {
             this.rows[position].cells[i].style.opacity = 0.0
-            this.rows[position].cells[i].style.backgroundColor = "grey"
-            this.rows[1].cells[i].style.opacity = 0.3
+            /*this.rows[position].cells[i].style.backgroundColor = "grey"*/
+            this.rows[1].cells[i].style.opacity = 0.5
         }
 
     }
@@ -659,75 +659,6 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
         e.stopImmediatePropagation()
     }
 
-    self.previewParent_old = function (wordTable) {
-        var left = 10000
-        var top = 10000
-        var parentPhraseNode = wordTable.phraseNode.parent;
-        var containerDiv = wordTable.parentNode;
-        var children = containerDiv.childNodes;
-        /*
-         get the top and left position for preview box
-         */
-        NodeList.prototype.forEach = Array.prototype.forEach
-        children.forEach(
-            function (item) {
-                if (startsWith(item.id, "previewOverlay")) {
-
-                } else {
-                    var pn = item.phraseNode;
-                    if (pn.isMyAncestor(parentPhraseNode)) {
-                        item.lightHighlight(0);
-                        var jtdpos = item.getBottomCellCoordinate()
-                        if (jtdpos.left < left) {
-                            left = jtdpos.left
-                        }
-                        if (jtdpos.top < top) {
-                            top = jtdpos.top
-                        }
-                    }
-                }
-
-            });
-
-        if (self.previewDiv != null) {
-            self.previewDiv.wordTable.unLightHighlight(0)
-            self.previewDiv.wordTable.unLightHighlight(2)
-            var p = self.previewDiv.parentNode
-            if (p != null) {
-                p.removeChild(self.previewDiv);
-            }
-            self.isPreviewState = false;
-            self.previewDiv = null;
-        }
-
-        var parentPhraseNode = wordTable.phraseNode.parent;
-        if (parentPhraseNode != null) {
-            self.isPreviewState = true;
-            //createAndAddPreview(wordTable, true, self)
-            self.previewDiv = document.createElement("div")
-            self.previewDiv["wordTable"] = wordTable
-            self.previewDiv["previewType"] = "parent"
-            //self.previewDiv.style.border = "1px solid black";
-            var previewSpan = document.createElement("span")
-            self.previewDiv.id = "previewOverlay" + self.id.toString()
-            //$("body").append(self.previewDiv);
-            self.lineDiv.appendChild(self.previewDiv)
-            self.previewDiv.appendChild(previewSpan)
-            previewSpan.innerHTML = parentPhraseNode.phrase.replace(/_/g, " ")
-            console.log("previewing parent areparentsswaped:" + wordTable.phraseNode.areParentsSwapped.toString())
-            //previewSpan.className = 'nonleaf';
-            var elem = $(self.previewDiv);
-            elem.css(
-                {
-                    position: 'absolute',
-                    top: top,
-                    left: left,
-                    zIndex: - 1
-                });
-        }
-
-    }
-
     self.visibleStrCheck = function (all_children, parentPhraseNode) {
         if (parentPhraseNode != null) {
             var visiblePhrase = []
@@ -840,8 +771,6 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
                         doPreviewNode = true
                     }
                 }
-
-
             } else {
                 //console.log("parent phrase is the NOT SAME as the current visible descendents")
                 //console.log("show parent node now ...")
@@ -863,11 +792,40 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
                 self.previewDiv = document.createElement("div")
                 self.previewDiv["wordTable"] = wordTable
                 self.previewDiv["previewType"] = "parent"
-                var previewSpan = document.createElement("span")
+                //var previewSpan = document.createElement("span")
                 self.previewDiv.id = "previewOverlay" + self.id.toString()
                 self.lineDiv.appendChild(self.previewDiv)
-                self.previewDiv.appendChild(previewSpan)
-                previewSpan.innerHTML = parentPhraseNode.phrase.replace(/_/g, " ")
+                //self.previewDiv.appendChild(previewSpan)
+                var parent_phrase_list = parentPhraseNode.phrase.split("_")
+                var children_list = self.getVisibileDescendants(children_nl, parentPhraseNode)
+                var current_phrase_list = []
+                for (var i = 0; i < children_list.length; i ++) {
+                    var sub = children_list[i].phraseNode.phrase.split("_")
+                    for (var j = 0; j < sub.length; j ++) {
+                        current_phrase_list.push(sub[j])
+                    }
+                }
+                var o = editdistance(parent_phrase_list, current_phrase_list)
+                for (var i = 0; i < o.alignments.length; i ++) {
+                    var curr = o.alignments[i][0]
+                    var par = o.alignments[i][1]
+                    var previewSpan = document.createElement("span")
+                    if (curr != "<eps>") {
+                        previewSpan.innerHTML = curr
+                        if (curr == par) {
+                            console.log("same:" + curr + " " + par)
+                            $(previewSpan).addClass("previewSame")
+                        } else {
+                            console.log("diff:" + curr + " " + par)
+                            $(previewSpan).addClass("previewDifferent")
+                        }
+                        self.previewDiv.appendChild(previewSpan)
+                    } else {
+                        console.log(" skip <eps>")
+                    }
+                }
+                $(self.previewDiv).addClass("previewDiv")
+                //previewSpan.innerHTML = parentPhraseNode.phrase.replace(/_/g, " ")
                 var elem = $(self.previewDiv);
                 var pos = self.getPositionBottomLeft(children_nl, parentPhraseNode)
                 elem.css(
@@ -945,23 +903,37 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
             console.log("previewing children arechildrenswapped:" + wordTable.phraseNode.areChildrenSwapped.toString())
             var acceptablePhraseNodes = wordTable.phraseNode.get_non_transient_children()
 
-            //for (var i = 0; i < wordTable.phraseNode.phraseChildren.length; i++) {
-            //    var pn = wordTable.phraseNode.phraseChildren[i];
+            var all_child_list = []
             for (var i = 0; i < acceptablePhraseNodes.length; i ++) {
                 var pn = acceptablePhraseNodes[i];
-                var previewSpan = document.createElement("span")
-                //previewSpan.style.border = "1px solid black";
-                previewSpan.innerHTML = pn.phrase.replace(/_/g, " ")
-                //previewSpan.className = pn.phraseChildren.length == 0 ? 'leaf' : 'nonleaf';
-                self.previewDiv.appendChild(previewSpan)
-                //if (i == wordTable.phraseNode.phraseChildren.length - 1) {
-                if (i != acceptablePhraseNodes.length - 1) {
-                    var previewSpan = document.createElement("span")
-                    previewSpan.innerHTML = "--"
-                    $(previewSpan).addClass("separator")
+                var pn_phrases_list = pn.phrase.split("_")
 
-                    //previewSpan.className = "nonleaf"
+                for (var j = 0; j < pn_phrases_list.length; j ++) {
+                    /*var previewSpan = document.createElement("span")
+                    previewSpan.innerHTML = pn_phrases_list[j]
                     self.previewDiv.appendChild(previewSpan)
+                    $(previewSpan).addClass("previewSame")*/
+                    all_child_list.push(pn_phrases_list[j])
+                }
+            }
+            var current_phrase_list = wordTable.phraseNode.phrase.split("_")
+            var o = editdistance(all_child_list, current_phrase_list)
+            for (var i = 0; i < o.alignments.length; i ++) {
+                var curr = o.alignments[i][0]
+                var par = o.alignments[i][1]
+                var previewSpan = document.createElement("span")
+                if (curr != "<eps>") {
+                    previewSpan.innerHTML = curr
+                    if (curr == par) {
+                        console.log("same:" + curr + " " + par)
+                        $(previewSpan).addClass("previewSame")
+                    } else {
+                        console.log("diff:" + curr + " " + par)
+                        $(previewSpan).addClass("previewDifferent")
+                    }
+                    self.previewDiv.appendChild(previewSpan)
+                } else {
+                    console.log(" skip <eps>")
                 }
             }
             //$("body").append(self.previewDiv);
@@ -1026,26 +998,6 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
             console.log("phrase node:" + wordTable.phraseNode.phrase + " has no children");
         }
         return wordtables_added
-    }
-
-    self.goUpToParent_old = function (wordTable) {
-        self.previewDiv = document.getElementById("previewOverlay" + self.id.toString())
-        if (self.previewDiv != null) {
-            self.previewDiv.parentNode.removeChild(self.previewDiv);
-        }
-        var pn = wordTable.phraseNode;
-        pn.isMyAncestor(pn);
-        var parentPhraseNode = wordTable.phraseNode.parent;
-        if (parentPhraseNode != null) {
-            var containerDiv = wordTable.parentNode;
-            var parentWordTable = createWordTable(wordTable.id, parentPhraseNode, self);
-            containerDiv.insertBefore(parentWordTable, wordTable);
-            self.removeDescents(parentWordTable);
-            self.redoIds(containerDiv);
-        } else {
-            console.log("parent phrase node seems to be null.... nothing to do..")
-        }
-
     }
 
     self.goUpToParent_new = function (wordTable, correct_transient_from_top) {
