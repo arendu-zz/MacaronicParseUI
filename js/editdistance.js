@@ -33,7 +33,17 @@ function edObj(score, prev, tok) {
     this.tok = tok
 
 }
-
+function drawTable(table) {
+    console.log("table:")
+    for (var x = 0; x < table.length; x ++) {
+        row = []
+        for (var y = 0; y < table[x].length; y ++) {
+            row.push((table[x][y]).toString())
+        }
+        row_str = row.join(" ")
+        console.log(row_str)
+    }
+}
 function minObj(a, b, c) {
     if (a.score <= b.score) {
         if (a.score <= c.score) {
@@ -54,13 +64,14 @@ function bt(cf, arr1, arr2) {
     var i = arr1.length
     var j = arr2.length
     var alignments = []
-    while (i > 0 && j > 0) {
+    while (! (i == 0 && j == 0)) {
         var edobj = cf[getTuple(i, j)]
         i = edobj.prev[0]
         j = edobj.prev[1]
         alignments.unshift(getTuple(edobj.tok[0], edobj.tok[1]))
 
     }
+    assert(alignments.length == Math.max(arr1.length, arr2.length))
     return alignments
 }
 
@@ -72,21 +83,25 @@ function editdistance(arr1, arr2) {
     var came_from = {}
     for (var i = 0; i < arr1.length + 1; i ++) {
         table[i][0] = deletion_cost * i
-        came_from[getTuple(i, 0)] = getTuple(getTuple(i - 1, 0), getTuple(arr1[i - 1], '<eps>'))
+        var ed = new edObj(deletion_cost * i, getTuple(i - 1, 0), getTuple(arr1[i - 1], '<eps>'))
+        came_from[getTuple(i, 0)] = ed
     }
 
     for (var j = 0; j < arr2.length + 1; j ++) {
         table[0][j] = insertion_cost * j
-        came_from[getTuple(0, j)] = getTuple(getTuple(0, j - 1), getTuple('<eps>', arr2[j - 1]))
+        var ed = new edObj(top, getTuple(0, j - 1), getTuple('<eps>', arr2[j - 1]))
+        came_from[getTuple(0, j)] = ed
     }
-
+    //drawTable(table)
     var diag = null
     var top = null
     var left = null
     for (var i = 1; i < arr1.length + 1; i ++) {
         for (var j = 1; j < arr2.length + 1; j ++) {
+
+            console.log("comparing:" + arr1[i - 1] + " and " + arr2[j - 1])
             if (arr1[i - 1] == arr2[j - 1]) {
-                diag = table[i - 1][i - 1] + 0
+                diag = table[i - 1][j - 1] + 0
             } else {
                 diag = table[i - 1][j - 1] + substitution_cost
             }
@@ -99,12 +114,13 @@ function editdistance(arr1, arr2) {
             var best_obj = minObj(diag_obj, top_obj, left_obj)
             table[i][j] = best_obj.score
             came_from[getTuple(i, j)] = best_obj
+            //drawTable(table)
 
 
         }
     }
+
     var alignments = bt(came_from, arr1, arr2)
-    console.log(alignments)
     var o = {}
     o.ed = table[arr1.length][arr2.length]
     o.alignments = alignments
