@@ -14,6 +14,7 @@ function Node() {
     this.visible = false
     this.graph = null
 
+
     this.take_action = function (param) {
         console.log('action triggered:' + param.action + ',' + param.direction)
         if (param.action == 'reorder') {
@@ -22,6 +23,16 @@ function Node() {
 
             } else {
                 self.graph.idx_reference = param.direction
+                for (var i in self.graph.nodes) {
+                    if (self.graph.nodes[i].visible) {
+                        if (self.graph.nodes.length > 1 || self.graph.nodes[i].en_id != self.graph.nodes.de_id) {
+                            console.log("moving node" + self.graph.nodes[i].s)
+                            var item = self.graph.nodes[i].get_item()
+                            item.highlight_movement = true
+                        }
+
+                    }
+                }
                 self.graph.sentence.update_visible_nodes()
             }
 
@@ -37,7 +48,8 @@ function Node() {
     this.get_item = function () {
         if (this.item == null) {
             this.item = document.createElement('div')
-
+            this.item.inDom = false
+            this.item.highlight_movement = false
             $(this.item).addClass('item')
 
             var menu_container = document.createElement('div')
@@ -62,6 +74,7 @@ function Node() {
 
             var s = document.createElement('span')
             s.innerHTML = this.s
+            this.item.span = s
             $(this.item).append($(s))
 
             var bottom_menu_container = document.createElement('div')
@@ -149,7 +162,9 @@ function Graph() {
             self.sentence.visible_nodes = _.reject(
                 self.sentence.visible_nodes, function (n) {
                     if (n == node) {
-                        $(node.get_item()).detach()
+                        var item = node.get_item()
+                        item.inDom = false
+                        $(item).detach()
                         return true
                     } else {
                         return false
@@ -245,16 +260,30 @@ function Sentence() {
     }
 
     this.update_visible_nodes = function () {
-        /*console.log("remove non-visible nodes")
-        for (var i in self.visible_nodes) {
-            if (self.visible_nodes[i].visible == false) {
-                $(self.visible_nodes[i].get_item()).detach()
-            }
-        }*/
+
         console.log("drawing node items...")
         self.update_order_of_visible_nodes()
         for (var i in self.visible_nodes) {
-            $(self.get_container()).append($(self.visible_nodes[i].get_item()))
+            var item = self.visible_nodes[i].get_item()
+            if (item.inDom) {
+
+            } else {
+
+                $(self.get_container()).append($(item))
+                $(item.span).css("backgroundColor", "orange");
+                $(item.span).animate({ backgroundColor: "transparent" }, 2000);
+                item.inDom = true
+            }
+
+            if (item.highlight_movement) {
+                $(item.span).css("backgroundColor", "orange");
+                $(item.span).animate({ backgroundColor: "transparent" }, 2000);
+                item.highlight_movement = false
+            } else {
+                console.log("no movement")
+            }
+
+
         }
         console.log("completed drawing node items...")
     }
@@ -312,7 +341,3 @@ function ok_parse() {
 
 
 }
-
-
-
-

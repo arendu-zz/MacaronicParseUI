@@ -1,0 +1,160 @@
+#mainbody {
+
+}
+
+div {
+    padding: 1em;
+}
+
+.subItem {
+    display: flex;
+
+}
+
+.item {
+    background: transparent;
+    text-align: center;
+    align-items: stretch;
+    margin: 0px;
+    padding: 0px;
+    /*display: inline-block;*/
+    display: flex;
+    width: -webkit-fit-content;
+    border: 2px solid transparent;
+    justify-content: space-around;
+    flex-direction: column;
+
+    height: 60px;
+
+    /*transition: height 0.25s;*/
+    /*padding: 0px;*/
+    /*height: -webkit-fit-content;*/
+    /*flex-basis: 200px;*/
+    /*-webkit-flex-grow: 2;*/
+
+    /*flex-grow: 1;*/
+    /*flex-shrink: 0;*/
+
+}
+
+.item:first-child {
+    /*background: blue;*/
+}
+
+.item:last-child {
+    /*background: green;*/
+}
+
+.item:hover {
+    /*border-color: white;*/
+}
+
+.item:hover > .node_menu_container {
+    opacity: 1;
+}
+
+.container:hover {
+    /*background: gray;*/
+}
+
+.node_menu_container {
+    display: flex;
+    background: transparent;
+    padding: 0;
+    flex-direction: row;
+    justify-content: space-around;
+    opacity: 0;
+    transition: opacity 0.25s linear;
+}
+
+/*.node_menu_container:hover {
+    opacity: 1;
+}*/
+
+.translation_selector {
+    border: 3px solid #9BC65C;
+    background: white;
+    height: 5px;
+    width: 5px;
+    padding: 0px;
+
+}
+
+.translation_selector:hover {
+    background: #9BC65C;
+}
+
+.reorder_selector {
+    background: transparent;
+    border: 3px solid #BD587C;
+    height: 5px;
+    width: 5px;
+    padding: 0px;
+
+}
+
+.reorder_selector:hover {
+    background: #BD587C;
+}
+
+.container {
+    background: transparent;
+    /*display: -moz-box;
+    display: -ms-box;
+    display: -webkit-box;
+    display: -webkit-flex;*/
+    display: flex;
+    /*height: 200px;*/
+    flex-direction: row;
+    /*----- row | row-reverse | column | column-reverse*/
+    justify-content: flex-start;
+    /*----- flex-start | flex-end | center | space-between | space-around*/
+    align-items: center;
+    /*----- flex-start | flex-end | center | baseline | stretch*/
+    align-content: center;
+    /*----- flex-start | flex-end | center | space-between | space-around | stretch*/
+    flex-wrap: wrap;
+    /*----- nowrap | wrap | wrap-reverse*/
+}
+
+/*--- ORDER ---*/
+
+#one {
+    order: 3;
+}
+
+#two {
+    order: 2;
+}
+
+#three {
+    order: 1;
+}
+
+#four {
+    order: 4;
+}
+
+#five {
+    order: 5;
+}
+
+/*--- BASIS Grow & shrink ---*/
+
+#one {
+    /*flex-basis: 400px;*/
+    /*flex-shrink: 0;*/
+}
+
+#two {
+    /*flex-grow: 2;*/
+    /*flex-shrink: 2;*/
+}
+
+#five {
+    /*	flex-shrink: 1;
+        flex-grow: 3;*/
+}
+
+
+
