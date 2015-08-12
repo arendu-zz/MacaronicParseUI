@@ -75,6 +75,7 @@ function Node() {
             var s = document.createElement('span')
             s.innerHTML = this.s
             this.item.span = s
+            $(s).addClass(this.lang == 'en' ? 'spanen' : 'spande')
             $(this.item).append($(s))
 
             var bottom_menu_container = document.createElement('div')

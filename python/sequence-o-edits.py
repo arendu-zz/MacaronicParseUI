@@ -78,9 +78,11 @@ def get_edges(n1, n2):
     return [e1, e2]
 
 
-def make_simple_graph(idx, en_s, de_s, position):
-    en_n = Node(0, en_s, position, position, 'en', True)
-    de_n = Node(1, de_s, position, position, 'de', False)
+def make_simple_graph(idx, en_s, de_s, position_en, position_de=None):
+    if position_de is None:
+        position_de = position_en
+    en_n = Node(0, en_s, position_en, position_de, 'en', True)
+    de_n = Node(1, de_s, position_en, position_de, 'de', False)
     e1 = Edge(0, 1, 'de')
     e2 = Edge(1, 0, 'en')
     g = Graph(idx, 'en')
@@ -90,26 +92,7 @@ def make_simple_graph(idx, en_s, de_s, position):
 
 
 if __name__ == '__main__':
-    '''n1 = Node(1, "hello", 1, 1, 'en')
-    n2 = Node(2, "hallo", 1, 1, 'de')
-    e = Edge(n1.id, n2.id)
-
-    json_str = json.dumps(n1, sort_keys=True, indent=4)
-    print json_str
-    print json.dumps(e, sort_keys=True, indent=4)
-
-    r = Node.from_dict(json.loads(json_str))
-    print r.lang, r.s, r.en_id, r.de_id
-
-    g = Graph(1)
-    g.nodes = [n1, n2]
-    g.edges = [e]
-    print 'graph'
-    json_graph_str = json.dumps(g, indent=4)
-    print json_graph_str
-    rg = Graph.from_dict(json.loads(json_graph_str))
-    print 'ok'
-    '''
+    all_sent = []
     en = "please shut the door"
     de = "bitte mach die tur zu"
     alignment = "0-0 1-1 1-4 2-2 3-3"
@@ -129,7 +112,29 @@ if __name__ == '__main__':
     s.graphs = [g0, g1, g2, g3]
     json_sentence_str = json.dumps(s, indent=4)
     # print json_sentence_str
-    print ' '.join(json_sentence_str.split())
+    all_sent.append(' '.join(json_sentence_str.split()))
+
+    en = "I like to eat chocolate cake"
+    de = "Ich mag zu Schokoladenkuchen essen"
+    alignment = "0-0 1-1 2-2 3-4 4-3 5-3"
+    g0 = make_simple_graph(0, 'I', 'Ich', 0)
+    g1 = make_simple_graph(1, 'like', 'mag', 1)
+    g2 = make_simple_graph(2, 'to', 'zu', 2)
+    g3 = make_simple_graph(3, 'eat', 'essen', 3, 5.5)
+    g4 = Graph(4, 'en')
+    n0 = Node(0, 'chocolate', 4, 4, EN_LANG, True)
+    n1 = Node(1, 'cake', 5, 5, EN_LANG, True)
+    n2 = Node(2, 'Shokolade', 4, 4, DE_LANG, False)
+    n3 = Node(3, 'Kuchen', 5, 5, DE_LANG, False)
+    n4 = Node(4, 'Shokoladenkuchen', 4, 4, DE_LANG, False)
+    g4.nodes = [n0, n1, n2, n3, n4]
+    g4.edges = get_edges(n0, n2) + get_edges(n1, n3) + get_edges(n2, n4) + get_edges(n3, n4)
+    s = Sentence(1, en, de, alignment)
+    s.graphs = [g0, g1, g2, g3, g4]
+    json_sentence_str = json.dumps(s, indent=4)
+    all_sent.append(' '.join(json_sentence_str.split()))
+
+    print all_sent
 
 
 
