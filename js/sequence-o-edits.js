@@ -271,13 +271,13 @@ function Sentence() {
 
                 $(self.get_container()).append($(item))
                 $(item.span).css("backgroundColor", "orange");
-                $(item.span).animate({ backgroundColor: "transparent" }, 2000);
+                $(item.span).animate({ backgroundColor: "transparent" }, 400);
                 item.inDom = true
             }
 
             if (item.highlight_movement) {
                 $(item.span).css("backgroundColor", "orange");
-                $(item.span).animate({ backgroundColor: "transparent" }, 2000);
+                $(item.span).animate({ backgroundColor: "transparent" }, 400);
                 item.highlight_movement = false
             } else {
                 console.log("no movement")
@@ -333,10 +333,13 @@ Sentence.parse = function (input) {
 }
 
 function ok_parse() {
-    var jo = JSON.parse(json_str1)
-    var s = Sentence.parse(jo)
-    s.initialize()
-    s.update_visible_nodes()
+    for (var i in json_str_arr) {
+        var jo = JSON.parse(json_str_arr[i])
+        var s = Sentence.parse(jo)
+        s.initialize()
+        s.update_visible_nodes()
+    }
+
     console.log("done")
 
 
