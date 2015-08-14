@@ -10,7 +10,7 @@ function Node() {
     this.en_id = null
     this.de_id = null
     this.lang = null
-    this.item = null
+    this.view = null
     this.visible = false
     this.graph = null
 
@@ -27,7 +27,7 @@ function Node() {
                     if (self.graph.nodes[i].visible) {
                         if (self.graph.nodes.length > 1 || self.graph.nodes[i].en_id != self.graph.nodes.de_id) {
                             console.log("moving node" + self.graph.nodes[i].s)
-                            var item = self.graph.nodes[i].get_item()
+                            var item = self.graph.nodes[i].get_view()
                             item.highlight_movement = true
                         }
 
@@ -45,16 +45,16 @@ function Node() {
         }
     }
 
-    this.get_item = function () {
-        if (this.item == null) {
-            this.item = document.createElement('div')
-            this.item.inDom = false
-            this.item.highlight_movement = false
-            $(this.item).addClass('item')
+    this.get_view = function () {
+        if (this.view == null) {
+            this.view = document.createElement('div')
+            this.view.inDom = false
+            this.view.highlight_movement = false
+            $(this.view).addClass('item')
 
             var menu_container = document.createElement('div')
             $(menu_container).addClass('node_menu_container')
-            $(this.item).append($(menu_container))
+            $(this.view).append($(menu_container))
 
             var translation_selector = document.createElement('div')
             $(translation_selector).addClass('translation_selector')
@@ -74,13 +74,13 @@ function Node() {
 
             var s = document.createElement('span')
             s.innerHTML = this.s
-            this.item.span = s
+            this.view.span = s
             $(s).addClass(this.lang == 'en' ? 'spanen' : 'spande')
-            $(this.item).append($(s))
+            $(this.view).append($(s))
 
             var bottom_menu_container = document.createElement('div')
             $(bottom_menu_container).addClass('node_menu_container')
-            $(this.item).append($(bottom_menu_container))
+            $(this.view).append($(bottom_menu_container))
 
             var translation_selector = document.createElement('div')
             $(translation_selector).addClass('translation_selector')
@@ -98,9 +98,9 @@ function Node() {
                     self.take_action({action: 'reorder', direction: 'en'})
                 })
 
-            return this.item
+            return this.view
         } else {
-            return this.item
+            return this.view
         }
     }
 }
@@ -163,7 +163,7 @@ function Graph() {
             self.sentence.visible_nodes = _.reject(
                 self.sentence.visible_nodes, function (n) {
                     if (n == node) {
-                        var item = node.get_item()
+                        var item = node.get_view()
                         item.inDom = false
                         $(item).detach()
                         return true
@@ -255,7 +255,7 @@ function Sentence() {
                 }
             });
         for (var i in self.visible_nodes) {
-            $(self.visible_nodes[i].get_item()).css('order', i)
+            $(self.visible_nodes[i].get_view()).css('order', i)
         }
 
     }
@@ -265,7 +265,7 @@ function Sentence() {
         console.log("drawing node items...")
         self.update_order_of_visible_nodes()
         for (var i in self.visible_nodes) {
-            var item = self.visible_nodes[i].get_item()
+            var item = self.visible_nodes[i].get_view()
             if (item.inDom) {
 
             } else {

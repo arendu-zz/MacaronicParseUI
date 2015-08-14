@@ -124,9 +124,9 @@ if __name__ == '__main__':
     g4 = Graph(4, 'en')
     n0 = Node(0, 'chocolate', 4, 4, EN_LANG, True)
     n1 = Node(1, 'cake', 5, 5, EN_LANG, True)
-    n2 = Node(2, 'Shokolade', 4, 4, DE_LANG, False)
+    n2 = Node(2, 'Schokolade', 4, 4, DE_LANG, False)
     n3 = Node(3, 'Kuchen', 5, 5, DE_LANG, False)
-    n4 = Node(4, 'Shokoladenkuchen', 4, 4, DE_LANG, False)
+    n4 = Node(4, 'Schokoladenkuchen', 4, 4, DE_LANG, False)
     g4.nodes = [n0, n1, n2, n3, n4]
     g4.edges = get_edges(n0, n2) + get_edges(n1, n3) + get_edges(n2, n4) + get_edges(n3, n4)
     s = Sentence(1, en, de, alignment)

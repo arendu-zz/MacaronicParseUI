@@ -700,17 +700,17 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
                     if (pn.isMyAncestor(parentPhraseNode)) {
                         item.lightHighlight(0);
                         var jtdpos = item.getBottomCellCoordinate()
-                        //console.log("checking descendant:" + item.phraseNode.phrase + " with left pos:" + jtdpos.left)
+                        //console.log("checking descendant:" + view.phraseNode.phrase + " with left pos:" + jtdpos.left)
                         //get the bottom and left position for preview box
                         if (jtdpos.left < left) {
                             left = jtdpos.left
-                            //console.log("most left so far:" + item.phraseNode.phrase)
+                            //console.log("most left so far:" + view.phraseNode.phrase)
                         }
                         if (jtdpos.top < top) {
                             top = jtdpos.top
                         }
                     } else {
-                        //console.log("item:" + item.phraseNode.phrase + "is not a descendant!!")
+                        //console.log("view:" + view.phraseNode.phrase + "is not a descendant!!")
                     }
                 }
             });
@@ -731,7 +731,7 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
                         item.lightHighlight(0);
 
                     } else {
-                        //console.log("item:" + item.phraseNode.phrase + "is not a descendant!!")
+                        //console.log("view:" + view.phraseNode.phrase + "is not a descendant!!")
                     }
                 }
             });
@@ -1025,7 +1025,7 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
                         var pn = item.phraseNode;
                         if (pn.isMyAncestor(parentPhraseNode)) {
                             item.lightHighlight(0);
-                            console.log("descendant is:" + pn.phrase + " inside item:" + item.id)
+                            console.log("descendant is:" + pn.phrase + " inside view:" + item.id)
 
                         }
                     }
@@ -1107,7 +1107,7 @@ function MacaronicLine(lineid, rootPhraseNode, numNT) {
 
                 } else {
                     item.setNewId(i);
-                    //item.setPhraseNode(item.phraseNode);//just for debugging
+                    //view.setPhraseNode(view.phraseNode);//just for debugging
                     i ++;
                 }
 
