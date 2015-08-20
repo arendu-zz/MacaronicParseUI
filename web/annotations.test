@@ -1,0 +1,35 @@
+[ab] [C D] [X Y] [U V] [E F] :
+[A B] [C D] [X Y] [U V] [E F] : T.E
+[A B] [E F][X Y] [U V] [C D] : ER
+[A B] [F E] [X Y] [U V] [C D] : IR
+[1 2] [6 5] [10 11] [100 101] [3 4] : TFG
+===
+[ab] [C D] [E F] [X Y Z] [U W] :
+[A B] [C D] [E F] [X Y Z] [U W] : T.E
+[A B] [cd] [E F] [X Y Z] [U W] : T.E
+[A B] [cd] [E f] [X Y Z] [U W] : T.E
+[A B] [cd] [E f] [X Z] [U W] : T.E
+[A B] [cd] [E f] [X Z] [U W] : T.E
+[A B] [cd] [E f] [X Z] [U V W] : T.E
+[1 2] [3] [4 5] [6 7] [8 9 10] : TFG
+===
+[X Y Z] [A B C] :
+[X Y Z] [a B C] : T.E
+[a B] [X Y Z] [C] : ER
+[a B] [X y Z] [C] : T.E
+[1 2] [10 11 12] [3] : TFG
+===
+[X Y Z] [A B C] :
+[X Y Z] [A C] : T.E
+[A] [X Y Z] [C] : ER
+[1 2] [10 11 12] [3] : TFG
+===
+[X Y Z] [A B C] :
+[X Y Z] [ABC] : T.E
+[ABC] [X Y Z] : ER
+[123] [10 11 12] : TFG
+===
+[please] [shut] [the door] :
+[please] [make close] [the door] : T.E
+[please] [make] [the door] [close] : ER
+[bitte] [mach] [die tur] [zu] : TF

@@ -74,7 +74,7 @@ class EditDistance(object):
                 table[i, j] = best
                 came_from[i, j] = (prev, tok)
                 # print 'current cell', table[i, j]
-        print table
+        # print table
 
         alignments = self.bt(came_from)
         return table[i, j], alignments
