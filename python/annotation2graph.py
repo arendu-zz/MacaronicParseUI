@@ -461,24 +461,45 @@ if __name__ == '__main__':
                         for pm, m in zip(prev_matches, matches):
                             changed_graph = get_changed_graph(pm, nodes_in_visible_order)
                             for d_idx, (pm_n, m_n) in enumerate(zip(pm.split(), m.split())):
-                                sys.stderr.write('sub' + pm_n + '-->' + m_n + '\n')
-                                rn = get_node_by_str(changed_graph, pm_n)
-                                a = Node(id=len(changed_graph.nodes), s=m_n, en_id=rn.en_id, de_id=d_idx, lang='de',
-                                         visible=False)
-                                assert rn.visible
-                                rn.visible = False
-                                rn_idx = get_idx_of_node(rn, nodes_in_visible_order)
-                                nodes_in_visible_order.pop(rn_idx)
-                                if rn.de_id is not None:
-                                    a.de_id = rn.de_id
-                                a.visible = True
-                                a.graph = rn.graph
-                                a.en_left = rn.en_left
-                                a.en_right = rn.en_right
-                                changed_graph.nodes.append(a)
-                                changed_graph.edges += get_edges(rn, a)
-                                nodes_in_visible_order.insert(rn_idx, a)
-                                new_nodes.append(a)
+                                if pm_n != m_n:
+                                    sys.stderr.write('sub ' + pm_n + '-->' + m_n + '\n')
+                                    rn = get_node_by_str(changed_graph, pm_n)
+                                    a = Node(id=len(changed_graph.nodes), s=m_n, en_id=rn.en_id, de_id=d_idx, lang='de',
+                                             visible=False)
+                                    assert rn.visible
+                                    rn.visible = False
+                                    rn_idx = get_idx_of_node(rn, nodes_in_visible_order)
+                                    nodes_in_visible_order.pop(rn_idx)
+                                    if rn.de_id is not None:
+                                        a.de_id = rn.de_id
+                                    a.visible = True
+                                    a.graph = rn.graph
+                                    a.en_left = rn.en_left
+                                    a.en_right = rn.en_right
+                                    changed_graph.nodes.append(a)
+                                    changed_graph.edges += get_edges(rn, a)
+                                    nodes_in_visible_order.insert(rn_idx, a)
+                                    new_nodes.append(a)
+                                elif pm_n == m_n:
+                                    sys.stderr.write('sub ' + pm_n + '-->' + m_n + '\n')
+                                    rn = get_node_by_str(changed_graph, pm_n)
+                                    rn.de_id = d_idx
+                                    # a = Node(id=len(changed_graph.nodes), s=m_n, en_id=rn.en_id, de_id=d_idx, lang='de',
+                                    #         visible=False)
+                                    #assert rn.visible
+                                    #rn.visible = False
+                                    #rn_idx = get_idx_of_node(rn, nodes_in_visible_order)
+                                    #nodes_in_visible_order.pop(rn_idx)
+                                    #if rn.de_id is not None:
+                                    #    a.de_id = rn.de_id
+                                    #a.visible = True
+                                    #a.graph = rn.graph
+                                    #a.en_left = rn.en_left
+                                    #a.en_right = rn.en_right
+                                    #changed_graph.nodes.append(a)
+                                    #changed_graph.edges += get_edges(rn, a)
+                                    #nodes_in_visible_order.insert(rn_idx, a)
+                                    new_nodes.append(rn)
 
                         for node in new_nodes:
                             in_left_gids = get_neighbor(node, nodes_in_visible_order, 'left')

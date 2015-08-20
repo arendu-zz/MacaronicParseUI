@@ -73,7 +73,7 @@ class Graph(dict):
                 propagate_list.append(n)
 
         while len(propagate_list) < len(self.nodes):
-
+            # print len(propagate_list)
             propagate_dict = {}
             for n in propagate_list:
                 neighbors = self.get_neighbor_nodes(n, 'en')
@@ -100,6 +100,7 @@ class Graph(dict):
                 propagate_list.append(n)
 
         while len(propagate_list) < len(self.nodes):
+
             propagate_dict = {}
             for n in propagate_list:
                 neighbors = self.get_neighbor_nodes(n, 'en')
