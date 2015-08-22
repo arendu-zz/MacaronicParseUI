@@ -66,6 +66,32 @@ class Graph(dict):
     def __str__(self):
         return str(self.id) + ',' + ','.join([str(i) for i in self.nodes])
 
+    def set_visibility(self):
+        visiblity_dict = {}
+        for n in self.nodes:
+            neighbor = self.get_neighbor_nodes(n, 'en')
+            if n.visible and len(neighbor) > 0:
+                n.visible = False
+                for ne in neighbor:
+                    lst = visiblity_dict.get(ne.id, set([]))
+                    lst.add(n.id)
+                    visiblity_dict[ne.id] = lst
+                    ne.visible = True
+
+        while len(visiblity_dict) > 0:
+            visiblity_dict = {}
+            for n in self.nodes:
+                neighbor = self.get_neighbor_nodes(n, 'en')
+                if n.visible and len(neighbor) > 0:
+                    n.visible = False
+                    for ne in neighbor:
+                        lst = visiblity_dict.get(ne.id, set([]))
+                        lst.add(n.id)
+                        visiblity_dict[ne.id] = lst
+                        ne.visible = True
+        return True
+
+
     def propagate_de_id(self):
         propagate_list = []
         for n in self.nodes:
