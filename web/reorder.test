@@ -1,0 +1,30 @@
+[a b] [c d] [e f] [g h] [i] :
+[a b] [g h] [e f] [c d] [i] : ER
+[A B] [C D] [E F] [G H] [I] : TFG
+===
+[a b] [c] [d e] :
+[a b] [d e] [c] : ER
+[A B] [D E] [C] : TFG
+===
+[a b] [c d] [e] :
+[a b] [e] [c d] : ER
+[A B] [E] [C D] : TFG
+===
+[a b] [c] [e] :
+[a b] [e] [c] : ER
+[A B] [E] [C] : TFG
+===
+[a b] [c d] [e f] :
+[a b] [e f] [c d] : ER
+[A B] [E F] [C D] : TFG
+===
+[ab] [C D] [E F] :
+[A B] [C D] [E F] : T.E
+[A B] [E F] [C D] : ER
+[A B] [F E] [C D] : IR
+[1 2] [6 5] [3 4] : TFG
+===
+[X Y Z] [A B C] :
+[X Y Z] [a B C] : T.E
+[a B] [X Y Z] [C] : ER
+[1 2] [10 11 12] [3] : TFG

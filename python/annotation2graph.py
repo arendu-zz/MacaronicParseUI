@@ -105,6 +105,17 @@ def get_changed_node(changed_graph, new_string):
         return changed_nodes[0]
 
 
+def check(nodes_list, matches):
+    nodes_str = ' '.join([n.s.strip() for n in nodes_list])
+    matches_str = ' '.join(matches)
+    sys.stderr.write('checking:' + nodes_str + ' - ' + matches_str + '\n')
+    if nodes_str.strip() == matches_str.strip():
+        return True
+    else:
+        assert matches_str == nodes_str
+        return False
+
+
 def get_neighbor(node, nodes_in_visible_order, direction):
     sys.stderr.write('getting neighbor for ' + node.s + '\n')
     seen = False
@@ -131,7 +142,7 @@ ed = EditDistance(None)
 
 if __name__ == '__main__':
     # annotation_file = sys.argv[1]
-    annotations = codecs.open('../web/an.test', 'r', 'utf-8').read().strip()
+    annotations = codecs.open('../web/reorder.test', 'r', 'utf-8').read().strip()
     sentence_obj_list = []
     for s_idx, sentence in enumerate(annotations.split('===')):
         if sentence.strip() != '':
@@ -165,7 +176,9 @@ if __name__ == '__main__':
                                 node.de_left = in_left_gids
                                 node.de_right = in_right_gids
 
+                        check(nodes_in_visible_order, matches)
                         prev_matches = matches
+
 
                     elif action.strip() == 'T.E' or action.strip() == 'T.G':
                         to_lang = 'en' if action.strip().split('.')[1] == 'E' else 'de'
@@ -174,8 +187,10 @@ if __name__ == '__main__':
                         new_nodes = []
                         for align in alignments:
                             if align[0] != align[1]:
-                                sys.stderr.write('change' + align[0] + ' ' + align[1] + '\n')
+                                sys.stderr.write('change ' + align[0] + ' ' + align[1] + '\n')
                                 changed_graph = get_changed_graph(align[0], nodes_in_visible_order)
+                                if changed_graph is None:
+                                    print 'ok'
                                 score_in, alignments_in = ed.editdistance_simple(align[0].split(), align[1].split())
                                 remove_nodes = []
                                 add_nodes = []
@@ -315,7 +330,7 @@ if __name__ == '__main__':
                                     pass
 
                             else:
-                                sys.stderr.write('no change in graph' + align[0] + ' ' + align[1] + '\n')
+                                sys.stderr.write('no change in graph ' + align[0] + ' ' + align[1] + '\n')
 
                         for node in new_nodes:
                             in_left_gids = get_neighbor(node, nodes_in_visible_order, 'left')
@@ -328,6 +343,7 @@ if __name__ == '__main__':
                                 node.de_right = in_right_gids
 
                         new_nodes = []
+                        check(nodes_in_visible_order, matches)
                         prev_matches = matches
 
                     elif action.strip() == 'ER':
@@ -382,24 +398,29 @@ if __name__ == '__main__':
                                     nodes_in_visible_order.insert(a_idx + cn_idx, cn)
                         elif len(unclaimed_graph_ids) == 2:
 
-                            first_node_idxs = []
+                            first_node_idxs = {}
                             for u_id in unclaimed_graph_ids:
                                 changed_graph = [g for g in S.graphs if g.id == u_id][0]
-                                first_node = sorted([vn for vn in changed_graph.nodes if vn.visible])[0]
-                                changed_first_node_idx = get_idx_of_node(first_node, nodes_in_visible_order)
-                                first_node_idxs.append((changed_first_node_idx, changed_graph))
-                            first_node_idxs = sorted(first_node_idxs)
-                            remove_order_cg = [cg for fn, cg in first_node_idxs]
-                            first_node_idxs = sorted(first_node_idxs, reverse=True)
-                            add_order_mark = [fn for fn, cg in first_node_idxs]
+                                cvn = [vn for vn in changed_graph.nodes if vn.visible]
+                                scvn = sorted([(get_idx_of_node(cgn, nodes_in_visible_order), cgn) for cgn in cvn])
+                                scvn_first = scvn[0][0]
+                                first_node_idxs[scvn_first] = [n[1] for n in scvn]
 
-                            for fn, cg in zip(add_order_mark, remove_order_cg):
-                                vn = [vn for vn in cg.nodes if vn.visible]
-                                svn = sorted(vn, key=lambda x: x.en_id)
-                                for w_idx, n in enumerate(svn):
-                                    n_idx = get_idx_of_node(n, nodes_in_visible_order)
-                                    nodes_in_visible_order.pop(n_idx)
-                                    nodes_in_visible_order.insert(fn + w_idx, n)
+                            max_k = max(first_node_idxs.keys())
+                            min_k = min(first_node_idxs.keys())
+                            h2l_cg = first_node_idxs[max_k]
+                            l2h_cg = first_node_idxs[min_k]
+                            for _idx, rn in enumerate(h2l_cg):
+                                rn_idx = get_idx_of_node(rn, nodes_in_visible_order)
+                                nodes_in_visible_order.pop(rn_idx)
+                                nodes_in_visible_order.insert(min_k + _idx, rn)
+
+                            max_k += len(h2l_cg)
+                            max_k -= 1
+                            for _idx, rn in enumerate(l2h_cg):
+                                rn_idx = get_idx_of_node(rn, nodes_in_visible_order)
+                                nodes_in_visible_order.pop(rn_idx)
+                                nodes_in_visible_order.insert(max_k, rn)
 
                         else:
                             assert len(unclaimed_graph_ids) == 1 or len(unclaimed_graph_ids) == 2
@@ -411,8 +432,8 @@ if __name__ == '__main__':
                             node.de_left = in_left_gids
                             node.de_right = in_right_gids
 
+                        check(nodes_in_visible_order, matches)
                         prev_matches = matches
-
 
                     elif action.strip() == 'IR':
                         sys.stderr.write('action internal reorder\n')
@@ -454,6 +475,7 @@ if __name__ == '__main__':
                                 n.de_left = current_de_r
                                 n.de_right = current_de_r'''
 
+                        check(nodes_in_visible_order, matches)
                         prev_matches = matches
 
                     elif action.strip() == 'TFG':
@@ -484,21 +506,6 @@ if __name__ == '__main__':
                                     sys.stderr.write('sub ' + pm_n + '-->' + m_n + '\n')
                                     rn = get_node_by_str(changed_graph, pm_n)
                                     rn.de_id = d_idx
-                                    # a = Node(id=len(changed_graph.nodes), s=m_n, en_id=rn.en_id, de_id=d_idx, lang='de',
-                                    #         visible=False)
-                                    #assert rn.visible
-                                    #rn.visible = False
-                                    #rn_idx = get_idx_of_node(rn, nodes_in_visible_order)
-                                    #nodes_in_visible_order.pop(rn_idx)
-                                    #if rn.de_id is not None:
-                                    #    a.de_id = rn.de_id
-                                    #a.visible = True
-                                    #a.graph = rn.graph
-                                    #a.en_left = rn.en_left
-                                    #a.en_right = rn.en_right
-                                    #changed_graph.nodes.append(a)
-                                    #changed_graph.edges += get_edges(rn, a)
-                                    #nodes_in_visible_order.insert(rn_idx, a)
                                     new_nodes.append(rn)
 
                         for node in new_nodes:
@@ -514,14 +521,17 @@ if __name__ == '__main__':
                             g.propagate_de_order()
                             sys.stderr.write('prop de id\n')
                             g.propagate_de_id()
+                            g.set_visibility()
                             for n in g.nodes:
                                 n.graph = None  # to avoid circular reference
 
                         sentence_obj_list.append(S)
+
     sys.stderr.write('done\n')
     sentence_str_list = []
     for s in sentence_obj_list:
         jstr = json.dumps(s, indent=4, sort_keys=True)
-        print jstr
+        # print jstr
         # jstr = ' '.join(jstr.split())
-        sentence_str_list.append(jstr)
+        sentence_str_list.append(' '.join(jstr.split()))
+    print 'var json_str_arr = ', sentence_str_list
