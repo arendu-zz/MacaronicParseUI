@@ -15,6 +15,9 @@ function Node() {
     this.en_right = null // between graph ordering uses these
     this.de_left = null  // between graph ordering uses these
     this.de_right = null // between graph ordering uses these
+    this.to_en = null
+    this.to_de = null
+    this.ir = null
 
     /*attributes created in js*/
     this.view = null
@@ -138,7 +141,7 @@ function Node() {
                 'click', function () {
                     self.take_action({action: 'internal reorder', direction: 'de'})
                 })
-            if (! this.graph.ir) {
+            if (! this.ir) {
                 $(internal_reorder_selector).hide()
             }
 
@@ -186,7 +189,7 @@ function Node() {
                     self.take_action({action: 'internal reorder', direction: 'en'})
                 })
 
-            if (! this.graph.ir) {
+            if (! this.ir) {
                 $(internal_reorder_selector).hide()
             }
 
@@ -405,7 +408,7 @@ function Sentence() {
         for (var v = 0; v < self.visible_nodes.length; v ++) {
             visible_nodes_copy.push(self.visible_nodes[v])
         }
-        config.sort()
+        //config.sort()
         for (var c = 0; c < config.length; c ++) {
             visible_nodes_copy.splice(config[c], 0, nodes_to_insert[c])
         }
@@ -474,7 +477,7 @@ function Sentence() {
         for (var v = 0; v < self.visible_nodes.length; v ++) {
             visible_nodes_copy.push(self.visible_nodes[v])
         }
-        config.sort()
+        //config.sort()
         for (var c = 0; c < config.length; c ++) {
             visible_nodes_copy.splice(config[c], 0, nodes_to_insert[c])
         }
@@ -518,7 +521,7 @@ function Sentence() {
         for (var v = 0; v < self.visible_nodes.length; v ++) {
             visible_nodes_copy.push(self.visible_nodes[v])
         }
-        config.sort()
+        //config.sort()
         for (var c = 0; c < config.length; c ++) {
             visible_nodes_copy.splice(config[c], 0, nodes_to_insert[c])
         }
@@ -565,7 +568,7 @@ function Sentence() {
             var use_score2 = self.score_configuration_alignment_unq(configurations[c], nodes_to_insert, g_order)
             var use_score3 = self.score_configuration_overlap(configurations[c], nodes_to_insert, g_order)
             var use_score = use_score2
-            console.log("score: " + use_score1 + " alignment_score:" + use_score2 + " alignment_score2:" + use_score3 + " config:" + configurations[c])
+            console.log("alignment: " + use_score1 + " alignment_unq:" + use_score2 + " overlap:" + use_score3 + " config:" + configurations[c])
             if (use_score > max) {
                 max = use_score
                 best_config = []
@@ -715,6 +718,7 @@ Node.parse = function (input) {
     n.de_right = input.de_right
     n.to_en = input.to_en
     n.to_de = input.to_de
+    n.ir = input.ir
     return n
 
 }

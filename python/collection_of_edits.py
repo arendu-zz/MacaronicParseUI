@@ -26,7 +26,7 @@ class Edge(dict):
 
 class Node(dict):
     def __init__(self, id, s, en_id, de_id, lang, visible, en_left=[], en_right=[], de_left=[], de_right=[],
-                 to_en=False, to_de=True):
+                 to_en=False, to_de=True, ir=False):
         dict.__init__(self)
         self.__dict__ = self
         self.id = id
@@ -43,6 +43,7 @@ class Node(dict):
         self.er_lang = "en"
         self.to_en = to_en
         self.to_de = to_de
+        self.ir = ir
 
     def __eq__(self, other):
         return self.s == other.s and self.graph.id == other.graph.id and self.id == other.id
@@ -55,7 +56,7 @@ class Node(dict):
         """ Recursively (re)construct TreeNode-based tree from dictionary. """
         n = Node(dict_['id'], dict_['s'], dict_['en_id'], dict_['de_id'], dict_['lang'], dict_['visible'],
                  dict_['en_left'], dict_['en_right'], dict_['de_left'], dict_['de_right'], dict_['to_en'],
-                 dict_['to_de'])
+                 dict_['to_de'], dict_['ir'])
         return n
 
 
@@ -66,7 +67,6 @@ class Graph(dict):
         self.id = id
         self.nodes = []
         self.edges = []
-        self.ir = False
         self.er = False
 
 

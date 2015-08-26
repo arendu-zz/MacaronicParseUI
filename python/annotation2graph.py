@@ -466,10 +466,17 @@ if __name__ == '__main__':
                         for align in alignments:
                             if align[0] != align[1]:
                                 changed_graph = get_changed_graph(align[0], nodes_in_visible_order)
-                                vn = [vn for vn in changed_graph.nodes if vn.visible]
+                                score_in, alignments_in = ed.editdistance_simple(align[0].split(), align[1].split())
+                                vn = []
+                                for align_in in alignments_in:
+                                    if align_in[0] != align_in[1]:
+                                        n_in = get_node_by_str(changed_graph, align_in[0])
+                                        if n_in.visible:
+                                            vn.append(n_in)
                                 modified_nodes = vn
                                 first_idx = 10000
                                 for n in vn:
+                                    n.ir = True
                                     n_idx = get_idx_of_node(n, nodes_in_visible_order)
                                     nodes_in_visible_order.pop(n_idx)
                                     if n_idx < first_idx:

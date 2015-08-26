@@ -44,9 +44,10 @@
 ===
 [We] [have been] [in Vienna] [for a] [couple of days] [.] :
 [Now we] [have been] [in Vienna] [for a] [couple of days] [.] : T.E
-[Now we are] [been] [in Vienna] [for a] [couple of days] [.] : T.E
+[Now we are] [have been] [in Vienna] [for a] [couple of days] [.] : T.E
 [Now we are] [already] [in Vienna] [for a] [couple of days] [.] : T.E
-[Now are we] [already] [in Vienna] [for a] [couple of days] [.] : IR
+[Now we are] [already] [in Vienna] [for a] [pair of days] [.] : T.E
+[Now are we] [already] [in Vienna] [for a] [pair of days] [.] : IR
 [Now are we] [already] [in Vienna] [for a] [pair of days] [.] : T.E
 [Now are we] [already] [in Vienna] [a] [pair of days] [.] : T.E
 [Now are we] [already] [in Vienna] [a] [pair days] [.] : T.E

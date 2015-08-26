@@ -29,8 +29,8 @@ function NP(i, c, m, parent) {
     }
 }
 
-function get_paths(num_insertions, num_nodes) {
-    var root = new NP(- 1, num_insertions, num_insertions + num_nodes, null)
+function get_paths(length_of_items, length_of_items_to_insert) {
+    var root = new NP(- 1, length_of_items, length_of_items + length_of_items_to_insert, null)
     root.populate_children()
     var paths = []
     var stack = []
@@ -56,13 +56,14 @@ function pad_array(arr, to_lenght) {
 }
 
 function __test__() {
-    var root = new NP(- 1, 3, 6, null)
-    root.populate_children()
-    var paths = get_paths(root)
+    var paths = get_paths(13, 2)
     for (var l in paths) {
-        console.log(paths[l].join(','))
+        console.log(paths[l])
+        paths[l].sort()
+        console.log(paths[l])
     }
     console.log("ok")
 }
 
+__test__()
 
