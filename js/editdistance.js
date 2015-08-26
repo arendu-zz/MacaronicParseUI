@@ -71,7 +71,7 @@ function bt(cf, arr1, arr2) {
         alignments.unshift(getTuple(edobj.tok[0], edobj.tok[1]))
 
     }
-    assert(alignments.length == Math.max(arr1.length, arr2.length))
+    assert(alignments.length <= arr1.length + arr2.length, "Checking the lengths")
     return alignments
 }
 
@@ -99,7 +99,7 @@ function editdistance(arr1, arr2) {
     for (var i = 1; i < arr1.length + 1; i ++) {
         for (var j = 1; j < arr2.length + 1; j ++) {
 
-            console.log("comparing:" + arr1[i - 1] + " and " + arr2[j - 1])
+            //console.log("comparing:" + arr1[i - 1] + " and " + arr2[j - 1])
             if (arr1[i - 1] == arr2[j - 1]) {
                 diag = table[i - 1][j - 1] + 0
             } else {

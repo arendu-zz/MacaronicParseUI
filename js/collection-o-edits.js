@@ -21,12 +21,30 @@ function Node() {
     this.visible = false
     this.graph = null
 
+    this.pick_config_closest = function (best_configs, remove_idx) {
+        var win = null
+        var r_min = 10000
+        for (var i = 0; i < remove_idx.length; i ++) {
+            if (r_min > remove_idx[i]) {
+                r_min = remove_idx[i]
+            }
+        }
+        for (var i = 0; i < best_configs.length; i ++) {
+            var config = best_configs[i]
+            var idx = config.indexOf(r_min)
+            if (idx == - 1) {
+
+            } else {
+                win = best_configs[i]
+            }
+        }
+        return win
+    }
+
 
     this.take_action = function (param) {
         console.log('action triggered:' + param.action + ',' + param.direction)
         if (param.action == 'internal reorder') {
-
-
             var gvn = _.filter(
                 self.graph.nodes, function (node) {
                     return node.visible
@@ -35,7 +53,10 @@ function Node() {
             gvn = self.graph.sentence.sort_within_graph(gvn, param.direction)
             self.graph.internal_reorder = param.direction
             var node_idx = self.graph.sentence.get_best_configuration(gvn, self.graph.external_reorder)
-            self.graph.sentence.add_nodes(gvn, node_idx)
+            if (node_idx.length > 1) {
+                console.log("multiple possible best configurations - internal order!!!")
+            }
+            self.graph.sentence.add_nodes(gvn, node_idx[0])
 
 
         } else if (param.action == 'external reorder') {
@@ -48,7 +69,10 @@ function Node() {
             gvn = self.graph.sentence.sort_within_graph(gvn, self.graph.internal_reorder)
             self.graph.external_reorder = param.direction
             var node_idx = self.graph.sentence.get_best_configuration(gvn, param.direction)
-            self.graph.sentence.add_nodes(gvn, node_idx)
+            if (node_idx.length > 1) {
+                console.log("multiple possible best configurations - external order!!!")
+            }
+            self.graph.sentence.add_nodes(gvn, node_idx[0])
 
 
         } else if (param.action == 'translate') {
@@ -60,10 +84,21 @@ function Node() {
             }
             //If the translation action has changed the visible nodes, result will be true
             if (modified_nodes != null) {
+                var remove_idx = []
+                for (var mnr = 0; mnr < modified_nodes.remove.length; mnr ++) {
+                    remove_idx.push(parseInt($(modified_nodes.remove[mnr].get_view()).css('order')))
+                }
                 self.graph.sentence.remove_nodes(modified_nodes.remove)
                 gvn = self.graph.sentence.sort_within_graph(modified_nodes.add, self.graph.internal_reorder)
                 var node_idx = self.graph.sentence.get_best_configuration(gvn, self.graph.external_reorder)
-                self.graph.sentence.add_nodes(gvn, node_idx)
+                if (node_idx.length > 1) {
+                    console.log("multiple possible best configurations -translate!!!")
+                    node_idx = self.pick_config_closest(node_idx, remove_idx)
+                    self.graph.sentence.add_nodes(gvn, node_idx)
+                } else {
+                    self.graph.sentence.add_nodes(gvn, node_idx[0])
+                }
+
             }
         } else {
             console.log("Invalid action:  " + param.action)
@@ -83,6 +118,7 @@ function Node() {
             $(menu_container).addClass('node_menu_container')
             $(this.view).append($(menu_container))
 
+
             var translation_selector = document.createElement('div')
             $(translation_selector).addClass('translation_selector')
             $(menu_container).append($(translation_selector))
@@ -90,6 +126,10 @@ function Node() {
                 'click', function () {
                     self.take_action({action: 'translate', direction: 'de'})
                 })
+            if (! this.to_de) {
+                $(translation_selector).hide()
+            }
+
 
             var internal_reorder_selector = document.createElement('div')
             $(internal_reorder_selector).addClass('internal_reorder_selector')
@@ -98,6 +138,10 @@ function Node() {
                 'click', function () {
                     self.take_action({action: 'internal reorder', direction: 'de'})
                 })
+            if (! this.graph.ir) {
+                $(internal_reorder_selector).hide()
+            }
+
 
             var external_reorder_selector = document.createElement('div')
             $(external_reorder_selector).addClass('external_reorder_selector')
@@ -106,6 +150,10 @@ function Node() {
                 'click', function () {
                     self.take_action({action: 'external reorder', direction: 'de'})
                 })
+
+            if (! this.graph.er) {
+                $(external_reorder_selector).hide()
+            }
 
             var s = document.createElement('span')
             s.innerHTML = this.s
@@ -117,6 +165,7 @@ function Node() {
             $(bottom_menu_container).addClass('node_menu_container')
             $(this.view).append($(bottom_menu_container))
 
+
             var translation_selector = document.createElement('div')
             $(translation_selector).addClass('translation_selector')
             $(bottom_menu_container).append($(translation_selector))
@@ -124,6 +173,10 @@ function Node() {
                 'click', function () {
                     self.take_action({action: 'translate', direction: 'en'})
                 })
+            if (! this.to_en) {
+                $(translation_selector).hide()
+            }
+
 
             var internal_reorder_selector = document.createElement('div')
             $(internal_reorder_selector).addClass('internal_reorder_selector')
@@ -133,6 +186,11 @@ function Node() {
                     self.take_action({action: 'internal reorder', direction: 'en'})
                 })
 
+            if (! this.graph.ir) {
+                $(internal_reorder_selector).hide()
+            }
+
+
             var external_reorder_selector = document.createElement('div')
             $(external_reorder_selector).addClass('external_reorder_selector')
             $(bottom_menu_container).append($(external_reorder_selector))
@@ -140,6 +198,10 @@ function Node() {
                 'click', function () {
                     self.take_action({action: 'external reorder', direction: 'en'})
                 })
+
+            if (! this.graph.er) {
+                $(external_reorder_selector).hide()
+            }
 
             return this.view
         } else {
@@ -265,7 +327,8 @@ function Sentence() {
     this.sort_visible_nodes_by_display_order = function () {
         self.visible_nodes = _.sortBy(
             self.visible_nodes, function (node) {
-                return $(node.get_view()).css('order')
+
+                return parseInt($(node.get_view()).css('order'))
             });
     }
 
@@ -337,8 +400,7 @@ function Sentence() {
             self.rec((i, max_num))
         }
     }
-
-    this.score_configuration = function (config, nodes_to_insert, g_order) {
+    this.score_configuration_overlap = function (config, nodes_to_insert, g_order) {
         var visible_nodes_copy = []
         for (var v = 0; v < self.visible_nodes.length; v ++) {
             visible_nodes_copy.push(self.visible_nodes[v])
@@ -354,45 +416,164 @@ function Sentence() {
             var right_gids = self.get_neighbor_graph_ids(config[c], 'right', visible_nodes_copy)
             var gold_left_gids = node_at_site[g_order + "_left"]
             var gold_right_gids = node_at_site[g_order + "_right"]
-            if (left_gids.length < gold_left_gids) {
-                left_gids = pad_array(left_gids, gold_left_gids.length)
-            } else if (left_gids.length > gold_left_gids) {
-                gold_left_gids = pad_array(gold_left_gids, left_gids.length)
+            var gold_left_gids_copy = []
+            var gold_right_gids_copy = []
+            for (var gr = 0; gr < gold_right_gids.length; gr ++) {
+                gold_right_gids_copy.push(gold_right_gids[gr])
+            }
+            for (var gl = 0; gl < gold_left_gids.length; gl ++) {
+                gold_left_gids_copy.push(gold_left_gids[gl])
+            }
+
+
+            if (left_gids.length < gold_left_gids_copy) {
+                left_gids = pad_array(left_gids, gold_left_gids_copy.length)
+            } else if (left_gids.length > gold_left_gids_copy) {
+                gold_left_gids_copy = pad_array(gold_left_gids_copy, left_gids.length)
             } else {
 
             }
 
-            if (right_gids.length < gold_right_gids.length) {
-                right_gids = pad_array(right_gids, gold_right_gids.length)
-            } else if (right_gids.length > gold_right_gids.length) {
-                gold_right_gids = pad_array(gold_right_gids, right_gids.length)
+            if (right_gids.length < gold_right_gids_copy.length) {
+                right_gids = pad_array(right_gids, gold_right_gids_copy.length)
+            } else if (right_gids.length > gold_right_gids_copy.length) {
+                gold_right_gids_copy = pad_array(gold_right_gids_copy, right_gids.length)
             } else {
 
             }
+            var score = 0
 
-            for (var l = 0; l < gold_left_gids.length; l ++) {
-                score += (gold_left_gids[l] == left_gids[l] ? 1 : 0)
+            //console.log("done")
+            for (var l = 0; l < gold_left_gids_copy.length; l ++) {
+                score += (gold_left_gids_copy[l] == left_gids[l] ? 1 : 0)
             }
 
 
-            for (var r = 0; r < gold_right_gids.length; r ++) {
-                score += (gold_right_gids[r] == right_gids[r] ? 1 : 0)
+            for (var r = 0; r < gold_right_gids_copy.length; r ++) {
+                score += (gold_right_gids_copy[r] == right_gids[r] ? 1 : 0)
             }
 
         }
+        //console.log("config:" + config + " alignment:" + alignment_score)
         return score
+    }
+    this.remove_cosecutive_duplicate = function (list) {
+        var new_list = []
+        var prev = null
+        for (var i = 0; i < list.length; i ++) {
+            if (list[i] != prev) {
+                new_list.push(list[i])
+                prev = list[i]
+            }
+        }
+        return new_list
+    }
+
+    this.score_configuration_alignment_unq = function (config, nodes_to_insert, g_order) {
+        var visible_nodes_copy = []
+        for (var v = 0; v < self.visible_nodes.length; v ++) {
+            visible_nodes_copy.push(self.visible_nodes[v])
+        }
+        config.sort()
+        for (var c = 0; c < config.length; c ++) {
+            visible_nodes_copy.splice(config[c], 0, nodes_to_insert[c])
+        }
+        var alignment_score = 0
+        for (var c = 0; c < config.length; c ++) {
+            var node_at_site = nodes_to_insert[c]
+            var left_gids = self.remove_cosecutive_duplicate(self.get_neighbor_graph_ids(config[c], 'left', visible_nodes_copy))
+            var right_gids = self.remove_cosecutive_duplicate(self.get_neighbor_graph_ids(config[c], 'right', visible_nodes_copy))
+            var gold_left_gids = self.remove_cosecutive_duplicate(node_at_site[g_order + "_left"])
+            var gold_right_gids = self.remove_cosecutive_duplicate(node_at_site[g_order + "_right"])
+
+            //console.log("right:")
+            var right_o = editdistance(gold_right_gids, right_gids)
+            for (var r = 0; r < right_o.alignments.length; r ++) {
+                var align = right_o.alignments[r]
+                if (align[0] == align[1]) {
+                    alignment_score += (right_o.alignments.length - r) / (right_o.alignments.length)
+                } else {
+                    alignment_score -= (right_o.alignments.length - r) / (right_o.alignments.length)
+                }
+            }
+            //console.log("left:")
+            var left_o = editdistance(gold_left_gids, left_gids)
+            for (var l = 0; l < left_o.alignments.length; l ++) {
+                var align = left_o.alignments[l]
+                //console.log(align[0] + " - " + align[1])
+                if (align[0] == align[1]) {
+                    alignment_score += (left_o.alignments.length - l) / (left_o.alignments.length)
+                } else {
+                    alignment_score -= (left_o.alignments.length - l) / (left_o.alignments.length)
+                }
+            }
+        }
+        //console.log("config:" + config + " alignment:" + alignment_score)
+        return alignment_score
+    }
+
+
+    this.score_configuration_alignment = function (config, nodes_to_insert, g_order) {
+        var visible_nodes_copy = []
+        for (var v = 0; v < self.visible_nodes.length; v ++) {
+            visible_nodes_copy.push(self.visible_nodes[v])
+        }
+        config.sort()
+        for (var c = 0; c < config.length; c ++) {
+            visible_nodes_copy.splice(config[c], 0, nodes_to_insert[c])
+        }
+        var alignment_score = 0
+        for (var c = 0; c < config.length; c ++) {
+            var node_at_site = nodes_to_insert[c]
+            var left_gids = self.get_neighbor_graph_ids(config[c], 'left', visible_nodes_copy)
+            var right_gids = self.get_neighbor_graph_ids(config[c], 'right', visible_nodes_copy)
+            var gold_left_gids = node_at_site[g_order + "_left"]
+            var gold_right_gids = node_at_site[g_order + "_right"]
+
+            //console.log("right:")
+            var right_o = editdistance(gold_right_gids, right_gids)
+            for (var r = 0; r < right_o.alignments.length; r ++) {
+                var align = right_o.alignments[r]
+                if (align[0] == align[1]) {
+                    alignment_score += (right_o.alignments.length - r) / (right_o.alignments.length)
+                } else {
+                    alignment_score -= (right_o.alignments.length - r) / (right_o.alignments.length)
+                }
+            }
+            //console.log("left:")
+            var left_o = editdistance(gold_left_gids, left_gids)
+            for (var l = 0; l < left_o.alignments.length; l ++) {
+                var align = left_o.alignments[l]
+                //console.log(align[0] + " - " + align[1])
+                if (align[0] == align[1]) {
+                    alignment_score += (left_o.alignments.length - l) / (left_o.alignments.length)
+                } else {
+                    alignment_score -= (left_o.alignments.length - l) / (left_o.alignments.length)
+                }
+            }
+        }
+        //console.log("config:" + config + " alignment:" + alignment_score)
+        return alignment_score
     }
 
     this.get_best_configuration = function (nodes_to_insert, g_order) {
         var configurations = get_paths(self.visible_nodes.length, nodes_to_insert.length)
-        var best_config = null
+        var best_config = []
         var max = Number.NEGATIVE_INFINITY
         for (var c in configurations) {
-            var s = self.score_configuration(configurations[c], nodes_to_insert, g_order)
-            if (s > max) {
-                max = s
-                best_config = configurations[c]
-                console.log('best so far ' + best_config.join(' ') + ' with score ' + max)
+            var use_score1 = self.score_configuration_alignment(configurations[c], nodes_to_insert, g_order)
+            var use_score2 = self.score_configuration_alignment_unq(configurations[c], nodes_to_insert, g_order)
+            var use_score3 = self.score_configuration_overlap(configurations[c], nodes_to_insert, g_order)
+            var use_score = use_score2
+            console.log("score: " + use_score1 + " alignment_score:" + use_score2 + " alignment_score2:" + use_score3 + " config:" + configurations[c])
+            if (use_score > max) {
+                max = use_score
+                best_config = []
+                best_config.push(configurations[c])
+            } else if (use_score == max) {
+                best_config.push(configurations[c])
+            } else {
+
             }
         }
         return best_config
@@ -414,21 +595,21 @@ function Sentence() {
 
     this.get_neighbor_graph_ids = function (ps, neighbor_direction, base_array) {
         var graphs_ids = []
-        var prev = null
+        //var prev = null
         if (neighbor_direction == 'right') {
             for (var i = ps + 1; i < base_array.length; i ++) {
-                if (prev != base_array[i].graph.id) {
-                    graphs_ids.push(base_array[i].graph.id)
-                    prev = base_array[i].graph.id
-                }
+                //if (prev != base_array[i].graph.id) {
+                graphs_ids.push(base_array[i].graph.id)
+                //    prev = base_array[i].graph.id
+                //}
             }
             graphs_ids.push('*EN*')
         } else if (neighbor_direction == 'left') {
             for (var i = ps - 1; i >= 0; i --) {
-                if (prev != base_array[i].graph.id) {
-                    graphs_ids.push(base_array[i].graph.id)
-                    prev = base_array[i].graph.id
-                }
+                //if (prev != base_array[i].graph.id) {
+                graphs_ids.push(base_array[i].graph.id)
+                //    prev = base_array[i].graph.id
+                //}
             }
             graphs_ids.push('*ST*')
         } else {
@@ -491,7 +672,7 @@ function Sentence() {
 
             var item = self.visible_nodes[i].get_view()
 
-            console.log("order :" + $(item).css('order') + "  is the order of " + item.node.s)
+            //console.log("order :" + $(item).css('order') + "  is the order of " + item.node.s)
             if (item.inDom) {
 
             } else {
@@ -506,7 +687,7 @@ function Sentence() {
                 $(item.span).animate({ backgroundColor: "transparent" }, 400);
                 item.highlight_movement = false
             } else {
-                console.log("no movement")
+                //console.log("no movement")
             }
         }
         console.log("completed drawing node items...")
@@ -532,12 +713,16 @@ Node.parse = function (input) {
     n.en_right = input.en_right
     n.de_left = input.de_left
     n.de_right = input.de_right
+    n.to_en = input.to_en
+    n.to_de = input.to_de
     return n
 
 }
 Graph.parse = function (input) {
     var g = new Graph()
     g.id = input.id
+    g.er = input.er
+    g.ir = input.ir
     g.internal_reorder = 'en'
     g.external_reorder = 'en'
     for (var i in input.nodes) {

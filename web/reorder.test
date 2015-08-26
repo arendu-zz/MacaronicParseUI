@@ -1,4 +1,8 @@
 [a b] [c d] [e f] [g h] [i] :
+[a b] [e f] [g h] [c d] [i] : ER
+[A B] [E F] [G H] [C D] [I] : TFG
+===
+[a b] [c d] [e f] [g h] [i] :
 [a b] [g h] [e f] [c d] [i] : ER
 [A B] [C D] [E F] [G H] [I] : TFG
 ===

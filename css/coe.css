@@ -69,6 +69,7 @@ div {
 .node_menu_container {
     display: flex;
     background: transparent;
+    height: 5px;
     padding: 0;
     flex-direction: row;
     justify-content: space-around;

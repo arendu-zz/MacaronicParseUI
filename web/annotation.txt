@@ -1,63 +1,65 @@
-[ab] [C D] [E F] :
-[A B] [C D] [E F] : T
-[A B] [E F] [C D] : ER
-[A B] [F E] [C D] : IR
-[1 2] [6 5] [3 4] : TFG
-===
-[X Y Z] [A B C] :
-[X Y Z] [a B C] : T
-[a B] [X Y Z] [C] : ER
-[1 2] [10 11 12] [3] : TFG
-===
 [please] [shut] [the door] :
-[please] [make close] [the door] : T
+[please] [make close] [the door] : T.E
 [please] [make] [the door] [close] : ER
-[bitte] [mach] [die tur] [zu] : TF
+[bitte] [mach] [die tur] [zu] : TFG
 ===
 [I like to] [eat] [chocolate cake] :
 [I like to] [chocolate cake] [eat] : ER
-[I like to] [Schokolade cake] [eat] : T
-[I like to] [Schokolade kuchen] [eat] : T
-[Ich mag zu] [Schokoladenkuchen] [essen] : TF
+[I like to] [Schokolade cake] [eat] : T.G
+[I like to] [Schokolade kuchen] [eat] : T.G
+[I like to] [Schokoladenkuchen] [eat] : T.G
+[Ich mag zu] [Schokoladenkuchen] [essen] : TFG
 ===
 [I] [like to eat] [chocolate cake] :
 [I] [like to] [chocolate cake] [eat] : ER
-[I] [like to] [Schokolade cake] [eat] : T
-[I] [like to] [Schokolade kuchen] [eat] : T
-[Ich] [mag zu] [Schokoladenkuchen] [essen] : TF
+[I] [like to] [Schokolade cake] [eat] : T.G
+[I] [like to] [Schokolade kuchen] [eat] : T.G
+[I] [like to] [Schokoladenkuchen] [eat] : T.G
+[Ich] [mag zu] [Schokoladenkuchen] [essen] : TFG
 ===
 [The weather] [has also been] [very nice] [.] :
 [The weather] [has also] [very nice] [been] [.] : ER
-[The weather] [is also] [very nice] [been] [.] : T
-[Das wetter] [ist auch] [sehr schon] [gewesen] [.] : TF
+[The weather] [is also] [very nice] [been] [.] : T.E
+[Das wetter] [ist auch] [sehr schon] [gewesen] [.] : TFG
 ===
 [We have been] [in Vienna] [for a couple of days] [.] :
-[Now we have been] [in Vienna] [for a couple of days] [.] : T
-[Now we are been] [in Vienna] [for a couple of days] [.] : T
-[Now we are already] [in Vienna] [for a couple of days] [.] : T
+[Now we have been] [in Vienna] [for a couple of days] [.] : T.E
+[Now we are been] [in Vienna] [for a couple of days] [.] : T.E
+[Now we are already] [in Vienna] [for a couple of days] [.] : T.E
 [Now are we already] [in Vienna] [for a couple of days] [.] : IR
-[Now are we already] [in Vienna] [for a pair of days] [.] : T
-[Now are we already] [in Vienna] [a pair of days] [.] : T
-[Now are we already] [in Vienna] [a pair days] [.] : T
+[Now are we already] [in Vienna] [for a pair of days] [.] : T.E
+[Now are we already] [in Vienna] [a pair of days] [.] : T.E
+[Now are we already] [in Vienna] [a pair days] [.] : T.E
 [Now are we already] [a pair days] [in Vienna]  [.] : ER
-[Jetzt sind wir schon] [ein paar Tage] [in Wien] [.] : TF
-====
+[Jetzt sind wir schon] [ein paar Tage] [in Wien] [.] : TFG
+===
 [Now] [I] [really have] [to write] [you] [again] [!]  :
 [Now] [I] [have really] [to write] [you] [again] [!] : IR
 [Now] [I] [have really] [you] [to write] [again] [!] : ER
-[Now] [I] [have really] [you] [to write] [of new] [!] : T
-[Now]  [I] [have truly] [you] [to write] [of new] [!] : T
-[Now]  [I] [must truly] [you] [to write] [of new] [!] : T
-[Now]  [I] [must truly] [you] [write] [of new] [!] : T
-[Maintenant]  [je] dois vraiment vous écrire de nouveau [!] : TFG
+[Now] [I] [have really] [you] [to write] [of new] [!] : T.E
+[Now] [I] [have truly] [you] [to write] [of new] [!] : T.E
+[Now] [I] [must truly] [you] [to write] [of new] [!] : T.E
+[Now] [I] [must truly] [you] [write] [of new] [!] : T.E
+[Maintenant] [je] [dois vraiment] [vous] [écrire] [de nouveau] [!] : TFG
+===
+[We] [have been] [in Vienna] [for a] [couple of days] [.] :
+[Now we] [have been] [in Vienna] [for a] [couple of days] [.] : T.E
+[Now we are] [been] [in Vienna] [for a] [couple of days] [.] : T.E
+[Now we are] [already] [in Vienna] [for a] [couple of days] [.] : T.E
+[Now are we] [already] [in Vienna] [for a] [couple of days] [.] : IR
+[Now are we] [already] [in Vienna] [for a] [pair of days] [.] : T.E
+[Now are we] [already] [in Vienna] [a] [pair of days] [.] : T.E
+[Now are we] [already] [in Vienna] [a] [pair days] [.] : T.E
+[Now are we] [already] [a] [pair days] [in Vienna]  [.] : ER
+[Jetzt sind wir] [schon] [ein] [paar Tage] [in Wien] [.] : TFG
 ===
 [I've seen] [so many] [things] [that I] [don't] [know] [where to start] [.] :
-[I've seen] [so many] [things] [that I] [don't] [know] [where to start] [.] : T
-[I've seen] [so many] [things] [that I] [not not] [know] [where to start] [.] : T
-[I've seen] [so many] [things] [that I] [not] [know] [not] [where to start] [.] : ER
-[I've seen] [so many] [things] [that I] [not] [know] [not] [to where start] [.] : IR
-[I've seen] [so many] [things] [that I] [not] [know] [not] [to where begin] [.] : T
-[I've seen] [so] [things] [that I] [not] [know] [not] [to where begin] [.] : T
-[I've seen] [so] [of things] [that I] [not] [know] [not] [to where begin][.] : T
+[I've seen] [so many] [things] [that I] [don't] [know] [where to start] [.] : T.E
+[I've seen] [so many] [things] [that I] [not_1 not_2] [know] [where to start] [.] : T.E
+[I've seen] [so many] [things] [that I] [not_1] [know] [not_2] [where to start] [.] : ER
+[I've seen] [so many] [things] [that I] [not_1] [know] [not_2] [to where start] [.] : IR
+[I've seen] [so many] [things] [that I] [not_1] [know] [not_2] [to where begin] [.] : T.E
+[I've seen] [so] [things] [that I] [not_1] [know] [not_2] [to where begin] [.] : T.E
+[I've seen] [so] [of things] [that I] [not_1] [know] [not_2] [to where begin][.] : T.E
 [J'ai vu] [tant] [de choses] [que je] [ne] [sais] [pas] [par où commencer] [.] : TFG
 
