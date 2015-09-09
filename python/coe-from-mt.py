@@ -5,14 +5,13 @@ from collection_of_edits import Sentence, Node, Graph, EN_LANG, DE_LANG, START, 
 import json
 import sys
 
-'''
 reload(sys)
 sys.setdefaultencoding('utf-8')
 sys.stdin = codecs.getreader('utf-8')(sys.stdin)
 sys.stdout = codecs.getwriter('utf-8')(sys.stdout)
 sys.stdout.encoding = 'utf-8'
-'''
-import pdb
+
+VIS_LANG = 'de'
 
 
 def check_symmetric(wa_list):
@@ -231,6 +230,32 @@ def propagate(graph):
             n.en_left = [i for i in en_n.en_left]
 
 
+def min_visible_word_position(graph, vis_lang):
+    n_ids = []
+    for n in graph.nodes:
+        if n.visible and n.lang == vis_lang:
+            if vis_lang == EN_LANG:
+                n_ids.append(n.en_id)
+            else:
+                n_ids.append(n.de_id)
+    n_ids.sort()
+    return n_ids[0]
+
+
+def sort_groups_by_lang(graphs, vis_lang):
+    graph_tuple = [(min_visible_word_position(g, vis_lang), g) for g in graphs]
+    graph_tuple.sort()
+    graph_tuple = [g for mv, g in graph_tuple]
+    graph_by_ids = []
+    for sorted_g_idx, g in enumerate(graph_tuple):
+        g.initial_order = sorted_g_idx
+        g.external_reorder_by = vis_lang
+        graph_by_ids.append((g.initial_order, g))
+    graph_by_ids.sort()
+    graphs = [g for gio, g in graph_by_ids]
+    return graphs
+
+
 if __name__ == '__main__':
     # wa = [(0, 0), (1, 0), (1, 1), (2, 1)]
     # wa_sym = make_symmetric(wa)
@@ -254,7 +279,7 @@ if __name__ == '__main__':
     sent_idx = 0
     eps_word_alignment = 0
     coe_sentences = []
-    for input_line, output_line in zip(input_mt, output_mt)[:100]:
+    for input_line, output_line in zip(input_mt, output_mt)[:3]:
 
         sys.stderr.write('SENT' + str(sent_idx) + '\n')
         input_sent = input_line.strip().split()
@@ -302,30 +327,34 @@ if __name__ == '__main__':
                     pass
                 final_groups[group_idx] = (iu, ou, inp_span, out_span)
                 coe_graph = Graph(group_idx)
-                # print '\t\tGROUP', group_idx
-                # print '\t\t\t', iu, ou
-                # print '\t\t\t',
+                sys.stderr.write('\t\tGROUP' + str(group_idx) + '\n')
+                sys.stderr.write('\t\t\t')
                 to_nodes = []
                 node_idx = 0
                 for iu_idx in iu:
                     assert inp_phrase[iu_idx] == input_sent[inp_span[0] + iu_idx]
                     input_coverage[inp_span[0] + iu_idx] = 1
                     input_tok_group[inp_span[0] + iu_idx] = group_idx
-                    n = Node(node_idx, input_sent[inp_span[0] + iu_idx], None, inp_span[0] + iu_idx, DE_LANG, False,
+                    n = Node(node_idx, input_sent[inp_span[0] + iu_idx], None, inp_span[0] + iu_idx, DE_LANG,
+                             VIS_LANG == DE_LANG,
                              None, None, None, None, True, False, False)
                     node_idx += 1
                     to_nodes.append(n)
+                    sys.stderr.write(' ' + input_sent[inp_span[0] + iu_idx] + ' ')
 
-                # print '---',
+                sys.stderr.write('---')
                 from_nodes = []
                 for ou_idx in ou:
                     assert out_phrase[ou_idx] == output_sent[out_span[0] + ou_idx]
                     output_tok_group[out_span[0] + ou_idx] = group_idx
-                    n = Node(node_idx, output_sent[out_span[0] + ou_idx], out_span[0] + ou_idx, None, EN_LANG, True,
+                    n = Node(node_idx, output_sent[out_span[0] + ou_idx], out_span[0] + ou_idx, None, EN_LANG,
+                             VIS_LANG == EN_LANG,
                              None, None, None, None, False, True, False)
                     node_idx += 1
                     from_nodes.append(n)
-                # print ''
+                    sys.stderr.write(' ' + output_sent[out_span[0] + ou_idx] + ' ')
+
+                sys.stderr.write('\n')
                 if len(from_nodes) > 1:
                     assert len(to_nodes) == 1  # or (len(iu) == 2 and len(ou) == 2)
                     pass
@@ -337,6 +366,8 @@ if __name__ == '__main__':
                 coe_sentence.graphs.append(coe_graph)
                 group_idx += 1
                 # input_coverage[inp_span[0]: inp_span[1] + 1] = ['1'] * ((inp_span[1] + 1) - inp_span[0])
+
+        coe_sentence.graphs = sort_groups_by_lang(coe_sentence.graphs, VIS_LANG)
 
         if 0 in input_coverage:
             # print 'bad coverage:', input_coverage

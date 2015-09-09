@@ -68,6 +68,9 @@ class Graph(dict):
         self.nodes = []
         self.edges = []
         self.er = False
+        self.initial_order = id
+        self.external_reorder_by = EN_LANG
+        self.internal_reorder_by = EN_LANG
 
 
     def __str__(self):
@@ -169,6 +172,9 @@ class Graph(dict):
     def from_dict(dict_):
         g = Graph(dict_['id'])
         g.er = dict_['er']
+        g.initial_order = dict_['initial_order']
+        g.internal_reorder_by = dict_['internal_reorder_by']
+        g.external_reorder_by = dict_['external_reorder_by']
         g.nodes = list(map(Node.from_dict, dict_['nodes']))
         g.edges = list(map(Edge.from_dict, dict_['edges']))
         return g
