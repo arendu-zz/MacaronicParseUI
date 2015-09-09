@@ -54,8 +54,8 @@ function Node() {
                 })
             self.graph.sentence.remove_nodes(gvn)
             gvn = self.graph.sentence.sort_within_graph(gvn, param.direction)
-            self.graph.internal_reorder = param.direction
-            var node_idx = self.graph.sentence.get_best_configuration(gvn, self.graph.external_reorder)
+            self.graph.internal_reorder_by = param.direction
+            var node_idx = self.graph.sentence.get_best_configuration(gvn, self.graph.external_reorder_by)
             if (node_idx.length > 1) {
                 console.log("multiple possible best configurations - internal order!!!")
             }
@@ -69,8 +69,8 @@ function Node() {
                     return node.visible
                 })
             self.graph.sentence.remove_nodes(gvn)
-            gvn = self.graph.sentence.sort_within_graph(gvn, self.graph.internal_reorder)
-            self.graph.external_reorder = param.direction
+            gvn = self.graph.sentence.sort_within_graph(gvn, self.graph.internal_reorder_by)
+            self.graph.external_reorder_by = param.direction
             var node_idx = self.graph.sentence.get_best_configuration(gvn, param.direction)
             if (node_idx.length > 1) {
                 console.log("multiple possible best configurations - external order!!!")
@@ -92,8 +92,8 @@ function Node() {
                     remove_idx.push(parseInt($(modified_nodes.remove[mnr].get_view()).css('order')))
                 }
                 self.graph.sentence.remove_nodes(modified_nodes.remove)
-                gvn = self.graph.sentence.sort_within_graph(modified_nodes.add, self.graph.internal_reorder)
-                var node_idx = self.graph.sentence.get_best_configuration(gvn, self.graph.external_reorder)
+                gvn = self.graph.sentence.sort_within_graph(modified_nodes.add, self.graph.internal_reorder_by)
+                var node_idx = self.graph.sentence.get_best_configuration(gvn, self.graph.external_reorder_by)
                 if (node_idx.length > 1) {
                     console.log("multiple possible best configurations -translate!!!")
                     node_idx = self.pick_config_closest(node_idx, remove_idx)
@@ -226,8 +226,9 @@ function Graph() {
     this.nodes = []
     this.edges = []
     this.sentence = null
-    this.internal_reorder = 'en'
-    this.external_reorder = 'en'
+    this.internal_reorder_by = 'en'
+    this.external_reorder_by = 'en'
+    this.initial_order = null
 
     this.get_node_by_ids = function (ids) {
         var result = []
@@ -247,7 +248,7 @@ function Graph() {
         var p_l_remove = nodes_to_remove.length
         var stop = false
         while (! stop) {
-            for (var a in nodes_to_add){
+            for (var a in nodes_to_add) {
                 var na = nodes_to_add[a]
 
             }
@@ -335,6 +336,10 @@ function Sentence() {
     this.initialize = function () {
         self.container = self.get_container()
         $(document.body).append($(self.get_container()))
+        self.graphs = _.sortBy(
+            self.graphs, function (graph) {
+                return graph.initial_order
+            })
         for (var i in self.graphs) {
             self.graphs[i].initialize(self)
 
@@ -668,12 +673,6 @@ function Sentence() {
     }
 
 
-    this.update_order_of_visible_nodes = function () {
-        //TODO: ordering function based on neighborhood
-
-
-    }
-
     this.initial_order = function () {
         //assigns order of the visible nodes initially
         for (var i in self.visible_nodes) {
@@ -684,7 +683,6 @@ function Sentence() {
 
     this.update_visible_nodes = function () {
         console.log("drawing node items...")
-        self.update_order_of_visible_nodes()
         for (var i in self.visible_nodes) {
 
             var item = self.visible_nodes[i].get_view()
@@ -741,8 +739,9 @@ Graph.parse = function (input) {
     g.id = input.id
     g.er = input.er
     g.ir = input.ir
-    g.internal_reorder = 'en'
-    g.external_reorder = 'en'
+    g.internal_reorder_by = input.internal_reorder_by
+    g.external_reorder_by = input.external_reorder_by
+    g.initial_order = input.initial_order
     for (var i in input.nodes) {
         g.nodes.push(Node.parse(input.nodes[i]))
     }
