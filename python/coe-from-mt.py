@@ -1,7 +1,9 @@
 __author__ = 'arenduchintala'
-import sys
 import codecs
 from optparse import OptionParser
+from collection_of_edits import Sentence, Node, Graph, EN_LANG, DE_LANG, START, END, get_edges
+import json
+import sys
 
 '''
 reload(sys)
@@ -54,61 +56,34 @@ def get_coverage(wa_list, original_wa_list):
     return len(original_inp - current_inp) + len(original_out - current_out)
 
 
-def insert_epsilon_wa(wa, inp_phrase, out_phrase):
-    print 'checking for eps'
+def insert_epsilon_edge(wa_original, inp_phrase, out_phrase):
+    wa = [a for a in wa_original]
     inp_cov = [0] * len(inp_phrase)
     out_cov = [0] * len(out_phrase)
+    inp_pos_ratio = [float(idx) / len(inp_phrase) for idx, i in enumerate(inp_phrase)]
+    out_pos_ratio = [float(idx) / len(out_phrase) for idx, i in enumerate(out_phrase)]
     while 0 in inp_cov or 0 in out_cov:
         for i, o in wa:
             inp_cov[i] = 1
             out_cov[o] = 1
-        if 0 in inp_cov:
-            print 'has eps in inp'
-            # pdb.set_trace()
-            pos_wa = []
-            if len(out_phrase) == 1:
-                for eps_idx, ic in enumerate(inp_cov):
-                    if ic == 0:
-                        wa.append((eps_idx, 0))
-            else:
-                print wa, inp_phrase, out_phrase
-                assert len(inp_phrase) > 1
-                eps_idx = inp_cov.index(0)
-                n_left = eps_idx - 1
-                while len(pos_wa) == 0 and n_left >= 0:
-                    pos_wa = [i for i in wa if i[0] == n_left]
-                    n_left -= 1
-                if len(pos_wa) == 0:
-                    n_right = eps_idx + 1
-                    while len(pos_wa) == 0 and n_right <= len(inp_phrase) - 1:
-                        pos_wa = [i for i in wa if i[0] == n_right]
-                        n_right += 1
-                pos_out_wa = pos_wa[0][1]
-                wa.append((eps_idx, pos_out_wa))
-        if 0 in out_cov:
-            print 'has eps in out'
-            # pdb.set_trace()
-            pos_wa = []
-            if len(inp_phrase) == 1:
-                for eps_idx, oc in enumerate(out_cov):
-                    if oc == 0:
-                        wa.append((0, eps_idx))
-            else:
-                print wa, inp_phrase, out_phrase
-                assert len(out_phrase) > 1
-                eps_idx = out_cov.index(0)
-                n_left = eps_idx - 1
-                while len(pos_wa) == 0 and n_left >= 0:
-                    pos_wa = [i for i in wa if i[1] == n_left]
-                    n_left -= 1
-
-                if len(pos_wa) == 0:
-                    n_right = eps_idx + 1
-                    while len(pos_wa) == 0 and n_right <= len(out_phrase) - 1:
-                        pos_wa = [i for i in wa if i[1] == n_right]
-                        n_right += 1
-                pos_in_wa = pos_wa[0][0]
-                wa.append((pos_in_wa, eps_idx))
+        for i_idx, (pos_ratio, ic) in enumerate(zip(inp_pos_ratio, inp_cov)):
+            if ic == 0:
+                out_pos_ratio_diff = [(abs(pos_ratio - pr), o_idx) for o_idx, pr in enumerate(out_pos_ratio)]
+                out_pos_ratio_diff.sort()
+                best_out_alignment_idx = out_pos_ratio_diff[0][1]
+                wa.append((i_idx, best_out_alignment_idx))
+        for i, o in wa:
+            inp_cov[i] = 1
+            out_cov[o] = 1
+        for o_idx, (pos_ratio, oc) in enumerate(zip(out_pos_ratio, out_cov)):
+            if oc == 0:
+                inp_pos_ratio_diff = [(abs(pos_ratio - pr), i_idx) for i_idx, pr in enumerate(inp_pos_ratio)]
+                inp_pos_ratio_diff.sort()
+                best_inp_alignment_idx = inp_pos_ratio_diff[0][1]
+                wa.append((best_inp_alignment_idx, o_idx))
+        for i, o in wa:
+            inp_cov[i] = 1
+            out_cov[o] = 1
     return wa
 
 
@@ -199,6 +174,14 @@ def untangle_wa(wa_list):
     return inp_wa_2_out_wa
 
 
+def make_edges(from_nodes, to_nodes):
+    edges = []
+    for fn in from_nodes:
+        for tn in to_nodes:
+            edges += get_edges(fn, tn)
+    return edges
+
+
 def get_output_phrase_as_spans(output_phrases):
     op_spans = []
     st_idx = 0
@@ -209,6 +192,43 @@ def get_output_phrase_as_spans(output_phrases):
         op_spans.append((st_idx, end_idx))
         st_idx = end_idx + 1
     return op_spans
+
+
+def get_groups_that_external_reorder(input_tok_group, output_tok_group):
+    reordering_groups = []
+    for i_idx, inp_group in enumerate(input_tok_group):
+        o_idxes = [o_idx for o_idx, out_group in enumerate(output_tok_group) if out_group == inp_group]
+        if len(o_idxes) > 1:
+            reordering_groups.append(inp_group)
+        else:
+            inp_group_left = [ig for igx, ig in enumerate(input_tok_group) if igx == i_idx - 1]
+            inp_group_right = [ig for igx, ig in enumerate(input_tok_group) if igx == i_idx + 1]
+            out_group_left = [og for ogx, og in enumerate(output_tok_group) if ogx == o_idxes[0] - 1]
+            out_group_right = [og for ogx, og in enumerate(output_tok_group) if ogx == o_idxes[0] + 1]
+            if inp_group_left == out_group_left and inp_group_right == out_group_right:
+                pass
+            else:
+                reordering_groups.append(inp_group)
+    return reordering_groups
+
+
+def propagate(graph):
+    for n in graph.nodes:
+        if n.de_id is None or n.de_left is None or n.de_right is None:
+            de_neighbors = graph.get_neighbor_nodes(n, DE_LANG)
+            de_n = de_neighbors[0]
+            assert de_n.de_left is not None and de_n.de_right is not None and de_n.de_id is not None
+            n.de_id = de_n.de_id
+            n.de_right = [i for i in de_n.de_right]
+            n.de_left = [i for i in de_n.de_left]
+
+        if n.en_id is None or n.en_left is None or n.en_right is None:
+            en_neighbors = graph.get_neighbor_nodes(n, EN_LANG)
+            en_n = en_neighbors[0]
+            assert en_n.en_id is not None and en_n.en_left is not None and en_n.en_right is not None
+            n.en_id = en_n.en_id
+            n.en_right = [i for i in en_n.en_right]
+            n.en_left = [i for i in en_n.en_left]
 
 
 if __name__ == '__main__':
@@ -233,10 +253,10 @@ if __name__ == '__main__':
     assert len(input_mt) == len(output_mt)
     sent_idx = 0
     eps_word_alignment = 0
-    for input_line, output_line in zip(input_mt, output_mt):
-        print 'SENT', sent_idx
+    coe_sentences = []
+    for input_line, output_line in zip(input_mt, output_mt)[:100]:
 
-        sent_idx += 1
+        sys.stderr.write('SENT' + str(sent_idx) + '\n')
         input_sent = input_line.strip().split()
         output_items = output_line.strip().split('|')
         output_phrases = [oi.strip() for idx, oi in enumerate(output_items) if idx % 2 == 0 and oi.strip() != '']
@@ -245,60 +265,115 @@ if __name__ == '__main__':
         output_meta = [tuple(om.split(',wa=')) for idx, om in enumerate(output_items) if idx % 2 != 0]
         input_spans = [tuple([int(i) for i in om[0].split('-')]) for om in output_meta]
         wa_per_span = [[tuple([int(i) for i in a.split('-')]) for a in om[1].split()] for om in output_meta]
-        input_tok_group = []
-        output_tok_group = []
-        print input_sent
-        print output_sent
+        input_tok_group = [-1] * len(input_sent)
+        output_tok_group = [-1] * len(output_sent)
+
+        sys.stderr.write('input sent:' + ' '.join(input_sent) + '\n')
+        sys.stderr.write('input sent:' + ' '.join(output_sent) + '\n')
+
+        coe_sentence = Sentence(sent_idx, ' '.join(input_sent), ' '.join(output_sent), None)
+        sent_idx += 1
         assert len(wa_per_span) == len(input_spans) == len(output_spans)
         phrase_dict = {}
         input_coverage = [0] * len(input_sent)
-        phrase_idx = 0
         group_idx = 0
         for idx, (out_span, inp_span, wa) in enumerate(zip(output_spans, input_spans, wa_per_span)):
-            print '\tPHRASE', phrase_idx
-            phrase_idx += 1
             out_phrase = output_sent[out_span[0]:out_span[1] + 1]
             inp_phrase = input_sent[inp_span[0]:inp_span[1] + 1]
-            print '\t phrases:', input_sent[inp_span[0]:inp_span[1] + 1], '-', output_sent[out_span[0]:out_span[1] + 1]
-            print '\t phrase spans:', inp_span, '-', out_span
-            print '\twa:', wa
-            sym_coverage, sym_wa = make_symmetric(wa)
-            print '\tsym wa:', sym_wa
-            sym_wa = insert_epsilon_wa(sym_wa, input_sent[inp_span[0]:inp_span[1] + 1],
-                                       output_sent[out_span[0]:out_span[1] + 1])
+            # print '\t phrases:', input_sent[inp_span[0]:inp_span[1] + 1], '-', output_sent[out_span[0]:out_span[1] + 1]
+            # print '\t phrase spans:', inp_span, '-', out_span
+            # print '\twa:', wa
+            wa_no_null = insert_epsilon_edge(wa, input_sent[inp_span[0]:inp_span[1] + 1],
+                                             output_sent[out_span[0]:out_span[1] + 1])
+            # print '\twa-no-null:', wa_no_null
+            sym_coverage, sym_wa = make_symmetric(wa_no_null)
+            # print '\tsym wa2:', sym_wa
             assert sym_coverage == 0
             untangle = untangle_wa(sym_wa)
-
-            print '\tfinal wa:', untangle
+            # print '\tfinal wa:', untangle
             final_groups = {}
-            for iu, ou in untangle.items():
+            for iu in sorted(untangle):
+                ou = untangle[iu]
+                if len(iu) > 1:
+                    assert len(ou) == 1  # or (len(iu) == 2 and len(ou) == 2)
+                    pass
+                if len(ou) > 1:
+                    assert len(iu) == 1  # or (len(iu) == 2 and len(ou) == 2)
+                    pass
                 final_groups[group_idx] = (iu, ou, inp_span, out_span)
-                print '\t\tGROUP', group_idx
-                print '\t\t\t', iu, ou
-                print '\t\t\t',
+                coe_graph = Graph(group_idx)
+                # print '\t\tGROUP', group_idx
+                # print '\t\t\t', iu, ou
+                # print '\t\t\t',
+                to_nodes = []
+                node_idx = 0
                 for iu_idx in iu:
-                    input_tok_group.append(group_idx)
                     assert inp_phrase[iu_idx] == input_sent[inp_span[0] + iu_idx]
                     input_coverage[inp_span[0] + iu_idx] = 1
-                    print input_sent[inp_span[0] + iu_idx], inp_span[0] + iu_idx,
-                print '---',
+                    input_tok_group[inp_span[0] + iu_idx] = group_idx
+                    n = Node(node_idx, input_sent[inp_span[0] + iu_idx], None, inp_span[0] + iu_idx, DE_LANG, False,
+                             None, None, None, None, True, False, False)
+                    node_idx += 1
+                    to_nodes.append(n)
+
+                # print '---',
+                from_nodes = []
                 for ou_idx in ou:
-                    output_tok_group.append(group_idx)
                     assert out_phrase[ou_idx] == output_sent[out_span[0] + ou_idx]
-                    print output_sent[out_span[0] + ou_idx], out_span[0] + ou_idx,
-                print ''
+                    output_tok_group[out_span[0] + ou_idx] = group_idx
+                    n = Node(node_idx, output_sent[out_span[0] + ou_idx], out_span[0] + ou_idx, None, EN_LANG, True,
+                             None, None, None, None, False, True, False)
+                    node_idx += 1
+                    from_nodes.append(n)
+                # print ''
+                if len(from_nodes) > 1:
+                    assert len(to_nodes) == 1  # or (len(iu) == 2 and len(ou) == 2)
+                    pass
+                if len(to_nodes) > 1:
+                    assert len(from_nodes) == 1  # or (len(iu) == 2 and len(ou) == 2)
+                    pass
+                coe_graph.edges = make_edges(from_nodes, to_nodes)
+                coe_graph.nodes = from_nodes + to_nodes
+                coe_sentence.graphs.append(coe_graph)
                 group_idx += 1
                 # input_coverage[inp_span[0]: inp_span[1] + 1] = ['1'] * ((inp_span[1] + 1) - inp_span[0])
+
         if 0 in input_coverage:
-            print 'bad coverage:', input_coverage
+            # print 'bad coverage:', input_coverage
             eps_word_alignment += 1
             assert 0 not in input_coverage
-        print input_tok_group
-        print output_tok_group
-        # assert len(input_tok_group) == len(input_sent)
-        # assert len(output_tok_group) == len(output_sent)
-        # pdb.set_trace()
-    print 'done', eps_word_alignment
+        sys.stderr.write(' '.join([str(i) for i in input_tok_group]) + '\n')
+        sys.stderr.write(' '.join([str(i) for i in output_tok_group]) + '\n')
+        er_groups = get_groups_that_external_reorder(input_tok_group, output_tok_group)
+        er_groups = set(er_groups)
+        sys.stderr.write('reorders:' + ' '.join([str(i) for i in er_groups]) + '\n')
+        for g in coe_sentence.graphs:
+            if g.id in er_groups:
+                g.er = True
+            for n in g.nodes:
+                if n.lang == EN_LANG:
+                    assert n.s == output_sent[n.en_id]
+                    n.en_left = [START] + output_tok_group[:n.en_id]
+                    n.en_left.reverse()
+                    n.en_right = output_tok_group[n.en_id + 1:] + [END]
+                if n.lang == DE_LANG:
+                    assert n.s == input_sent[n.de_id]
+                    n.de_left = [START] + input_tok_group[:n.de_id]
+                    n.de_left.reverse()
+                    n.de_right = input_tok_group[n.de_id + 1:] + [END]
+
+            propagate(g)
+
+            for n in g.nodes:
+                assert n.en_id is not None and n.de_id is not None
+                assert n.en_left is not None and n.de_left is not None
+                assert n.en_right is not None and n.de_right is not None
+
+        sys.stderr.write('done sent' + str(sent_idx) + '\n')
+        json_sentence_str = json.dumps(coe_sentence, indent=4, sort_keys=True)
+        coe_sentences.append(' '.join(json_sentence_str.split()))
+    sys.stderr.write('done' + str(eps_word_alignment) + ' errors\n')
+    print 'var json_str_arr = ', coe_sentences
 
 
 

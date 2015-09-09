@@ -65,5 +65,5 @@ function __test__() {
     console.log("ok")
 }
 
-__test__()
+//__test__()
 

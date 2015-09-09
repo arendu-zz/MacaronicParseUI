@@ -241,6 +241,20 @@ function Graph() {
         return result
     }
 
+    this.make_transitive_closure = function (nodes_to_add, nodes_to_remove, direction) {
+        var oppo_direction = (direction == 'en') ? 'de' : 'en'
+        var p_l_add = nodes_to_add.length
+        var p_l_remove = nodes_to_remove.length
+        var stop = false
+        while (! stop) {
+            for (var a in nodes_to_add){
+                var na = nodes_to_add[a]
+
+            }
+        }
+    }
+
+
     this.get_visible_directional_neighbors = function (node, direction) {
         var neighbors = []
         for (var i in self.edges) {
