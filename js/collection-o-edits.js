@@ -675,7 +675,7 @@ function Sentence() {
             var use_score2 = self.score_configuration_alignment_unq(configurations[c], nodes_to_insert, g_order)
             var use_score3 = self.score_configuration_overlap(configurations[c], nodes_to_insert, g_order)
             var use_score = (use_score2 * 0.9) + (use_score3 * 0.1)
-            console.log("config:" + configurations[c] + " a_unq:" + use_score2 + " o:" + use_score3 + "final score:" + use_score)
+            //console.log("config:" + configurations[c] + " a_unq:" + use_score2 + " o:" + use_score3 + "final score:" + use_score)
             if (use_score > max) {
                 max = use_score
                 best_config = []
