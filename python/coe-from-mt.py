@@ -294,7 +294,7 @@ if __name__ == '__main__':
         output_tok_group = [-1] * len(output_sent)
 
         sys.stderr.write('input sent:' + ' '.join(input_sent) + '\n')
-        sys.stderr.write('input sent:' + ' '.join(output_sent) + '\n')
+        sys.stderr.write('output sent:' + ' '.join(output_sent) + '\n')
 
         coe_sentence = Sentence(sent_idx, ' '.join(input_sent), ' '.join(output_sent), None)
         sent_idx += 1
@@ -327,8 +327,8 @@ if __name__ == '__main__':
                     pass
                 final_groups[group_idx] = (iu, ou, inp_span, out_span)
                 coe_graph = Graph(group_idx)
-                sys.stderr.write('\t\tGROUP' + str(group_idx) + '\n')
-                sys.stderr.write('\t\t\t')
+                # sys.stderr.write('\t\tGROUP' + str(group_idx) + '\n')
+                # sys.stderr.write('\t\t\t')
                 to_nodes = []
                 node_idx = 0
                 for iu_idx in iu:
@@ -340,9 +340,9 @@ if __name__ == '__main__':
                              None, None, None, None, True, False, False)
                     node_idx += 1
                     to_nodes.append(n)
-                    sys.stderr.write(' ' + input_sent[inp_span[0] + iu_idx] + ' ')
+                    # sys.stderr.write(' ' + input_sent[inp_span[0] + iu_idx] + ' ')
 
-                sys.stderr.write('---')
+                # sys.stderr.write('---')
                 from_nodes = []
                 for ou_idx in ou:
                     assert out_phrase[ou_idx] == output_sent[out_span[0] + ou_idx]
@@ -352,9 +352,9 @@ if __name__ == '__main__':
                              None, None, None, None, False, True, False)
                     node_idx += 1
                     from_nodes.append(n)
-                    sys.stderr.write(' ' + output_sent[out_span[0] + ou_idx] + ' ')
+                    # sys.stderr.write(' ' + output_sent[out_span[0] + ou_idx] + ' ')
 
-                sys.stderr.write('\n')
+                # sys.stderr.write('\n')
                 if len(from_nodes) > 1:
                     assert len(to_nodes) == 1  # or (len(iu) == 2 and len(ou) == 2)
                     pass
@@ -400,11 +400,12 @@ if __name__ == '__main__':
                 assert n.en_left is not None and n.de_left is not None
                 assert n.en_right is not None and n.de_right is not None
 
-        sys.stderr.write('done sent' + str(sent_idx) + '\n')
+        # sys.stderr.write('done sent' + str(sent_idx) + '\n')
         json_sentence_str = json.dumps(coe_sentence, indent=4, sort_keys=True)
         coe_sentences.append(' '.join(json_sentence_str.split()))
     sys.stderr.write('done' + str(eps_word_alignment) + ' errors\n')
     print 'var json_str_arr = ', coe_sentences
+
 
 
 
