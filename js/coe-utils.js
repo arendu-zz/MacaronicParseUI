@@ -18,7 +18,7 @@ function NP(i, c, m, parent) {
 
     this.populate_children = function () {
         if (self.c >= self.m) {
-            console.log('stop')
+            //console.log('stop')
         } else {
             for (var i = self.a + 1; i <= self.c; i ++) {
                 var child = new NP(i, self.c + 1, self.m, self)
