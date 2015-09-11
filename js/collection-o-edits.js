@@ -23,9 +23,8 @@ function Node() {
     this.view = null
     this.visible = false
     this.graph = null
-    this.reorder_preview_en = {from: null, to: null}
-    this.reorder_preview_de = {from: null, to: null}
-    this.mark_for_removal = false
+    this.reorder_precompute_en = {from: null, to: null}
+    this.reorder_precompute_de = {from: null, to: null}
 
     this.pick_config_closest = function (best_configs, remove_idx) {
         var win = null
@@ -47,29 +46,55 @@ function Node() {
         return win
     }
 
-    this.update_view = function (recent_action) {
-        if (recent_action.action == 'external reorder') {
-            if (recent_action.direction == 'en') {
-                var view = this.get_view()
-                $(view.external_reorder_selector_to_en).hide()
-                if ((this.reorder_preview_en.from != this.reorder_preview_en.to) || (this.reorder_preview_en.from == null)) {
-                    $(view.external_reorder_selector_to_de).show()
-                } else {
-                    console.log("reorder en does not move node")
-                }
+    this.update_view = function () {
 
-            } else if (recent_action.direction == 'de') {
-                var view = this.get_view()
-                $(view.external_reorder_selector_to_de).hide()
-                if ((this.reorder_preview_de.from != this.reorder_preview_de.to) || (this.reorder_preview_de.from == null)) {
-                    $(view.external_reorder_selector_to_en).show()
-                } else {
-                    console.log("reorder de does not move node")
-                }
-
-            }
+        var view = this.get_view()
+        $(view.external_reorder_selector_to_en).hide()
+        if (this.reorder_precompute_en.from != this.reorder_precompute_en.to) {
+            $(view.external_reorder_selector_to_en).show()
+        } else {
+            console.log("reorder en does not move node")
         }
 
+
+        $(view.external_reorder_selector_to_de).hide()
+        if (this.reorder_precompute_de.from != this.reorder_precompute_de.to) {
+            $(view.external_reorder_selector_to_de).show()
+        } else {
+            console.log("reorder de does not move node")
+        }
+
+
+    }
+
+    this.precompute_possibility = function (param) {
+        console.log('* * PRECOMPUTE POSSIBLE ACTION * *')
+        if (param.action == 'external reorder') {
+            var gvn = _.filter(
+                self.graph.nodes, function (node) {
+                    return node.visible
+                })
+            gvn = self.graph.sentence.sort_within_graph(gvn, self.graph.internal_reorder_by)
+            var original_external_reorder_by = self.graph.external_reorder_by
+            self.graph.external_reorder_by = param.direction
+            var node_idx = self.graph.sentence.get_best_configuration(gvn, param.direction, gvn)
+            for (var i = 0; i < gvn.length; i ++) {
+                var preview_n = gvn[i]
+                var destination_position = parseInt(node_idx[0]) + parseInt(i)
+                var from_pos = parseInt($(preview_n.get_view()).css('order'))
+                console.log('precomputed movement ' + param.direction + ' :' + preview_n.s + 'from ' + from_pos + ' to ' + destination_position)
+                var p = 'reorder_precompute_' + param.direction
+                preview_n[p] = {from: parseInt(from_pos), to: parseInt(destination_position)}
+                console.log('precompute will move ' + preview_n.s + 'from ' + from_pos + ' to ' + destination_position)
+                var p2 = 'reorder_precompute_' + (param.direction == 'en' ? 'de' : 'en')
+                preview_n[p2] = {from: null, to: null}
+
+            }
+            if (node_idx.length > 1) {
+                console.log("multiple possible best configurations - external order!!!")
+            }
+            self.graph.external_reorder_by = original_external_reorder_by
+        }
     }
 
     this.preview_action = function (param) {
@@ -84,14 +109,14 @@ function Node() {
             gvn = self.graph.sentence.sort_within_graph(gvn, self.graph.internal_reorder_by)
             var original_external_reorder_by = self.graph.external_reorder_by
             self.graph.external_reorder_by = param.direction
-            var node_idx = self.graph.sentence.get_best_configuration(gvn, param.direction)
+            var node_idx = self.graph.sentence.get_best_configuration(gvn, param.direction, gvn)
             for (var i = 0; i < gvn.length; i ++) {
                 var preview_n = gvn[i]
                 var destination_position = parseInt(node_idx[0]) + parseInt(i)
                 var from_pos = parseInt($(preview_n.get_view()).css('order'))
                 console.log('will move ' + preview_n.s + 'from ' + from_pos + ' to ' + destination_position)
-
-
+                var p = 'reorder_precompute_' + param.direction
+                console.log('using precomputation  move ' + preview_n.s + 'from ' + preview_n[p].from + ' to ' + preview_n[p].to)
             }
             if (node_idx.length > 1) {
                 console.log("multiple possible best configurations - external order!!!")
@@ -111,11 +136,11 @@ function Node() {
             self.graph.sentence.remove_nodes(gvn)
             gvn = self.graph.sentence.sort_within_graph(gvn, param.direction)
             self.graph.internal_reorder_by = param.direction
-            var node_idx = self.graph.sentence.get_best_configuration(gvn, self.graph.external_reorder_by)
+            var node_idx = self.graph.sentence.get_best_configuration(gvn, self.graph.external_reorder_by, gvn)
             if (node_idx.length > 1) {
                 console.log("multiple possible best configurations - internal order!!!")
             }
-            self.graph.sentence.add_nodes(gvn, node_idx[0])
+            self.graph.sentence.add_nodes(gvn, node_idx[0], param)
 
 
         } else if (param.action == 'external reorder') {
@@ -124,22 +149,19 @@ function Node() {
                 self.graph.nodes, function (node) {
                     return node.visible
                 })
-            
+
             //for (var i = 0; i < gvn.length; i ++) {
             //    gvn[i].mark_for_removal = true
             //}
             gvn = self.graph.sentence.sort_within_graph(gvn, self.graph.internal_reorder_by)
             self.graph.external_reorder_by = param.direction
-            var node_idx = self.graph.sentence.get_best_configuration(gvn, param.direction)
+            var node_idx = self.graph.sentence.get_best_configuration(gvn, param.direction, gvn)
             self.graph.sentence.remove_nodes(gvn)
             if (node_idx.length > 1) {
                 console.log("multiple possible best configurations - external order!!!")
             }
-            for (var n in gvn) {
-                gvn[n].update_view(param)
-            }
-            self.graph.sentence.add_nodes(gvn, node_idx[0])
 
+            self.graph.sentence.add_nodes(gvn, node_idx[0], param)
 
         } else if (param.action == 'translate') {
             var modified_nodes = null
@@ -154,15 +176,16 @@ function Node() {
                 for (var mnr = 0; mnr < modified_nodes.remove.length; mnr ++) {
                     remove_idx.push(parseInt($(modified_nodes.remove[mnr].get_view()).css('order')))
                 }
-                self.graph.sentence.remove_nodes(modified_nodes.remove)
+
                 gvn = self.graph.sentence.sort_within_graph(modified_nodes.add, self.graph.internal_reorder_by)
-                var node_idx = self.graph.sentence.get_best_configuration(gvn, self.graph.external_reorder_by)
+                var node_idx = self.graph.sentence.get_best_configuration(gvn, self.graph.external_reorder_by, modified_nodes.remove)
+                self.graph.sentence.remove_nodes(modified_nodes.remove)
                 if (node_idx.length > 1) {
                     console.log("multiple possible best configurations -translate!!!")
                     node_idx = self.pick_config_closest(node_idx, remove_idx)
-                    self.graph.sentence.add_nodes(gvn, node_idx)
+                    self.graph.sentence.add_nodes(gvn, node_idx, param)
                 } else {
-                    self.graph.sentence.add_nodes(gvn, node_idx[0])
+                    self.graph.sentence.add_nodes(gvn, node_idx[0], param)
                 }
 
             }
@@ -312,6 +335,19 @@ function Graph() {
     this.external_reorder_by = 'en'
     this.initial_order = null
 
+    this.initial_possibility_precomputations = function () {
+        for (var i = 0; i < this.nodes.length; i ++) {
+            var n = this.nodes[i]
+            if (n.visible) {
+                var new_direction = n.graph.external_reorder_by == 'en' ? 'de' : 'en'
+                n.precompute_possibility({action: 'external reorder', direction: new_direction })
+                console.log(n.s + " precomputed possibility en:" + n.reorder_precompute_en.from + " " + n.reorder_precompute_en.to)
+                console.log(n.s + " precomputed possibility de:" + n.reorder_precompute_de.from + " " + n.reorder_precompute_de.to)
+                n.update_view()
+            }
+        }
+    }
+
     this.get_node_by_ids = function (ids) {
         var result = []
         for (var i in ids) {
@@ -322,19 +358,6 @@ function Graph() {
             }
         }
         return result
-    }
-
-    this.make_transitive_closure = function (nodes_to_add, nodes_to_remove, direction) {
-        var oppo_direction = (direction == 'en') ? 'de' : 'en'
-        var p_l_add = nodes_to_add.length
-        var p_l_remove = nodes_to_remove.length
-        var stop = false
-        while (! stop) {
-            for (var a in nodes_to_add) {
-                var na = nodes_to_add[a]
-
-            }
-        }
     }
 
 
@@ -458,33 +481,6 @@ function Sentence() {
             ]);
     };
 
-    this.get_best_site_for_node = function (node, min, max, graph_neighbor_order_by) {
-        var possible_sites = _.range(min, max)
-        var possible_sites_scores = {}
-        for (var idx in possible_sites) {
-            var ps = possible_sites[idx]
-            //checking neighborhood scoring for possible site of node
-            var left_neighbors_graph_ids = self.get_neighbor_graph_ids(ps, 'left', self.visible_nodes)
-            var right_neighbors_graph_ids = self.get_neighbor_graph_ids(ps, 'right', self.visible_nodes)
-            var score = 0
-            for (var l in node[graph_neighbor_order_by + "_left"]) {
-                score += (node[graph_neighbor_order_by + "_left"][l] == left_neighbors_graph_ids[l] ? 1 : - 1)
-            }
-            for (var r in node[graph_neighbor_order_by + "_right"]) {
-                score += (node[graph_neighbor_order_by + "_right"][r] == right_neighbors_graph_ids[r] ? 1 : - 1)
-            }
-            possible_sites_scores[ps] = score
-        }
-        var max = Number.NEGATIVE_INFINITY;
-        var best_ps = null
-        for (var property in possible_sites_scores) {
-            if (possible_sites_scores[property] > max) {
-                max = possible_sites_scores[property]
-                best_ps = parseInt(property)
-            }
-        }
-        return best_ps
-    }
 
     this.sort_within_graph = function (nodes, within_graph_ordering) {
 
@@ -504,10 +500,10 @@ function Sentence() {
             self.rec((i, max_num))
         }
     }
-    this.score_configuration_overlap = function (config, nodes_to_insert, g_order) {
+    this.score_configuration_overlap = function (config, nodes_to_insert, g_order, nodes_to_ignore) {
         var visible_nodes_copy = []
         for (var v = 0; v < self.visible_nodes.length; v ++) {
-            if ($.inArray(self.visible_nodes[v], nodes_to_insert) == - 1) {
+            if ($.inArray(self.visible_nodes[v], nodes_to_ignore) == - 1) {
                 visible_nodes_copy.push(self.visible_nodes[v])
             }
         }
@@ -575,10 +571,10 @@ function Sentence() {
         return new_list
     }
 
-    this.score_configuration_alignment_unq = function (config, nodes_to_insert, g_order) {
+    this.score_configuration_alignment_unq = function (config, nodes_to_insert, g_order, nodes_to_ignore) {
         var visible_nodes_copy = []
         for (var v = 0; v < self.visible_nodes.length; v ++) {
-            if ($.inArray(self.visible_nodes[v], nodes_to_insert) == - 1) {
+            if ($.inArray(self.visible_nodes[v], nodes_to_ignore) == - 1) {
                 visible_nodes_copy.push(self.visible_nodes[v])
             }
         }
@@ -621,59 +617,14 @@ function Sentence() {
     }
 
 
-    this.score_configuration_alignment = function (config, nodes_to_insert, g_order) {
-        var visible_nodes_copy = []
-        for (var v = 0; v < self.visible_nodes.length; v ++) {
-            if ($.inArray(self.visible_nodes[v], nodes_to_insert) == - 1) {
-                visible_nodes_copy.push(self.visible_nodes[v])
-            }
-        }
-        //config.sort()
-        for (var c = 0; c < config.length; c ++) {
-            visible_nodes_copy.splice(config[c], 0, nodes_to_insert[c])
-        }
-        var alignment_score = 0
-        for (var c = 0; c < config.length; c ++) {
-            var node_at_site = nodes_to_insert[c]
-            var left_gids = self.get_neighbor_graph_ids(config[c], 'left', visible_nodes_copy)
-            var right_gids = self.get_neighbor_graph_ids(config[c], 'right', visible_nodes_copy)
-            var gold_left_gids = node_at_site[g_order + "_left"]
-            var gold_right_gids = node_at_site[g_order + "_right"]
-
-            //console.log("right:")
-            var right_o = editdistance(gold_right_gids, right_gids)
-            for (var r = 0; r < right_o.alignments.length; r ++) {
-                var align = right_o.alignments[r]
-                if (align[0] == align[1]) {
-                    alignment_score += Math.pow((right_o.alignments.length - r) / (right_o.alignments.length), 2)
-                } else {
-                    alignment_score -= Math.pow((right_o.alignments.length - r) / (right_o.alignments.length), 2)
-                }
-            }
-            //console.log("left:")
-            var left_o = editdistance(gold_left_gids, left_gids)
-            for (var l = 0; l < left_o.alignments.length; l ++) {
-                var align = left_o.alignments[l]
-                //console.log(align[0] + " - " + align[1])
-                if (align[0] == align[1]) {
-                    alignment_score += Math.pow((left_o.alignments.length - l) / (left_o.alignments.length), 2)
-                } else {
-                    alignment_score -= Math.pow((left_o.alignments.length - l) / (left_o.alignments.length), 2)
-                }
-            }
-        }
-        //console.log("config:" + config + " alignment:" + alignment_score)
-        return alignment_score
-    }
-
-    this.get_best_configuration = function (nodes_to_insert, g_order) {
-        var configurations = get_paths(self.visible_nodes.length - nodes_to_insert.length, nodes_to_insert.length)
+    this.get_best_configuration = function (nodes_to_insert, g_order, nodes_to_ignore) {
+        var configurations = get_paths(self.visible_nodes.length - nodes_to_ignore.length, nodes_to_insert.length)
         var best_config = []
         var max = Number.NEGATIVE_INFINITY
         for (var c in configurations) {
             //var use_score1 = self.score_configuration_alignment(configurations[c], nodes_to_insert, g_order)
-            var use_score2 = self.score_configuration_alignment_unq(configurations[c], nodes_to_insert, g_order)
-            var use_score3 = self.score_configuration_overlap(configurations[c], nodes_to_insert, g_order)
+            var use_score2 = self.score_configuration_alignment_unq(configurations[c], nodes_to_insert, g_order, nodes_to_ignore)
+            var use_score3 = self.score_configuration_overlap(configurations[c], nodes_to_insert, g_order, nodes_to_ignore)
             var use_score = (use_score2 * 0.9) + (use_score3 * 0.1)
             //console.log("config:" + configurations[c] + " a_unq:" + use_score2 + " o:" + use_score3 + "final score:" + use_score)
             if (use_score > max) {
@@ -690,7 +641,7 @@ function Sentence() {
     }
 
 
-    this.add_nodes = function (nodes, nodes_idx) {
+    this.add_nodes = function (nodes, nodes_idx, param) {
         self.sort_visible_nodes_by_display_order()
 
 
@@ -701,6 +652,23 @@ function Sentence() {
 
         self.assign_display_order_by_array_order()
         self.update_visible_nodes()
+
+        if (param.action == 'external reorder') {
+            for (var c = 0; c < nodes_idx.length; c ++) {
+                var n = nodes[c]
+                var new_direction = n.graph.external_reorder_by == 'en' ? 'de' : 'en'
+                n.precompute_possibility({action: 'external reorder', direction: new_direction })
+                console.log(n.s + " precomputed possibility en:" + n.reorder_precompute_en.from + " " + n.reorder_precompute_en.to)
+                console.log(n.s + " precomputed possibility de:" + n.reorder_precompute_de.from + " " + n.reorder_precompute_de.to)
+
+            }
+        }
+        for (var c = 0; c < nodes_idx.length; c ++) {
+            var n = nodes[c]
+            n.update_view()
+        }
+
+
     }
 
     this.get_neighbor_graph_ids = function (ps, neighbor_direction, base_array) {
@@ -746,9 +714,7 @@ function Sentence() {
                     }
                 });
         }
-
     }
-
 
     this.get_container = function () {
         if (this.container == null) {
@@ -759,7 +725,11 @@ function Sentence() {
             return this.container
         }
     }
-
+    this.initial_possibility_precomputations = function () {
+        for (var i = 0; i < this.graphs.length; i ++) {
+            this.graphs[i].initial_possibility_precomputations()
+        }
+    }
 
     this.initial_order = function () {
         //assigns order of the visible nodes initially
@@ -858,6 +828,7 @@ function ok_parse() {
         s.initialize()
         s.update_visible_nodes()
         s.initial_order()
+        s.initial_possibility_precomputations()
     }
     console.log("done")
 }
