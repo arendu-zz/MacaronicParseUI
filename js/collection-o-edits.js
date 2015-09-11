@@ -124,14 +124,14 @@ function Node() {
                 self.graph.nodes, function (node) {
                     return node.visible
                 })
-            self.graph.sentence.remove_nodes(gvn)
+            
             //for (var i = 0; i < gvn.length; i ++) {
             //    gvn[i].mark_for_removal = true
             //}
             gvn = self.graph.sentence.sort_within_graph(gvn, self.graph.internal_reorder_by)
             self.graph.external_reorder_by = param.direction
             var node_idx = self.graph.sentence.get_best_configuration(gvn, param.direction)
-
+            self.graph.sentence.remove_nodes(gvn)
             if (node_idx.length > 1) {
                 console.log("multiple possible best configurations - external order!!!")
             }
@@ -599,9 +599,9 @@ function Sentence() {
             for (var r = 0; r < right_o.alignments.length; r ++) {
                 var align = right_o.alignments[r]
                 if (align[0] == align[1]) {
-                    alignment_score += Math.pow((right_o.alignments.length - r) / (right_o.alignments.length), 2)
+                    alignment_score += Math.exp(- r) //Math.pow((right_o.alignments.length - r) / (right_o.alignments.length), 2)
                 } else {
-                    alignment_score -= Math.pow((right_o.alignments.length - r) / (right_o.alignments.length), 2)
+                    alignment_score -= Math.exp(- r) //Math.pow((right_o.alignments.length - r) / (right_o.alignments.length), 2)
                 }
             }
             //console.log("left:")
@@ -610,9 +610,9 @@ function Sentence() {
                 var align = left_o.alignments[l]
                 //console.log(align[0] + " - " + align[1])
                 if (align[0] == align[1]) {
-                    alignment_score += Math.pow((left_o.alignments.length - l) / (left_o.alignments.length), 2)
+                    alignment_score += Math.exp(- l) //Math.pow((left_o.alignments.length - l) / (left_o.alignments.length), 2)
                 } else {
-                    alignment_score -= Math.pow((left_o.alignments.length - l) / (left_o.alignments.length), 2)
+                    alignment_score -= Math.exp(- l) //Math.pow((left_o.alignments.length - l) / (left_o.alignments.length), 2)
                 }
             }
         }
