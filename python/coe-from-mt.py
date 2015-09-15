@@ -16,6 +16,7 @@ VIS_LANG = 'de'
 
 
 def check_swaps(input_tok_group, output_tok_group):
+    # TODO: transfer detection gets messed up if swaps happen to the right and left..
     swaps_inp = []
     swaps_out = []
     transfer = []
@@ -40,7 +41,6 @@ def check_swaps(input_tok_group, output_tok_group):
         (lo, ro) = output_lr[i]
         if li != lo and ri != ro:
             if i not in swaps_inp and i not in swaps_out:
-                # TODO: transfer detection gets messed up if swaps happen to the right and left..
                 transfer.append(i)
 
     return swaps_inp, swaps_out, transfer

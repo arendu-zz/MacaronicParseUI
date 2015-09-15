@@ -80,6 +80,7 @@ class Graph(dict):
     def __str__(self):
         return str(self.id) + ',' + ','.join([str(i) for i in self.nodes])
 
+
     def set_visibility(self):
         visiblity_dict = {}
         for n in self.nodes:
@@ -161,12 +162,14 @@ class Graph(dict):
     def get_neighbor_nodes(self, node, direction):
         neighbor_nodes = []
         for e in self.edges:
-            if e.direction == direction and e.from_id == node.id:
-                neighbor_nodes.append(self.get_node_by_id(e.to_id))
+            if e.direction == direction and node.id in e.from_id:
+                for toid in e.to_id:
+                    neighbor_nodes.append(self.get_node_by_id(toid))
         return neighbor_nodes
 
 
     def get_node_by_id(self, node_id):
+        assert isinstance(node_id, int)
         for n in self.nodes:
             if n.id == node_id:
                 return n
