@@ -52,25 +52,25 @@ function Node() {
 
         var view = this.get_view()
         $(view.external_reorder_selector_to_en).hide()
-        if (this.reorder_precompute_en.from != this.reorder_precompute_en.to) {
+        if (this.reorder_precompute_en.from != this.reorder_precompute_en.to && (this.graph.transfers || this.graph.swaps_with != null)) {
             $(view.external_reorder_selector_to_en).show()
         } else {
-            console.log("reorder en does not move node")
+            //console.log("reorder en does not move node")
         }
 
 
         $(view.external_reorder_selector_to_de).hide()
-        if (this.reorder_precompute_de.from != this.reorder_precompute_de.to) {
+        if (this.reorder_precompute_de.from != this.reorder_precompute_de.to && (this.graph.transfers || this.graph.swaps_with != null)) {
             $(view.external_reorder_selector_to_de).show()
         } else {
-            console.log("reorder de does not move node")
+            //console.log("reorder de does not move node")
         }
 
 
     }
 
     this.precompute_possibility = function (param) {
-        console.log('* * PRECOMPUTE POSSIBLE ACTION * *')
+        //console.log('* * PRECOMPUTE POSSIBLE ACTION * *')
         if (param.action == 'external reorder') {
             var gvn = _.filter(
                 self.graph.nodes, function (node) {
@@ -84,24 +84,24 @@ function Node() {
                 var preview_n = gvn[i]
                 var destination_position = parseInt(node_idx[0]) + parseInt(i)
                 var from_pos = parseInt($(preview_n.get_view()).css('order'))
-                console.log('precomputed movement ' + param.direction + ' :' + preview_n.s + 'from ' + from_pos + ' to ' + destination_position)
+                //console.log('precomputed movement ' + param.direction + ' :' + preview_n.s + 'from ' + from_pos + ' to ' + destination_position)
                 var p = 'reorder_precompute_' + param.direction
                 preview_n[p] = {from: parseInt(from_pos), to: parseInt(destination_position)}
-                console.log('precompute will move ' + preview_n.s + 'from ' + from_pos + ' to ' + destination_position)
+                //console.log('precompute will move ' + preview_n.s + 'from ' + from_pos + ' to ' + destination_position)
                 var p2 = 'reorder_precompute_' + (param.direction == 'en' ? 'de' : 'en')
                 preview_n[p2] = {from: null, to: null}
 
             }
             if (node_idx.length > 1) {
-                console.log("multiple possible best configurations - external order!!!")
+                //console.log("multiple possible best configurations - external order!!!")
             }
             self.graph.external_reorder_by = original_external_reorder_by
         }
     }
 
     this.preview_action = function (param) {
-        console.log('* *  PREVIEW REORDER ' + param.direction + '* *')
-        console.log(this.s + ' with action:' + param.action + ' ' + param.direction)
+        //console.log('* *  PREVIEW REORDER ' + param.direction + '* *')
+        //console.log(this.s + ' with action:' + param.action + ' ' + param.direction)
         if (param.action == 'external reorder') {
             var gvn = _.filter(
                 self.graph.nodes, function (node) {
@@ -116,16 +116,16 @@ function Node() {
                 var preview_n = gvn[i]
                 //var destination_position = parseInt(node_idx[0]) + parseInt(i)
                 //var from_pos = parseInt($(preview_n.get_view()).css('order'))
-                //console.log('will move ' + preview_n.s + 'from ' + from_pos + ' to ' + destination_position)
+                ////console.log('will move ' + preview_n.s + 'from ' + from_pos + ' to ' + destination_position)
                 var p = 'reorder_precompute_' + param.direction
-                console.log('using precomputation  move ' + preview_n.s + 'from ' + preview_n[p].from + ' to ' + preview_n[p].to)
+                //console.log('using precomputation  move ' + preview_n.s + 'from ' + preview_n[p].from + ' to ' + preview_n[p].to)
             }
             //if (node_idx.length > 1) {
-            //    console.log("multiple possible best configurations - external order!!!")
+            //    //console.log("multiple possible best configurations - external order!!!")
             //}
             //self.graph.external_reorder_by = original_external_reorder_by
         }
-        console.log('* * * *')
+        //console.log('* * * *')
     }
 
     this.get_swaps_with_nodes = function (gvn) {
@@ -146,7 +146,7 @@ function Node() {
     }
 
     this.take_action = function (param) {
-        console.log('action triggered:' + param.action + ',' + param.direction)
+        //console.log('action triggered:' + param.action + ',' + param.direction)
         if (param.action == 'internal reorder') {
             var gvn = _.filter(
                 self.graph.nodes, function (node) {
@@ -157,7 +157,7 @@ function Node() {
             self.graph.internal_reorder_by = param.direction
             var node_idx = self.graph.sentence.get_best_configuration(gvn, self.graph.external_reorder_by, gvn)
             if (node_idx.length > 1) {
-                console.log("multiple possible best configurations - internal order!!!")
+                //console.log("multiple possible best configurations - internal order!!!")
             }
             self.graph.sentence.add_nodes(gvn, node_idx[0], param)
 
@@ -182,7 +182,7 @@ function Node() {
             var node_idx = self.graph.sentence.get_best_configuration(gvn, param.direction, gvn)
             self.graph.sentence.remove_nodes(gvn)
             if (node_idx.length > 1) {
-                console.log("multiple possible best configurations - external order!!!")
+                //console.log("multiple possible best configurations - external order!!!")
             }
 
             self.graph.sentence.add_nodes(gvn, node_idx[0], param)
@@ -213,7 +213,7 @@ function Node() {
                     self.graph.sentence.update_external_reorder_options(gvn, param)
                     self.graph.sentence.update_views(gvn)
                 } else if (modified_nodes.add.length > 1) {
-                    console.log("multiple possible best configurations -translate!!!")
+                    //console.log("multiple possible best configurations -translate!!!")
                     node_idx = self.pick_config_closest(node_idx, remove_idx)
                     self.graph.sentence.add_nodes(gvn, node_idx, param)
                     self.graph.sentence.update_external_reorder_options(gvn, param)
@@ -226,7 +226,7 @@ function Node() {
 
             }
         } else {
-            console.log("Invalid action:  " + param.action)
+            //console.log("Invalid action:  " + param.action)
         }
     }
 
@@ -361,6 +361,11 @@ function Edge() {
     this.graph = null
 }
 
+function Reorder() {
+    this.type = null
+    this.anchor = null
+}
+
 function Graph() {
     var self = this
     this.id = null
@@ -375,13 +380,19 @@ function Graph() {
         for (var i = 0; i < this.nodes.length; i ++) {
             var n = this.nodes[i]
             if (n.visible) {
-                var new_direction = n.graph.external_reorder_by == 'en' ? 'de' : 'en'
-                n.precompute_possibility({action: 'external reorder', direction: new_direction })
-                console.log(n.s + " precomputed possibility en:" + n.reorder_precompute_en.from + " " + n.reorder_precompute_en.to)
-                console.log(n.s + " precomputed possibility de:" + n.reorder_precompute_de.from + " " + n.reorder_precompute_de.to)
+                if (this.transfers || this.swaps_with != null) {
+                    var new_direction = n.graph.external_reorder_by == 'en' ? 'de' : 'en'
+                    n.precompute_possibility({action: 'external reorder', direction: new_direction })
+                    //console.log(n.s + " precomputed possibility en:" + n.reorder_precompute_en.from + " " + n.reorder_precompute_en.to)
+                    //console.log(n.s + " precomputed possibility de:" + n.reorder_precompute_de.from + " " + n.reorder_precompute_de.to)
+                } else {
+                    //console.log("not doing any precomputations")
+                }
                 n.update_view()
             }
         }
+
+
     }
 
     this.get_visible_nodes = function () {
@@ -444,13 +455,13 @@ function Graph() {
             nodes_to_remove = _.uniq(nodes_to_remove)
             //self.remove_nodes(nodes_to_remove)
 
-            console.log('added ' + neighbors.length + ' nodes to visible_nodes')
+            //console.log('added ' + neighbors.length + ' nodes to visible_nodes')
             var result = {}
             result.add = neighbors
             result.remove = nodes_to_remove
             return result
         } else {
-            console.log('can not translate in the given direction, nothing to remove or add')
+            //console.log('can not translate in the given direction, nothing to remove or add')
             return null
         }
     }
@@ -578,7 +589,7 @@ function Sentence() {
             }
             var score = 0
 
-            //console.log("done")
+            ////console.log("done")
             for (var l = 0; l < gold_left_gids_copy.length; l ++) {
                 score += (gold_left_gids_copy[l] == left_gids[l] ? 1 : 0)
             }
@@ -589,7 +600,7 @@ function Sentence() {
             }
 
         }
-        //console.log("config:" + config + " alignment:" + alignment_score)
+        ////console.log("config:" + config + " alignment:" + alignment_score)
         return score
     }
     this.remove_cosecutive_duplicate = function (list) {
@@ -623,7 +634,7 @@ function Sentence() {
             var gold_left_gids = self.remove_cosecutive_duplicate(node_at_site[g_order + "_left"])
             var gold_right_gids = self.remove_cosecutive_duplicate(node_at_site[g_order + "_right"])
 
-            //console.log("right:")
+            ////console.log("right:")
             var right_o = editdistance(gold_right_gids, right_gids)
             for (var r = 0; r < right_o.alignments.length; r ++) {
                 var align = right_o.alignments[r]
@@ -633,11 +644,11 @@ function Sentence() {
                     alignment_score -= Math.exp(- r) //Math.pow((right_o.alignments.length - r) / (right_o.alignments.length), 2)
                 }
             }
-            //console.log("left:")
+            ////console.log("left:")
             var left_o = editdistance(gold_left_gids, left_gids)
             for (var l = 0; l < left_o.alignments.length; l ++) {
                 var align = left_o.alignments[l]
-                //console.log(align[0] + " - " + align[1])
+                ////console.log(align[0] + " - " + align[1])
                 if (align[0] == align[1]) {
                     alignment_score += Math.exp(- l) //Math.pow((left_o.alignments.length - l) / (left_o.alignments.length), 2)
                 } else {
@@ -645,7 +656,7 @@ function Sentence() {
                 }
             }
         }
-        //console.log("config:" + config + " alignment:" + alignment_score)
+        ////console.log("config:" + config + " alignment:" + alignment_score)
         return alignment_score
     }
 
@@ -659,7 +670,7 @@ function Sentence() {
             var use_score2 = self.score_configuration_alignment_unq(configurations[c], nodes_to_insert, g_order, nodes_to_ignore)
             var use_score3 = self.score_configuration_overlap(configurations[c], nodes_to_insert, g_order, nodes_to_ignore)
             var use_score = (use_score2 * 0.9) + (use_score3 * 0.1)
-            console.log("config:" + configurations[c] + " a_unq:" + use_score2 + " o:" + use_score3 + "final score:" + use_score)
+            ////console.log("config:" + configurations[c] + " a_unq:" + use_score2 + " o:" + use_score3 + "final score:" + use_score)
             if (use_score > max) {
                 max = use_score
                 best_config = []
@@ -685,8 +696,8 @@ function Sentence() {
             }
 
             n.precompute_possibility({action: 'external reorder', direction: new_direction })
-            console.log(n.s + " precomputed possibility en:" + n.reorder_precompute_en.from + " " + n.reorder_precompute_en.to)
-            console.log(n.s + " precomputed possibility de:" + n.reorder_precompute_de.from + " " + n.reorder_precompute_de.to)
+            //console.log(n.s + " precomputed possibility en:" + n.reorder_precompute_en.from + " " + n.reorder_precompute_en.to)
+            //console.log(n.s + " precomputed possibility de:" + n.reorder_precompute_de.from + " " + n.reorder_precompute_de.to)
 
         }
     }
@@ -731,7 +742,7 @@ function Sentence() {
             }
             graphs_ids.push('*ST*')
         } else {
-            console.log('invalid neighborhood direction')
+            //console.log('invalid neighborhood direction')
         }
 
         return graphs_ids
@@ -780,12 +791,12 @@ function Sentence() {
     }
 
     this.update_visible_nodes = function () {
-        console.log("drawing node items...")
+        //console.log("drawing node items...")
         for (var i in self.visible_nodes) {
 
             var item = self.visible_nodes[i].get_view()
 
-            //console.log("order :" + $(item).css('order') + "  is the order of " + item.node.s)
+            ////console.log("order :" + $(item).css('order') + "  is the order of " + item.node.s)
             if (item.inDom) {
 
             } else {
@@ -800,10 +811,10 @@ function Sentence() {
                 $(item.span).animate({ backgroundColor: "transparent" }, 400);
                 item.highlight_movement = false
             } else {
-                //console.log("no movement")
+                ////console.log("no movement")
             }
         }
-        console.log("completed drawing node items...")
+        //console.log("completed drawing node items...")
     }
 }
 Edge.parse = function (input) {
@@ -832,6 +843,14 @@ Node.parse = function (input) {
     return n
 
 }
+
+Reorder.parse = function (input) {
+    var r = new Reorder()
+    r.type = input.type
+    r.anchor = input.anchor
+    return r
+}
+
 Graph.parse = function (input) {
     var g = new Graph()
     g.id = input.id
@@ -841,12 +860,14 @@ Graph.parse = function (input) {
     g.external_reorder_by = input.external_reorder_by
     g.initial_order = input.initial_order
     g.swaps_with = input.swaps_with
+    g.transfers = input.transfers
     for (var i in input.nodes) {
         g.nodes.push(Node.parse(input.nodes[i]))
     }
     for (var i in input.edges) {
         g.edges.push(Edge.parse(input.edges[i]))
     }
+    g.reorder = Reorder.parse(input.reorder)
 
     return g
 }
@@ -873,17 +894,19 @@ function async(your_function, arg, callback) {
 }
 
 function precomputations(i) {
-    var jo = JSON.parse(json_str_arr[i])
-    var s = Sentence.parse(jo)
-    s.initialize()
-    s.update_visible_nodes()
-    s.initial_order()
-    //var s = sentences[i]
+    var s = sentences[i]
     s.initial_possibility_precomputations()
 
 }
+
+function do_precomputations() {
+    for (var i = 0; i < json_str_arr.length; i ++) {
+        async(precomputations, i, null)
+    }
+}
+
 function ok_parse() {
-    /*for (var i in json_str_arr) {
+    for (var i in json_str_arr) {
         var jo = JSON.parse(json_str_arr[i])
         var s = Sentence.parse(jo)
         s.initialize()
@@ -892,9 +915,7 @@ function ok_parse() {
         sentences.push(s)
         //s.initial_possibility_precomputations()
         //async(s.initial_possibility_precomputations, null);
-    }*/
-    for (var i = 0; i < json_str_arr.length; i ++) {
-        async(precomputations, i, null)
     }
-    console.log("done")
+
+    //console.log("done")
 }
