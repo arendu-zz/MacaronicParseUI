@@ -1,6 +1,7 @@
 __author__ = 'arenduchintala'
 import codecs
 from optparse import OptionParser
+from itertools import groupby
 from collection_of_edits import Sentence, Node, Graph, EN_LANG, DE_LANG, START, END, get_edges
 import json
 import sys
@@ -12,6 +13,37 @@ sys.stdout = codecs.getwriter('utf-8')(sys.stdout)
 sys.stdout.encoding = 'utf-8'
 
 VIS_LANG = 'de'
+
+
+def check_swaps(input_tok_group, output_tok_group):
+    swaps_inp = []
+    swaps_out = []
+    transfer = []
+    input_unique = [i[0] for i in groupby(input_tok_group)]
+    output_unique = [i[0] for i in groupby(output_tok_group)]
+    input_lr = {}
+    for idx, i in enumerate(input_unique):
+        l = input_unique[idx - 1] if 0 < idx  else '**'
+        r = input_unique[idx + 1] if idx < len(input_unique) - 1 else '**'
+        input_lr[i] = (l, r)
+    output_lr = {}
+    for idx, i in enumerate(output_unique):
+        l = output_unique[idx - 1] if 0 < idx else '**'
+        r = output_unique[idx + 1] if idx < len(output_unique) - 1 else '**'
+        output_lr[i] = (l, r)
+    for i, (li, ri) in input_lr.items():
+        (lo, ro) = output_lr[i]
+        if li == ro and lo != ri:
+            swaps_inp.append(i)
+            swaps_out.append(ro)
+    for i, (li, ri) in input_lr.items():
+        (lo, ro) = output_lr[i]
+        if li != lo and ri != ro:
+            if i not in swaps_inp and i not in swaps_out:
+                # TODO: transfer detection gets messed up if swaps happen to the right and left..
+                transfer.append(i)
+
+    return swaps_inp, swaps_out, transfer
 
 
 def check_symmetric(wa_list):
@@ -279,7 +311,7 @@ if __name__ == '__main__':
     sent_idx = 0
     eps_word_alignment = 0
     coe_sentences = []
-    for input_line, output_line in zip(input_mt, output_mt)[:3]:
+    for input_line, output_line in zip(input_mt, output_mt):
 
         sys.stderr.write('SENT' + str(sent_idx) + '\n')
         input_sent = input_line.strip().split()
@@ -375,11 +407,16 @@ if __name__ == '__main__':
             assert 0 not in input_coverage
         sys.stderr.write(' '.join([str(i) for i in input_tok_group]) + '\n')
         sys.stderr.write(' '.join([str(i) for i in output_tok_group]) + '\n')
-        er_groups = get_groups_that_external_reorder(input_tok_group, output_tok_group)
-        er_groups = set(er_groups)
-        sys.stderr.write('reorders:' + ' '.join([str(i) for i in er_groups]) + '\n')
+        swaps_inp, swaps_out, transfer = check_swaps(input_tok_group, output_tok_group)
+        swaps_str = ' '.join([str(i) + ',' + str(j) for i, j in zip(swaps_inp, swaps_out)])
+        transfer_str = ','.join([str(i) for i in transfer])
+        sys.stderr.write('swaps:' + swaps_str + '\n')
+        sys.stderr.write('transfer:' + transfer_str + '\n')
+        # er_groups = get_groups_that_external_reorder(input_tok_group, output_tok_group)
+        # er_groups = set(er_groups)
+        # sys.stderr.write('reorders:' + ' '.join([str(i) for i in er_groups]) + '\n')
         for g in coe_sentence.graphs:
-            if g.id in er_groups:
+            if g.id in swaps_inp + swaps_out + transfer:
                 g.er = True
             for n in g.nodes:
                 if n.lang == EN_LANG:
@@ -404,7 +441,7 @@ if __name__ == '__main__':
         json_sentence_str = json.dumps(coe_sentence, indent=4, sort_keys=True)
         coe_sentences.append(' '.join(json_sentence_str.split()))
     sys.stderr.write('done' + str(eps_word_alignment) + ' errors\n')
-    print 'var json_str_arr = ', coe_sentences
+    # print 'var json_str_arr = ', coe_sentences
 
 
 
