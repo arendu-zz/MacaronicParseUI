@@ -5,6 +5,9 @@ EN_LANG = 'en'
 DE_LANG = 'de'
 END = '*EN*'
 START = '*ST*'
+REORDER_SWAP_TYPE = 'swap reorder'
+REORDER_TRANSFER = 'transfer reorder'
+REORDER_SEPARATES = 'separation reorder'
 
 
 class Edge(dict):
@@ -63,6 +66,21 @@ class Node(dict):
         return n
 
 
+class Reorder(dict):
+    def __init__(self):
+        dict.__init__(self)
+        self.__dict__ = self
+        self.type = None  #
+        self.anchor = None
+
+    @staticmethod
+    def from_dict(dict_):
+        r = Reorder()
+        r.type = dict_['type']
+        r.anchor = dict_['anchor']
+        return r
+
+
 class Graph(dict):
     def __init__(self, id):
         dict.__init__(self)
@@ -74,7 +92,22 @@ class Graph(dict):
         self.initial_order = id
         self.external_reorder_by = EN_LANG
         self.internal_reorder_by = EN_LANG
+        self.reorder = Reorder()
         self.swaps_with = None
+        self.transfers = False
+
+    @staticmethod
+    def from_dict(dict_):
+        g = Graph(dict_['id'])
+        g.er = dict_['er']
+        g.initial_order = dict_['initial_order']
+        g.internal_reorder_by = dict_['internal_reorder_by']
+        g.external_reorder_by = dict_['external_reorder_by']
+        g.swaps_with = dict_['swaps_with']
+        g.transfers = dict_['transfers']
+        g.nodes = list(map(Node.from_dict, dict_['nodes']))
+        g.edges = list(map(Edge.from_dict, dict_['edges']))
+        return g
 
 
     def __str__(self):
@@ -174,17 +207,6 @@ class Graph(dict):
             if n.id == node_id:
                 return n
         return None
-
-    @staticmethod
-    def from_dict(dict_):
-        g = Graph(dict_['id'])
-        g.er = dict_['er']
-        g.initial_order = dict_['initial_order']
-        g.internal_reorder_by = dict_['internal_reorder_by']
-        g.external_reorder_by = dict_['external_reorder_by']
-        g.nodes = list(map(Node.from_dict, dict_['nodes']))
-        g.edges = list(map(Edge.from_dict, dict_['edges']))
-        return g
 
 
 class Sentence(dict):
@@ -407,6 +429,10 @@ if __name__ == '__main__':
 
     g1.swaps_with = [g2.id]
     g2.swaps_with = [g1.id]
+    g1.reorder.type = REORDER_SWAP_TYPE
+    g1.reorder.anchor = [g2.id]
+    g2.reorder.type = REORDER_SWAP_TYPE
+    g2.reorder.anchor = [g1.id]
 
     json_sentence_str = json.dumps(s0, indent=4, sort_keys=True)
     all_sent.append(' '.join(json_sentence_str.split()))
@@ -441,6 +467,7 @@ if __name__ == '__main__':
     s1.graphs.append(g3)
     g3.nodes = [n0, n1]
     g3.edges = get_edges(n0, n1)
+    g3.transfers = True
 
     # g1.swaps_with = g2.id
     # g2.swaps_with = g1.id

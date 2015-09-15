@@ -5,23 +5,30 @@ from itertools import groupby
 from collection_of_edits import Sentence, Node, Graph, EN_LANG, DE_LANG, START, END, get_edges
 import json
 import sys
+import operator
+import pdb
 
+'''
 reload(sys)
 sys.setdefaultencoding('utf-8')
 sys.stdin = codecs.getreader('utf-8')(sys.stdin)
 sys.stdout = codecs.getwriter('utf-8')(sys.stdout)
 sys.stdout.encoding = 'utf-8'
-
+'''
 VIS_LANG = 'de'
 
 
-def check_swaps(input_tok_group, output_tok_group):
-    # TODO: transfer detection gets messed up if swaps happen to the right and left..
-    swaps_inp = []
-    swaps_out = []
-    transfer = []
-    input_unique = [i[0] for i in groupby(input_tok_group)]
-    output_unique = [i[0] for i in groupby(output_tok_group)]
+def get_contiguous(lst):
+    ranges = []
+    for k, g in groupby(enumerate(lst), lambda (i, x): i - x):
+        group = map(operator.itemgetter(1), g)
+        ranges.append((group[0], group[-1]))
+    return ranges
+
+
+def get_lr(input_list, output_list):
+    input_unique = [i[0] for i in groupby(input_list)]
+    output_unique = [i[0] for i in groupby(output_list)]
     input_lr = {}
     for idx, i in enumerate(input_unique):
         l = input_unique[idx - 1] if 0 < idx  else '**'
@@ -32,18 +39,82 @@ def check_swaps(input_tok_group, output_tok_group):
         l = output_unique[idx - 1] if 0 < idx else '**'
         r = output_unique[idx + 1] if idx < len(output_unique) - 1 else '**'
         output_lr[i] = (l, r)
-    for i, (li, ri) in input_lr.items():
-        (lo, ro) = output_lr[i]
-        if li == ro and lo != ri:
-            swaps_inp.append(i)
-            swaps_out.append(ro)
-    for i, (li, ri) in input_lr.items():
-        (lo, ro) = output_lr[i]
-        if li != lo and ri != ro:
-            if i not in swaps_inp and i not in swaps_out:
-                transfer.append(i)
+    return input_lr, output_lr
 
-    return swaps_inp, swaps_out, transfer
+
+def mark_swaps_transfers_interrupts(input_tok_group, output_tok_group):
+    swaps_inp = []
+    swaps_out = []
+    separatee_inp = []
+    separator_inp = []
+    separatee_out = []
+    separator_out = []
+    transfer = []
+    for i in set(input_tok_group):
+        tmp = [idx_x for idx_x, x in enumerate(input_tok_group) if x == i]
+        c = get_contiguous(tmp)
+        if len(c) == 2:
+            c0 = c[0][1]
+            c1 = c[1][0]
+            middle_idxs = range(c0 + 1, c1)
+            interrupting_group = [input_tok_group[mi] for mi in middle_idxs]
+            separatee_inp.append(i)
+            separator_inp.append(interrupting_group)
+            # print 'discontiguous input', c, i, interrupting_group
+        elif len(c) == 1:
+            pass
+            # print 'contiguous input'
+        else:
+            pass
+
+        for i in set(output_tok_group):
+            tmp = [idx_x for idx_x, x in enumerate(output_tok_group) if x == i]
+            c = get_contiguous(tmp)
+            if len(c) == 2:
+                c0 = c[0][1]
+                c1 = c[1][0]
+                middle_idxs = range(c0 + 1, c1)
+                interrupting_group = [output_tok_group[mi] for mi in middle_idxs]
+                separatee_out.append(i)
+                separator_out.append(interrupting_group)
+                # print 'discontiguous output', c, i, interrupting_group
+            elif len(c) == 1:
+                pass
+                # print 'contiguous ouput'
+            else:
+                pass
+
+        interrupts_inp_flat = [item for sublist in separator_inp for item in sublist]
+        interrupts_out_flat = [item for sublist in separator_out for item in sublist]
+
+        input_lr, output_lr = get_lr(input_tok_group, output_tok_group)
+
+        for i, (li, ri) in input_lr.items():
+            (lo, ro) = output_lr[i]
+            if li == ro and lo != ri and i not in interrupts_inp_flat and i not in separatee_inp and ro not in separatee_out and ro not in interrupts_out_flat:
+                swaps_inp.append(i)
+                swaps_out.append(ro)
+
+        input_chk_transfer = [swap_notation(i, swaps_inp, swaps_out) for i in input_tok_group]
+        output_chk_transfer = [swap_notation(i, swaps_inp, swaps_out) for i in output_tok_group]
+        input_lr, output_lr = get_lr(input_chk_transfer, output_chk_transfer)
+
+        for i, (li, ri) in input_lr.items():
+            (lo, ro) = output_lr[i]
+            if li != lo and ri != ro:
+                if i not in swaps_inp and i not in swaps_out and isinstance(i, int):
+                    transfer.append(i)
+
+        return swaps_inp, swaps_out, transfer
+
+
+def swap_notation(i, swap_i, swap_o):
+    if i in swap_i:
+        return i, swap_o[swap_i.index(i)]
+    elif i in swap_o:
+        return swap_i[swap_o.index(i)], i
+    else:
+        return i
 
 
 def check_symmetric(wa_list):
@@ -311,7 +382,7 @@ if __name__ == '__main__':
     sent_idx = 0
     eps_word_alignment = 0
     coe_sentences = []
-    for input_line, output_line in zip(input_mt, output_mt):
+    for input_line, output_line in zip(input_mt, output_mt)[:50]:
 
         sys.stderr.write('SENT' + str(sent_idx) + '\n')
         input_sent = input_line.strip().split()
@@ -407,7 +478,7 @@ if __name__ == '__main__':
             assert 0 not in input_coverage
         sys.stderr.write(' '.join([str(i) for i in input_tok_group]) + '\n')
         sys.stderr.write(' '.join([str(i) for i in output_tok_group]) + '\n')
-        swaps_inp, swaps_out, transfer = check_swaps(input_tok_group, output_tok_group)
+        swaps_inp, swaps_out, transfer = mark_swaps_transfers_interrupts(input_tok_group, output_tok_group)
         swaps_str = ' '.join([str(i) + ',' + str(j) for i, j in zip(swaps_inp, swaps_out)])
         transfer_str = ','.join([str(i) for i in transfer])
         sys.stderr.write('swaps:' + swaps_str + '\n')
@@ -418,6 +489,12 @@ if __name__ == '__main__':
         for g in coe_sentence.graphs:
             if g.id in swaps_inp + swaps_out + transfer:
                 g.er = True
+                if g.id in swaps_inp:
+                    g.swaps_with = [swaps_out[swaps_inp.index(g.id)]]
+                if g.id in swaps_out:
+                    g.swaps_with = [swaps_inp[swaps_out.index(g.id)]]
+                if g.id in transfer and g.swaps_with is None:
+                    g.transfers = True
             for n in g.nodes:
                 if n.lang == EN_LANG:
                     assert n.s == output_sent[n.en_id]
@@ -441,7 +518,7 @@ if __name__ == '__main__':
         json_sentence_str = json.dumps(coe_sentence, indent=4, sort_keys=True)
         coe_sentences.append(' '.join(json_sentence_str.split()))
     sys.stderr.write('done' + str(eps_word_alignment) + ' errors\n')
-    # print 'var json_str_arr = ', coe_sentences
+    print 'var json_str_arr = ', coe_sentences
 
 
 

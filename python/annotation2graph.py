@@ -549,7 +549,7 @@ if __name__ == '__main__':
                             g.propagate_de_order()
                             sys.stderr.write('prop de id\n')
                             g.propagate_de_id()
-                            g.set_visibility()
+                            g.set_visibility
                             for n in g.nodes:
                                 n.graph = None  # to avoid circular reference
 
