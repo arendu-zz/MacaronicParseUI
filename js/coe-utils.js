@@ -2,11 +2,12 @@
  * Created by arenduchintala on 8/13/15.
  */
 
-function NP(i, c, m, parent) {
+function NP(i, c, m, parent, gap) {
     var self = this
     this.a = i
     this.c = c
     this.m = m
+    this.gap = gap
     this.children = []
     this.parent = parent
     if (parent != null) {
@@ -20,8 +21,14 @@ function NP(i, c, m, parent) {
         if (self.c >= self.m) {
             //console.log('stop')
         } else {
-            for (var i = self.a + 1; i <= self.c; i ++) {
-                var child = new NP(i, self.c + 1, self.m, self)
+            if (self.parent == null) {
+                var max = self.c
+            } else {
+                var max = self.c < self.gap + self.a + 1 ? self.c : self.gap + self.a + 1
+            }
+
+            for (var i = self.a + 1; i <= max; i ++) {
+                var child = new NP(i, self.c + 1, self.m, self, self.gap)
                 child.populate_children()
                 self.children.push(child)
             }
@@ -29,8 +36,8 @@ function NP(i, c, m, parent) {
     }
 }
 
-function get_paths(length_of_items, length_of_items_to_insert) {
-    var root = new NP(- 1, length_of_items, length_of_items + length_of_items_to_insert, null)
+function get_possible_configurations(length_of_items, length_of_items_to_insert, gap) {
+    var root = new NP(- 1, length_of_items, length_of_items + length_of_items_to_insert, null, gap)
     root.populate_children()
     var paths = []
     var stack = []
@@ -56,14 +63,14 @@ function pad_array(arr, to_lenght) {
 }
 
 function __test__() {
-    var paths = get_paths(13, 2)
+    var paths = get_possible_configurations(13, 3, 0)
     for (var l in paths) {
-        console.log(paths[l])
+        //console.log(paths[l])
         paths[l].sort()
         console.log(paths[l])
     }
     console.log("ok")
 }
 
-//__test__()
+__test__()
 

@@ -2,6 +2,8 @@
  * Created by arenduchintala on 8/10/15.
  */
 
+var sentences = []
+
 
 function Node() {
     var self = this
@@ -106,24 +108,41 @@ function Node() {
                     return node.visible
                 })
             //self.graph.sentence.remove_nodes(gvn)
-            gvn = self.graph.sentence.sort_within_graph(gvn, self.graph.internal_reorder_by)
-            var original_external_reorder_by = self.graph.external_reorder_by
-            self.graph.external_reorder_by = param.direction
-            var node_idx = self.graph.sentence.get_best_configuration(gvn, param.direction, gvn)
+            var gvn = self.graph.sentence.sort_within_graph(gvn, self.graph.internal_reorder_by)
+            //var original_external_reorder_by = self.graph.external_reorder_by
+            //self.graph.external_reorder_by = param.direction
+            //var node_idx = self.graph.sentence.get_best_configuration(gvn, param.direction, gvn)
             for (var i = 0; i < gvn.length; i ++) {
                 var preview_n = gvn[i]
-                var destination_position = parseInt(node_idx[0]) + parseInt(i)
-                var from_pos = parseInt($(preview_n.get_view()).css('order'))
-                console.log('will move ' + preview_n.s + 'from ' + from_pos + ' to ' + destination_position)
+                //var destination_position = parseInt(node_idx[0]) + parseInt(i)
+                //var from_pos = parseInt($(preview_n.get_view()).css('order'))
+                //console.log('will move ' + preview_n.s + 'from ' + from_pos + ' to ' + destination_position)
                 var p = 'reorder_precompute_' + param.direction
                 console.log('using precomputation  move ' + preview_n.s + 'from ' + preview_n[p].from + ' to ' + preview_n[p].to)
             }
-            if (node_idx.length > 1) {
-                console.log("multiple possible best configurations - external order!!!")
-            }
-            self.graph.external_reorder_by = original_external_reorder_by
+            //if (node_idx.length > 1) {
+            //    console.log("multiple possible best configurations - external order!!!")
+            //}
+            //self.graph.external_reorder_by = original_external_reorder_by
         }
         console.log('* * * *')
+    }
+
+    this.get_swaps_with_nodes = function (gvn) {
+        var g_ids = []
+        for (var i = 0; i < gvn.length; i ++) {
+            if (gvn[i].graph.swaps_with != null) {
+                g_ids = g_ids.concat(gvn[i].graph.swaps_with)
+            }
+
+        }
+        g_ids = _.uniq(g_ids);
+        var swaps_with_vn = []
+        for (var i = 0; i < g_ids.length; i ++) {
+            var g = this.graph.sentence.get_graph_by_id(g_ids[i])
+            swaps_with_vn = swaps_with_vn.concat(g.get_visible_nodes())
+        }
+        return swaps_with_vn
     }
 
     this.take_action = function (param) {
@@ -154,7 +173,12 @@ function Node() {
             //    gvn[i].mark_for_removal = true
             //}
             gvn = self.graph.sentence.sort_within_graph(gvn, self.graph.internal_reorder_by)
+            var swaps_with_nodes = self.get_swaps_with_nodes(gvn)
             self.graph.external_reorder_by = param.direction
+            for (var swn in swaps_with_nodes) {
+                swaps_with_nodes[swn].graph.external_reorder_by = param.direction
+
+            }
             var node_idx = self.graph.sentence.get_best_configuration(gvn, param.direction, gvn)
             self.graph.sentence.remove_nodes(gvn)
             if (node_idx.length > 1) {
@@ -162,6 +186,10 @@ function Node() {
             }
 
             self.graph.sentence.add_nodes(gvn, node_idx[0], param)
+            self.graph.sentence.update_external_reorder_options(gvn, param)
+            self.graph.sentence.update_external_reorder_options(swaps_with_nodes, param)
+            self.graph.sentence.update_views(gvn)
+            self.graph.sentence.update_views(swaps_with_nodes)
 
         } else if (param.action == 'translate') {
             var modified_nodes = null
@@ -180,12 +208,20 @@ function Node() {
                 gvn = self.graph.sentence.sort_within_graph(modified_nodes.add, self.graph.internal_reorder_by)
                 var node_idx = self.graph.sentence.get_best_configuration(gvn, self.graph.external_reorder_by, modified_nodes.remove)
                 self.graph.sentence.remove_nodes(modified_nodes.remove)
-                if (node_idx.length > 1) {
+                if (modified_nodes.add.length == 1 && modified_nodes.remove.length == 1) {
+                    self.graph.sentence.add_nodes(gvn, [remove_idx[0]], param)
+                    self.graph.sentence.update_external_reorder_options(gvn, param)
+                    self.graph.sentence.update_views(gvn)
+                } else if (modified_nodes.add.length > 1) {
                     console.log("multiple possible best configurations -translate!!!")
                     node_idx = self.pick_config_closest(node_idx, remove_idx)
                     self.graph.sentence.add_nodes(gvn, node_idx, param)
+                    self.graph.sentence.update_external_reorder_options(gvn, param)
+                    self.graph.sentence.update_views(gvn)
                 } else {
                     self.graph.sentence.add_nodes(gvn, node_idx[0], param)
+                    self.graph.sentence.update_external_reorder_options(gvn, param)
+                    self.graph.sentence.update_views(gvn)
                 }
 
             }
@@ -348,6 +384,16 @@ function Graph() {
         }
     }
 
+    this.get_visible_nodes = function () {
+        var result = []
+        for (var i in this.nodes) {
+            if (this.nodes[i].visible) {
+                result.push(this.nodes[i])
+            }
+        }
+        return result
+    }
+
     this.get_node_by_ids = function (ids) {
         var result = []
         for (var i in ids) {
@@ -387,9 +433,7 @@ function Graph() {
     }
 
     this.translate_from = function (node, direction) {
-
         var neighbors = self.get_directional_neighbors(node, direction)
-
         if (neighbors.length > 0) {
             var nodes_to_remove = []
             //remove inverse neighbors of the nodes going to be added
@@ -409,8 +453,6 @@ function Graph() {
             console.log('can not translate in the given direction, nothing to remove or add')
             return null
         }
-
-
     }
 
     this.initialize = function (sentence) {
@@ -424,7 +466,6 @@ function Graph() {
         for (var i in self.edges) {
             self.edges[i].graph = self
         }
-
     }
 }
 
@@ -437,6 +478,15 @@ function Sentence() {
     this.graphs = []
     this.visible_nodes = []
     this.container = null
+
+    this.get_graph_by_id = function (gid) {
+        for (var i = 0; i < this.graphs.length; i ++) {
+            var g = this.graphs[i]
+            if (g.id == gid) {
+                return g
+            }
+        }
+    }
 
     this.initialize = function () {
         self.container = self.get_container()
@@ -464,23 +514,6 @@ function Sentence() {
             $(self.visible_nodes[i].get_view()).css('order', i)
         }
     }
-
-    this.cartesianProductOf = function (args) {
-        return _.reduce(
-            args, function (a, b) {
-                return _.flatten(
-                    _.map(
-                        a, function (x) {
-                            return _.map(
-                                b, function (y) {
-                                    return x.concat([y]);
-                                });
-                        }), true);
-            }, [
-                []
-            ]);
-    };
-
 
     this.sort_within_graph = function (nodes, within_graph_ordering) {
 
@@ -618,7 +651,7 @@ function Sentence() {
 
 
     this.get_best_configuration = function (nodes_to_insert, g_order, nodes_to_ignore) {
-        var configurations = get_paths(self.visible_nodes.length - nodes_to_ignore.length, nodes_to_insert.length)
+        var configurations = get_possible_configurations(self.visible_nodes.length - nodes_to_ignore.length, nodes_to_insert.length, 0)
         var best_config = []
         var max = Number.NEGATIVE_INFINITY
         for (var c in configurations) {
@@ -626,7 +659,7 @@ function Sentence() {
             var use_score2 = self.score_configuration_alignment_unq(configurations[c], nodes_to_insert, g_order, nodes_to_ignore)
             var use_score3 = self.score_configuration_overlap(configurations[c], nodes_to_insert, g_order, nodes_to_ignore)
             var use_score = (use_score2 * 0.9) + (use_score3 * 0.1)
-            //console.log("config:" + configurations[c] + " a_unq:" + use_score2 + " o:" + use_score3 + "final score:" + use_score)
+            console.log("config:" + configurations[c] + " a_unq:" + use_score2 + " o:" + use_score3 + "final score:" + use_score)
             if (use_score > max) {
                 max = use_score
                 best_config = []
@@ -641,6 +674,30 @@ function Sentence() {
     }
 
 
+    this.update_external_reorder_options = function (nodes, param) {
+        //TODO: this is a known bug simply switching reorder will not be correct if there are nested reorderings!!
+        for (var c = 0; c < nodes.length; c ++) {
+            var n = nodes[c]
+            if (param.action == 'external reorder') {
+                var new_direction = n.graph.external_reorder_by == 'en' ? 'de' : 'en'
+            } else if (param.action == 'translate') {
+                var new_direction = n.graph.external_reorder_by == 'en' ? 'de' : 'en'
+            }
+
+            n.precompute_possibility({action: 'external reorder', direction: new_direction })
+            console.log(n.s + " precomputed possibility en:" + n.reorder_precompute_en.from + " " + n.reorder_precompute_en.to)
+            console.log(n.s + " precomputed possibility de:" + n.reorder_precompute_de.from + " " + n.reorder_precompute_de.to)
+
+        }
+    }
+
+    this.update_views = function (nodes) {
+        for (var c = 0; c < nodes.length; c ++) {
+            var n = nodes[c]
+            n.update_view()
+        }
+    }
+
     this.add_nodes = function (nodes, nodes_idx, param) {
         self.sort_visible_nodes_by_display_order()
 
@@ -652,23 +709,6 @@ function Sentence() {
 
         self.assign_display_order_by_array_order()
         self.update_visible_nodes()
-
-        if (param.action == 'external reorder') {
-            for (var c = 0; c < nodes_idx.length; c ++) {
-                var n = nodes[c]
-                var new_direction = n.graph.external_reorder_by == 'en' ? 'de' : 'en'
-                n.precompute_possibility({action: 'external reorder', direction: new_direction })
-                console.log(n.s + " precomputed possibility en:" + n.reorder_precompute_en.from + " " + n.reorder_precompute_en.to)
-                console.log(n.s + " precomputed possibility de:" + n.reorder_precompute_de.from + " " + n.reorder_precompute_de.to)
-
-            }
-        }
-        for (var c = 0; c < nodes_idx.length; c ++) {
-            var n = nodes[c]
-            n.update_view()
-        }
-
-
     }
 
     this.get_neighbor_graph_ids = function (ps, neighbor_direction, base_array) {
@@ -800,6 +840,7 @@ Graph.parse = function (input) {
     g.internal_reorder_by = input.internal_reorder_by
     g.external_reorder_by = input.external_reorder_by
     g.initial_order = input.initial_order
+    g.swaps_with = input.swaps_with
     for (var i in input.nodes) {
         g.nodes.push(Node.parse(input.nodes[i]))
     }
@@ -821,14 +862,39 @@ Sentence.parse = function (input) {
     return s
 }
 
+function async(your_function, arg, callback) {
+    setTimeout(
+        function () {
+            your_function(arg);
+            if (callback) {
+                callback();
+            }
+        }, 0);
+}
+
+function precomputations(i) {
+    var jo = JSON.parse(json_str_arr[i])
+    var s = Sentence.parse(jo)
+    s.initialize()
+    s.update_visible_nodes()
+    s.initial_order()
+    //var s = sentences[i]
+    s.initial_possibility_precomputations()
+
+}
 function ok_parse() {
-    for (var i in json_str_arr) {
+    /*for (var i in json_str_arr) {
         var jo = JSON.parse(json_str_arr[i])
         var s = Sentence.parse(jo)
         s.initialize()
         s.update_visible_nodes()
         s.initial_order()
-        s.initial_possibility_precomputations()
+        sentences.push(s)
+        //s.initial_possibility_precomputations()
+        //async(s.initial_possibility_precomputations, null);
+    }*/
+    for (var i = 0; i < json_str_arr.length; i ++) {
+        async(precomputations, i, null)
     }
     console.log("done")
 }
