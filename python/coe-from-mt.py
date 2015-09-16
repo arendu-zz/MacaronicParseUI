@@ -490,8 +490,10 @@ if __name__ == '__main__':
             if g.id in swaps_inp + swaps_out + transfer:
                 g.er = True
                 if g.id in swaps_inp:
+                    g.swaps = True
                     g.swaps_with = [swaps_out[swaps_inp.index(g.id)]]
                 if g.id in swaps_out:
+                    g.swaps = True
                     g.swaps_with = [swaps_inp[swaps_out.index(g.id)]]
                 if g.id in transfer and g.swaps_with is None:
                     g.transfers = True

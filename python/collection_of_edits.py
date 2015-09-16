@@ -92,9 +92,14 @@ class Graph(dict):
         self.initial_order = id
         self.external_reorder_by = EN_LANG
         self.internal_reorder_by = EN_LANG
-        self.reorder = Reorder()
-        self.swaps_with = None
+
+        self.splits = False
         self.transfers = False
+        self.swaps = False
+
+        self.swaps_with = None
+        self.separator = None
+        self.visibility_condition = None
 
     @staticmethod
     def from_dict(dict_):
@@ -103,16 +108,19 @@ class Graph(dict):
         g.initial_order = dict_['initial_order']
         g.internal_reorder_by = dict_['internal_reorder_by']
         g.external_reorder_by = dict_['external_reorder_by']
-        g.swaps_with = dict_['swaps_with']
         g.transfers = dict_['transfers']
+        g.splits = dict_['splits']
+        g.swaps = dict_['swaps']
+
+        g.separator = dict_['separator']
+        g.swaps_with = dict_['swaps_with']
+        g.visibility_condition = dict_['visibility_condition']
         g.nodes = list(map(Node.from_dict, dict_['nodes']))
         g.edges = list(map(Edge.from_dict, dict_['edges']))
         return g
 
-
     def __str__(self):
         return str(self.id) + ',' + ','.join([str(i) for i in self.nodes])
-
 
     def set_visibility(self):
         visiblity_dict = {}
@@ -139,7 +147,6 @@ class Graph(dict):
                         ne.visible = True
         return True
 
-
     def propagate_de_id(self):
         propagate_list = []
         for n in self.nodes:
@@ -164,7 +171,6 @@ class Graph(dict):
                 if n.de_id is not None:
                     propagate_list.append(n)
         return True
-
 
     def propagate_de_order(self):
         propagate_list = []
@@ -191,7 +197,6 @@ class Graph(dict):
                     propagate_list.append(n)
         return True
 
-
     def get_neighbor_nodes(self, node, direction):
         neighbor_nodes = []
         for e in self.edges:
@@ -199,7 +204,6 @@ class Graph(dict):
                 for toid in e.to_id:
                     neighbor_nodes.append(self.get_node_by_id(toid))
         return neighbor_nodes
-
 
     def get_node_by_id(self, node_id):
         assert isinstance(node_id, int)
@@ -426,13 +430,10 @@ if __name__ == '__main__':
     s0.graphs.append(g2)
     g2.nodes = [n0, n1]
     g2.edges = get_edges(n0, n1)
-
+    g1.swaps = True
+    g2.swaps = True
     g1.swaps_with = [g2.id]
     g2.swaps_with = [g1.id]
-    g1.reorder.type = REORDER_SWAP_TYPE
-    g1.reorder.anchor = [g2.id]
-    g2.reorder.type = REORDER_SWAP_TYPE
-    g2.reorder.anchor = [g1.id]
 
     json_sentence_str = json.dumps(s0, indent=4, sort_keys=True)
     all_sent.append(' '.join(json_sentence_str.split()))
@@ -473,6 +474,73 @@ if __name__ == '__main__':
     # g2.swaps_with = g1.id
 
     json_sentence_str = json.dumps(s1, indent=4, sort_keys=True)
+    all_sent.append(' '.join(json_sentence_str.split()))
+
+    s2 = Sentence(2, "A B C", "1 21 3 22", None)
+    g0 = Graph(0)
+    n0 = Node(0, 'A', 0, 0, EN_LANG, True, [START], [1, 2, END], [START], [1, 2, 1, END], to_en=False, to_de=True)
+    n1 = Node(1, '1', 0, 0, DE_LANG, False, [START], [1, 2, END], [START], [1, 2, 1, END], to_en=True, to_de=False)
+    g0.nodes = [n0, n1]
+    g0.edges = get_edges(n0, n1)
+    s2.graphs.append(g0)
+
+    g1 = Graph(1)
+    n0 = Node(0, 'B', 1, 1, EN_LANG, True, [0, START], [2, END], [0, START], [2, END], to_de=True, to_en=False)
+    n1 = Node(1, '2a', 1, 1, DE_LANG, False, [0, START], [2, END], [0, START], [END], to_de=False, to_en=True)
+    n2 = Node(2, '2b', 1, 3, DE_LANG, False, [0, START], [2, END], [0, START], [END], to_de=False, to_en=True)
+    g1.nodes = [n0, n1, n2]
+    g1.edges = get_edges(n0, n1) + get_edges(n0, n2)
+
+    g2 = Graph(2)
+    n0 = Node(0, 'C', 2, 2, EN_LANG, True, [1, 2, START], [END], [1, 0, START], [1, END], to_de=True, to_en=False)
+    n1 = Node(1, '3', 2, 2, DE_LANG, False, [1, 2, START], [END], [1, 0, START], [1, END], to_de=False, to_en=True)
+    g2.nodes = [n0, n1]
+    g2.edges = get_edges(n0, n1)
+    s2.graphs.append(g2)
+
+    g1.splits = True
+    g1.visibility_condition = [n1.id, n2.id]
+    g1.separator = [g2.id]
+    s2.graphs.append(g1)
+
+    json_sentence_str = json.dumps(s2, indent=4, sort_keys=True)
+    all_sent.append(' '.join(json_sentence_str.split()))
+
+    s3 = Sentence(3, "A B C D", "1 31 2 32 4", None)
+    g0 = Graph(0)
+    n0 = Node(0, 'A', 0, 0, EN_LANG, True, [START], [1, 2, END], [START], [1, 2, 1, END], to_en=False, to_de=True)
+    n1 = Node(1, '1', 0, 0, DE_LANG, False, [START], [1, 2, END], [START], [1, 2, 1, END], to_en=True, to_de=False)
+    g0.nodes = [n0, n1]
+    g0.edges = get_edges(n0, n1)
+    s3.graphs.append(g0)
+
+    g1 = Graph(1)
+    n0 = Node(0, 'B', 1, 2, EN_LANG, True, [0, START], [2, END], [0, START], [2, END], to_de=True, to_en=False)
+    n1 = Node(1, '2', 1, 2, DE_LANG, False, [0, START], [2, END], [0, START], [END], to_de=False, to_en=True)
+    g1.nodes = [n0, n1]
+    g1.edges = get_edges(n0, n1)
+    s3.graphs.append(g1)
+
+    g2 = Graph(2)
+    n0 = Node(0, 'C', 2, 2, EN_LANG, True, [1, 0, START], [3, END], [1, 0, START], [4, END], to_de=True, to_en=False)
+    n1 = Node(1, '31', 2, 1, DE_LANG, False, [1, 2, START], [END], [0, START], [1, 2, 3, END], to_de=False, to_en=True)
+    n2 = Node(2, '32', 2, 3, DE_LANG, False, [1, 2, START], [END], [1, 2, START], [1, END], to_de=False, to_en=True)
+    g2.nodes = [n0, n1, n2]
+    g2.edges = get_edges(n0, n1) + get_edges(n0, n2)
+    g2.splits = True
+    g2.visibility_condition = [n1.id, n2.id]
+    g2.separator = [g1.id]
+    s3.graphs.append(g2)
+
+    g3 = Graph(3)
+    n0 = Node(0, 'D', 3, 4, EN_LANG, True, [2, 1, 0, START], [END], [2, 1, 2, 0, START], [END], to_de=True, to_en=False)
+    n1 = Node(1, '4', 3, 4, DE_LANG, False, [2, 1, 0, START], [END], [2, 1, 2, 0, START], [END], to_de=False,
+              to_en=True)
+    g3.nodes = [n0, n1]
+    g3.edges = get_edges(n0, n1)
+    s3.graphs.append(g3)
+
+    json_sentence_str = json.dumps(s3, indent=4, sort_keys=True)
     all_sent.append(' '.join(json_sentence_str.split()))
 
     print 'var json_str_arr = ', all_sent
