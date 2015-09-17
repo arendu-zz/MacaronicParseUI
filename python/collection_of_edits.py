@@ -98,8 +98,10 @@ class Graph(dict):
         self.swaps = False
 
         self.swaps_with = None
-        self.separator = None
+        self.separators = None
         self.visibility_condition = None
+        self.currently_split = False
+        self.separator_positions = None
 
     @staticmethod
     def from_dict(dict_):
@@ -110,9 +112,10 @@ class Graph(dict):
         g.external_reorder_by = dict_['external_reorder_by']
         g.transfers = dict_['transfers']
         g.splits = dict_['splits']
+        g.currently_split = dict_['currently_split']
         g.swaps = dict_['swaps']
-
-        g.separator = dict_['separator']
+        g.separator_positions = dict_['separator_position']
+        g.separators = dict_['separators']
         g.swaps_with = dict_['swaps_with']
         g.visibility_condition = dict_['visibility_condition']
         g.nodes = list(map(Node.from_dict, dict_['nodes']))
@@ -234,6 +237,25 @@ def get_edges(n1, n2):
     e1 = Edge([n1.id], [n2.id], DE_LANG)
     e2 = Edge([n2.id], [n1.id], EN_LANG)
     return [e1, e2]
+
+
+def propagate(graph):
+    for n in graph.nodes:
+        if n.de_id is None or n.de_left is None or n.de_right is None:
+            de_neighbors = graph.get_neighbor_nodes(n, DE_LANG)
+            de_n = de_neighbors[0]
+            assert de_n.de_left is not None and de_n.de_right is not None and de_n.de_id is not None
+            n.de_id = de_n.de_id
+            n.de_right = [i for i in de_n.de_right]
+            n.de_left = [i for i in de_n.de_left]
+
+        if n.en_id is None or n.en_left is None or n.en_right is None:
+            en_neighbors = graph.get_neighbor_nodes(n, EN_LANG)
+            en_n = en_neighbors[0]
+            assert en_n.en_id is not None and en_n.en_left is not None and en_n.en_right is not None
+            n.en_id = en_n.en_id
+            n.en_right = [i for i in en_n.en_right]
+            n.en_left = [i for i in en_n.en_left]
 
 
 if __name__ == '__main__':
@@ -415,60 +437,95 @@ if __name__ == '__main__':
 
     g0.nodes = [n0, n1]
     g0.edges = get_edges(n0, n1)
+    propagate(g0)
     s0.graphs.append(g0)
 
     g1 = Graph(1)
     n0 = Node(0, 'B', 1, 2, EN_LANG, True, [0, START], [2, END], [2, 0, START], [END], to_en=False, to_de=True)
     n1 = Node(1, '2', 1, 2, DE_LANG, False, [0, START], [2, END], [2, 0, START], [END], to_en=True, to_de=False)
-    s0.graphs.append(g1)
     g1.nodes = [n0, n1]
     g1.edges = get_edges(n0, n1)
+    propagate(g1)
+    s0.graphs.append(g1)
 
     g2 = Graph(2)
     n0 = Node(0, 'C', 2, 1, EN_LANG, True, [1, 0, START], [END], [0, START], [1, END], to_en=False, to_de=True)
     n1 = Node(1, '3', 1, 2, DE_LANG, False, [1, 0, START], [END], [0, START], [1, END], to_en=True, to_de=False)
-    s0.graphs.append(g2)
+
     g2.nodes = [n0, n1]
     g2.edges = get_edges(n0, n1)
     g1.swaps = True
     g2.swaps = True
     g1.swaps_with = [g2.id]
     g2.swaps_with = [g1.id]
+    propagate(g2)
+    s0.graphs.append(g2)
 
     json_sentence_str = json.dumps(s0, indent=4, sort_keys=True)
     all_sent.append(' '.join(json_sentence_str.split()))
 
-    s1 = Sentence(1, "A B C D", "1 4 2 3", None)
+    s1 = Sentence(1, "A B C D E F", "1 4 2 3 6 5", None)
     g0 = Graph(0)
     n0 = Node(0, 'A', 0, 0, EN_LANG, True, [START], [1, 2, 3, END], [START], [3, 1, 2, END], to_en=False, to_de=True)
     n1 = Node(1, '1', 0, 0, DE_LANG, False, [START], [1, 2, 3, END], [START], [3, 1, 2, END], to_en=True, to_de=False)
 
     g0.nodes = [n0, n1]
     g0.edges = get_edges(n0, n1)
+    propagate(g0)
     s1.graphs.append(g0)
 
     g1 = Graph(1)
     n0 = Node(0, 'B', 1, 2, EN_LANG, True, [0, START], [2, 3, END], [3, 1, 0, START], [2, END], to_en=False, to_de=True)
     n1 = Node(1, '2', 1, 2, DE_LANG, False, [0, START], [2, 3, END], [3, 1, 0, START], [2, END], to_en=True,
               to_de=False)
-    s1.graphs.append(g1)
+
     g1.nodes = [n0, n1]
     g1.edges = get_edges(n0, n1)
+    propagate(g1)
+    s1.graphs.append(g1)
 
     g2 = Graph(2)
     n0 = Node(0, 'C', 2, 1, EN_LANG, True, [1, 0, START], [3, END], [1, 3, 0, START], [END], to_en=False, to_de=True)
     n1 = Node(1, '3', 1, 2, DE_LANG, False, [1, 0, START], [3, END], [1, 3, 0, START], [END], to_en=True, to_de=False)
-    s1.graphs.append(g2)
+
     g2.nodes = [n0, n1]
     g2.edges = get_edges(n0, n1)
+    propagate(g2)
+    s1.graphs.append(g2)
 
     g3 = Graph(3)
-    n0 = Node(0, 'D', 3, 1, EN_LANG, True, [2, 1, 0, START], [END], [0, START], [1, 2, END], to_en=False, to_de=True)
-    n1 = Node(1, '4', 3, 1, DE_LANG, False, [2, 1, 0, START], [END], [0, START], [1, 2, END], to_en=True, to_de=False)
-    s1.graphs.append(g3)
+    n0 = Node(0, 'D', 3, 1, EN_LANG, True, [2, 1, 0, START], [4, 5, END], [0, START], [1, 2, 4, 5, END], to_en=False,
+              to_de=True)
+    n1 = Node(1, '4', 3, 1, DE_LANG, False, [2, 1, 0, START], [END], [0, START], [1, 2, 4, 5, END], to_en=True,
+              to_de=False)
+
     g3.nodes = [n0, n1]
     g3.edges = get_edges(n0, n1)
     g3.transfers = True
+    propagate(g3)
+    s1.graphs.append(g3)
+
+    g4 = Graph(4)
+    n0 = Node(0, 'E', 4, 5, EN_LANG, True, [None], [None], [None], [None], to_en=False, to_de=True)
+    n1 = Node(1, '5', 4, 5, DE_LANG, False, [None], [None], [None], [None], to_en=False, to_de=True)
+    g4.nodes = [n0, n1]
+    g4.edges = get_edges(n0, n1)
+    g5 = Graph(5)
+    n0 = Node(0, 'F', 5, 4, EN_LANG, True, [None], [None], [None], [None], to_en=False, to_de=True)
+    n1 = Node(1, '6', 5, 4, DE_LANG, False, [None], [None], [None], [None], to_en=False, to_de=True)
+    g5.nodes = [n0, n1]
+    g5.edges = get_edges(n0, n1)
+    g4.swaps = True
+    g4.swaps_with = [g5.id]
+
+    g5.swaps = True
+    g5.swaps_with = [g4.id]
+    propagate(g4)
+    propagate(g5)
+    s1.graphs.append(g4)
+    s1.graphs.append(g5)
+
+
 
     # g1.swaps_with = g2.id
     # g2.swaps_with = g1.id
@@ -482,6 +539,7 @@ if __name__ == '__main__':
     n1 = Node(1, '1', 0, 0, DE_LANG, False, [START], [1, 2, END], [START], [1, 2, 1, END], to_en=True, to_de=False)
     g0.nodes = [n0, n1]
     g0.edges = get_edges(n0, n1)
+    propagate(g0)
     s2.graphs.append(g0)
 
     g1 = Graph(1)
@@ -496,11 +554,14 @@ if __name__ == '__main__':
     n1 = Node(1, '3', 2, 2, DE_LANG, False, [1, 2, START], [END], [1, 0, START], [1, END], to_de=False, to_en=True)
     g2.nodes = [n0, n1]
     g2.edges = get_edges(n0, n1)
+    propagate(g2)
     s2.graphs.append(g2)
 
     g1.splits = True
     g1.visibility_condition = [n1.id, n2.id]
-    g1.separator = [g2.id]
+    g1.separators = [g2.id]
+    g1.separator_positions = ['right']
+    propagate(g1)
     s2.graphs.append(g1)
 
     json_sentence_str = json.dumps(s2, indent=4, sort_keys=True)
@@ -512,6 +573,7 @@ if __name__ == '__main__':
     n1 = Node(1, '1', 0, 0, DE_LANG, False, [START], [1, 2, END], [START], [1, 2, 1, END], to_en=True, to_de=False)
     g0.nodes = [n0, n1]
     g0.edges = get_edges(n0, n1)
+    propagate(g0)
     s3.graphs.append(g0)
 
     g1 = Graph(1)
@@ -519,18 +581,8 @@ if __name__ == '__main__':
     n1 = Node(1, '2', 1, 2, DE_LANG, False, [0, START], [2, END], [0, START], [END], to_de=False, to_en=True)
     g1.nodes = [n0, n1]
     g1.edges = get_edges(n0, n1)
+    propagate(g1)
     s3.graphs.append(g1)
-
-    g2 = Graph(2)
-    n0 = Node(0, 'C', 2, 2, EN_LANG, True, [1, 0, START], [3, END], [1, 0, START], [4, END], to_de=True, to_en=False)
-    n1 = Node(1, '31', 2, 1, DE_LANG, False, [1, 2, START], [END], [0, START], [1, 2, 3, END], to_de=False, to_en=True)
-    n2 = Node(2, '32', 2, 3, DE_LANG, False, [1, 2, START], [END], [1, 2, START], [1, END], to_de=False, to_en=True)
-    g2.nodes = [n0, n1, n2]
-    g2.edges = get_edges(n0, n1) + get_edges(n0, n2)
-    g2.splits = True
-    g2.visibility_condition = [n1.id, n2.id]
-    g2.separator = [g1.id]
-    s3.graphs.append(g2)
 
     g3 = Graph(3)
     n0 = Node(0, 'D', 3, 4, EN_LANG, True, [2, 1, 0, START], [END], [2, 1, 2, 0, START], [END], to_de=True, to_en=False)
@@ -538,7 +590,22 @@ if __name__ == '__main__':
               to_en=True)
     g3.nodes = [n0, n1]
     g3.edges = get_edges(n0, n1)
+    propagate(g3)
     s3.graphs.append(g3)
+
+    g2 = Graph(2)
+    n0 = Node(0, 'C', 2, 2, EN_LANG, True, [1, 0, START], [3, END], [1, 0, START], [4, END], to_de=True, to_en=False)
+    n1 = Node(1, 'C1', 2, 1, DE_LANG, False, [1, 2, START], [END], [0, START], [1, 2, 3, END], to_de=False, to_en=True)
+    n2 = Node(2, 'C4', 2, 3, DE_LANG, False, [1, 2, START], [END], [1, 2, START], [1, END], to_de=False, to_en=True)
+    g2.nodes = [n0, n1, n2]
+    g2.edges = get_edges(n0, n1) + get_edges(n0, n2)
+    g2.splits = True
+    g2.currently_split = False
+    g2.visibility_condition = [n1.id, n2.id]
+    g2.separators = [g1.id, g3.id]
+    g2.separator_positions = ['left', 'right']
+    propagate(g2)
+    s3.graphs.append(g2)
 
     json_sentence_str = json.dumps(s3, indent=4, sort_keys=True)
     all_sent.append(' '.join(json_sentence_str.split()))
