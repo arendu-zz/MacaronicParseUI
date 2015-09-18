@@ -752,11 +752,9 @@ function Sentence() {
 		return best_config
 	}
 	this.update_external_reorder_options = function (nodes, param) {
-		//TODO: this is a known bug simply switching reorder will not be correct if there are nested reorderings!!
 		for (var c = 0; c < nodes.length; c++) {
 			var n = nodes[c]
 			if (n.graph.transfers && param.action == 'external reorder') {
-				//n.precompute_transfer_possibility({action: 'external reorder', direction: n.graph.external_reorder_by })
 				n.graph.external_reorder_by = param.direction
 			}
 			if (n.graph.swaps && param.action == 'external reorder') {
@@ -767,8 +765,6 @@ function Sentence() {
 				n.graph.external_reorder_by = param.direction
 			}
 
-			//console.log(n.s + " precomputed possibility en:" + n.reorder_precompute_en.from + " " + n.reorder_precompute_en.to)
-			//console.log(n.s + " precomputed possibility de:" + n.reorder_precompute_de.from + " " + n.reorder_precompute_de.to)
 		}
 	}
 	this.add_nodes = function (nodes, nodes_idx, param) {
