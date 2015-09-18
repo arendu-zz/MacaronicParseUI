@@ -45,6 +45,8 @@ def get_lr(input_list, output_list):
 def mark_swaps_transfers_interrupts(input_tok_group, output_tok_group):
     swaps_inp = []
     swaps_out = []
+    split_inp = {}
+    split_out = {}
     separatee_inp = []
     separator_inp = []
     separatee_out = []
@@ -61,6 +63,11 @@ def mark_swaps_transfers_interrupts(input_tok_group, output_tok_group):
             separatee_inp.append(i)
             separator_inp.append(interrupting_group)
             # print 'discontiguous input', c, i, interrupting_group
+            sp_in_out = output_tok_group.index(i)
+            interrupting_group_lr = [('left' if (output_tok_group.index(ig) < sp_in_out)  else 'right') for ig in
+                                     interrupting_group]
+            split_inp[i] = (interrupting_group, interrupting_group_lr)
+
         elif len(c) == 1:
             pass
             # print 'contiguous input'
@@ -78,6 +85,11 @@ def mark_swaps_transfers_interrupts(input_tok_group, output_tok_group):
                 separatee_out.append(i)
                 separator_out.append(interrupting_group)
                 # print 'discontiguous output', c, i, interrupting_group
+                sp_in_inp = input_tok_group.index(i)
+                interrupting_group_lr = [('left' if (input_tok_group.index(ig) < sp_in_inp) else 'right') for ig in
+                                         interrupting_group]
+                split_out[i] = (interrupting_group, interrupting_group_lr)
+
             elif len(c) == 1:
                 pass
                 # print 'contiguous ouput'
@@ -102,10 +114,11 @@ def mark_swaps_transfers_interrupts(input_tok_group, output_tok_group):
         for i, (li, ri) in input_lr.items():
             (lo, ro) = output_lr[i]
             if li != lo and ri != ro:
-                if i not in swaps_inp and i not in swaps_out and isinstance(i, int):
+                if i not in swaps_inp and i not in swaps_out and i not in split_inp and i not in split_out and isinstance(
+                        i, int):
                     transfer.append(i)
 
-        return swaps_inp, swaps_out, transfer
+        return swaps_inp, swaps_out, transfer, split_inp, split_out
 
 
 def swap_notation(i, swap_i, swap_o):
@@ -314,6 +327,18 @@ def get_groups_that_external_reorder(input_tok_group, output_tok_group):
     return reordering_groups
 
 
+def propagate_split_info(sent):
+    for g in sent.graphs:
+        if g.splits:
+            interacts_with = g.separators
+            for iw in interacts_with:
+                g_other = sent.get_graph_by_id(iw)
+                g_other.is_separator = True
+                set(interacts_with).add(g.id)
+                set(interacts_with).remove(g_other.id)
+                g_other.split_iteraction = list(interacts_with)
+
+
 def propagate(graph):
     for n in graph.nodes:
         if n.de_id is None or n.de_left is None or n.de_right is None:
@@ -382,7 +407,7 @@ if __name__ == '__main__':
     sent_idx = 0
     eps_word_alignment = 0
     coe_sentences = []
-    for input_line, output_line in zip(input_mt, output_mt)[:50]:
+    for input_line, output_line in zip(input_mt, output_mt)[:30]:
 
         sys.stderr.write('SENT' + str(sent_idx) + '\n')
         input_sent = input_line.strip().split()
@@ -470,22 +495,25 @@ if __name__ == '__main__':
                 group_idx += 1
                 # input_coverage[inp_span[0]: inp_span[1] + 1] = ['1'] * ((inp_span[1] + 1) - inp_span[0])
 
-        coe_sentence.graphs = sort_groups_by_lang(coe_sentence.graphs, VIS_LANG)
-
         if 0 in input_coverage:
-            # print 'bad coverage:', input_coverage
             eps_word_alignment += 1
             assert 0 not in input_coverage
+
+        coe_sentence.graphs = sort_groups_by_lang(coe_sentence.graphs, VIS_LANG)
         sys.stderr.write(' '.join([str(i) for i in input_tok_group]) + '\n')
         sys.stderr.write(' '.join([str(i) for i in output_tok_group]) + '\n')
-        swaps_inp, swaps_out, transfer = mark_swaps_transfers_interrupts(input_tok_group, output_tok_group)
+        swaps_inp, swaps_out, transfer, split_inp, split_out = mark_swaps_transfers_interrupts(input_tok_group,
+                                                                                               output_tok_group)
         swaps_str = ' '.join([str(i) + ',' + str(j) for i, j in zip(swaps_inp, swaps_out)])
         transfer_str = ','.join([str(i) for i in transfer])
         sys.stderr.write('swaps:' + swaps_str + '\n')
         sys.stderr.write('transfer:' + transfer_str + '\n')
-        # er_groups = get_groups_that_external_reorder(input_tok_group, output_tok_group)
-        # er_groups = set(er_groups)
-        # sys.stderr.write('reorders:' + ' '.join([str(i) for i in er_groups]) + '\n')
+        split_inp_str = ' '.join([str(i) + "-" + ','.join([str(k) for k in j[0]]) for i, j in split_inp.items()])
+        sys.stderr.write('split inp:' + split_inp_str + '\n')
+        split_out_str = ' '.join([str(i) + "-" + ','.join([str(k) for k in j[0]]) for i, j in split_out.items()])
+        sys.stderr.write('split out:' + split_out_str + '\n')
+        if len(split_out) or len(split_inp) > 0:
+            pass  # pdb.set_trace()
         for g in coe_sentence.graphs:
             if g.id in swaps_inp + swaps_out + transfer:
                 g.er = True
@@ -497,6 +525,16 @@ if __name__ == '__main__':
                     g.swaps_with = [swaps_inp[swaps_out.index(g.id)]]
                 if g.id in transfer and g.swaps_with is None:
                     g.transfers = True
+            if g.id in split_out.keys():
+                g.splits = True
+                g.separators = list(set(split_out[g.id][0]))
+                g.separator_positions = split_out[g.id][1]
+
+            if g.id in split_inp.keys():
+                g.splits = True
+                g.separators = list(set(split_inp[g.id][0]))
+                g.separator_positions = split_inp[g.id][1]
+
             for n in g.nodes:
                 if n.lang == EN_LANG:
                     assert n.s == output_sent[n.en_id]
@@ -515,8 +553,9 @@ if __name__ == '__main__':
                 assert n.en_id is not None and n.de_id is not None
                 assert n.en_left is not None and n.de_left is not None
                 assert n.en_right is not None and n.de_right is not None
-
+        propagate_split_info(coe_sentence)
         # sys.stderr.write('done sent' + str(sent_idx) + '\n')
+
         json_sentence_str = json.dumps(coe_sentence, indent=4, sort_keys=True)
         coe_sentences.append(' '.join(json_sentence_str.split()))
     sys.stderr.write('done' + str(eps_word_alignment) + ' errors\n')

@@ -94,12 +94,13 @@ class Graph(dict):
         self.internal_reorder_by = EN_LANG
 
         self.splits = False
+        self.is_separator = False
+        self.split_interaction = None
         self.transfers = False
         self.swaps = False
 
         self.swaps_with = None
         self.separators = None
-        self.visibility_condition = None
         self.currently_split = False
         self.separator_positions = None
 
@@ -116,8 +117,9 @@ class Graph(dict):
         g.swaps = dict_['swaps']
         g.separator_positions = dict_['separator_position']
         g.separators = dict_['separators']
+        g.is_separator = dict_['is_separator']
+        g.split_interaction = dict_['split_interaction']
         g.swaps_with = dict_['swaps_with']
-        g.visibility_condition = dict_['visibility_condition']
         g.nodes = list(map(Node.from_dict, dict_['nodes']))
         g.edges = list(map(Edge.from_dict, dict_['edges']))
         return g
@@ -225,6 +227,12 @@ class Sentence(dict):
         self.de = de
         self.alignment = alignment
         self.graphs = []
+
+    def get_graph_by_id(self, gid):
+        for g in self.graphs:
+            if g.id == gid:
+                return g
+        return None
 
     @staticmethod
     def from_dict(dict_):
@@ -558,7 +566,6 @@ if __name__ == '__main__':
     s2.graphs.append(g2)
 
     g1.splits = True
-    g1.visibility_condition = [n1.id, n2.id]
     g1.separators = [g2.id]
     g1.separator_positions = ['right']
     propagate(g1)
@@ -601,8 +608,11 @@ if __name__ == '__main__':
     g2.edges = get_edges(n0, n1) + get_edges(n0, n2)
     g2.splits = True
     g2.currently_split = False
-    g2.visibility_condition = [n1.id, n2.id]
     g2.separators = [g1.id, g3.id]
+    g1.is_separator = True
+    g1.split_interaction = [g2.id, g3.id]
+    g3.is_separator = True
+    g3.split_interaction = [g2.id, g1.id]
     g2.separator_positions = ['left', 'right']
     propagate(g2)
     s3.graphs.append(g2)
