@@ -47,6 +47,7 @@ def mark_swaps_transfers_interrupts(input_tok_group, output_tok_group):
     swaps_out = []
     split_inp = {}
     split_out = {}
+    split_orderings = {}
     separatee_inp = []
     separator_inp = []
     separatee_out = []
@@ -67,6 +68,15 @@ def mark_swaps_transfers_interrupts(input_tok_group, output_tok_group):
             interrupting_group_lr = [('left' if (output_tok_group.index(ig) < sp_in_out)  else 'right') for ig in
                                      interrupting_group]
             split_inp[i] = (interrupting_group, interrupting_group_lr)
+            involved_graphs = set((interrupting_group + [i]))
+            o1 = [ix for ix in output_tok_group if ix in involved_graphs]
+            o2 = [ix for ix in input_tok_group if ix in involved_graphs]
+            # assert len(o1) != len(o2)  #todo: must address this exception
+            if len(o1) > len(o2):
+                split_orderings[i] = {'split_ordering': o1, 'unsplit_ordering': o2}
+            else:
+                split_orderings[i] = {'split_ordering': o1, 'unsplit_ordering': o2}
+
 
         elif len(c) == 1:
             pass
@@ -90,6 +100,14 @@ def mark_swaps_transfers_interrupts(input_tok_group, output_tok_group):
                                          interrupting_group]
                 split_out[i] = (interrupting_group, interrupting_group_lr)
 
+                involved_graphs = set((interrupting_group + [i]))
+                o1 = [ix for ix in output_tok_group if ix in involved_graphs]
+                o2 = [ix for ix in input_tok_group if ix in involved_graphs]
+                # assert len(o1) != len(o2) #todo: must address this exception
+                if len(o1) > len(o2):
+                    split_orderings[i] = {'split_ordering': o1, 'unsplit_ordering': o2}
+                else:
+                    split_orderings[i] = {'split_ordering': o1, 'unsplit_ordering': o2}
             elif len(c) == 1:
                 pass
                 # print 'contiguous ouput'
@@ -118,7 +136,7 @@ def mark_swaps_transfers_interrupts(input_tok_group, output_tok_group):
                         i, int):
                     transfer.append(i)
 
-        return swaps_inp, swaps_out, transfer, split_inp, split_out
+        return swaps_inp, swaps_out, transfer, split_inp, split_out, split_orderings
 
 
 def swap_notation(i, swap_i, swap_o):
@@ -385,15 +403,7 @@ def sort_groups_by_lang(graphs, vis_lang):
 
 
 if __name__ == '__main__':
-    # wa = [(0, 0), (1, 0), (1, 1), (2, 1)]
-    # wa_sym = make_symmetric(wa)
-    # print 'sym:', wa_sym
-    # wa = [(0, 0), (1, 0), (1, 1), (2, 0), (2, 2), (3, 2), (4, 2)]
-    # wa_sym = make_symmetric(wa)
-    # print 'sym:', wa_sym
-    # exit()
     opt = OptionParser()
-    # insert options here
 
     opt.add_option('-i', dest='input_mt', default='../web/newstest2013/newstest2013.input.tok.1')
     opt.add_option('-o', dest='output_mt', default='../web/newstest2013/newstest2013.output.1.wa')
@@ -407,7 +417,7 @@ if __name__ == '__main__':
     sent_idx = 0
     eps_word_alignment = 0
     coe_sentences = []
-    for input_line, output_line in zip(input_mt, output_mt)[:30]:
+    for input_line, output_line in zip(input_mt, output_mt)[:300]:
 
         sys.stderr.write('SENT' + str(sent_idx) + '\n')
         input_sent = input_line.strip().split()
@@ -425,6 +435,7 @@ if __name__ == '__main__':
         sys.stderr.write('output sent:' + ' '.join(output_sent) + '\n')
 
         coe_sentence = Sentence(sent_idx, ' '.join(input_sent), ' '.join(output_sent), None)
+        coe_sentence.initial_order_by = VIS_LANG
         sent_idx += 1
         assert len(wa_per_span) == len(input_spans) == len(output_spans)
         phrase_dict = {}
@@ -502,8 +513,9 @@ if __name__ == '__main__':
         coe_sentence.graphs = sort_groups_by_lang(coe_sentence.graphs, VIS_LANG)
         sys.stderr.write(' '.join([str(i) for i in input_tok_group]) + '\n')
         sys.stderr.write(' '.join([str(i) for i in output_tok_group]) + '\n')
-        swaps_inp, swaps_out, transfer, split_inp, split_out = mark_swaps_transfers_interrupts(input_tok_group,
-                                                                                               output_tok_group)
+        swaps_inp, swaps_out, transfer, split_inp, split_out, split_orderings = mark_swaps_transfers_interrupts(
+            input_tok_group,
+            output_tok_group)
         swaps_str = ' '.join([str(i) + ',' + str(j) for i, j in zip(swaps_inp, swaps_out)])
         transfer_str = ','.join([str(i) for i in transfer])
         sys.stderr.write('swaps:' + swaps_str + '\n')
@@ -526,14 +538,28 @@ if __name__ == '__main__':
                 if g.id in transfer and g.swaps_with is None:
                     g.transfers = True
             if g.id in split_out.keys():
+                # pdb.set_trace()
                 g.splits = True
                 g.separators = list(set(split_out[g.id][0]))
                 g.separator_positions = split_out[g.id][1]
+                g.split_ordering = split_orderings[g.id]['split_ordering']
+                g.unsplit_ordering = split_orderings[g.id]['unsplit_ordering']
+                if VIS_LANG == 'de':  # de is the input language and de is the visible language
+                    g.currently_split = False
+                else:
+                    g.currently_split = True
 
             if g.id in split_inp.keys():
+                # pdb.set_trace()
                 g.splits = True
                 g.separators = list(set(split_inp[g.id][0]))
                 g.separator_positions = split_inp[g.id][1]
+                g.split_ordering = split_orderings[g.id]['split_ordering']
+                g.unsplit_ordering = split_orderings[g.id]['unsplit_ordering']
+                if VIS_LANG == 'de':  # de is the input language and de is the visible language
+                    g.currently_split = True
+                else:
+                    g.currently_split = False
 
             for n in g.nodes:
                 if n.lang == EN_LANG:

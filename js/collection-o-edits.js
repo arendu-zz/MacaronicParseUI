@@ -3,6 +3,39 @@
  */
 
 var sentences = []
+var page = 0;
+var sentences_per_page = 10
+
+gotoPrevPage = function () {
+	console.log("go to prev page")
+	page -= 1
+	if (page >= 0) {
+		var total = json_str_arr.length
+		var st = page * sentences_per_page
+		var end = st + sentences_per_page
+		$('#mainbody').empty()
+		sentences = []
+		ok_parse(st, end)
+		do_precomputations()
+	}
+}
+gotoNextPage = function () {
+	console.log("go to next page")
+	page += 1
+	var total = json_str_arr.length
+	var st = page * sentences_per_page
+	var end = st + sentences_per_page
+	if (end > total) {
+		end = total
+		$('#nextbtn').prop("disabled", true)
+	}else{
+		$('#nextbtn').prop("disabled", false)
+	}
+	$('#mainbody').empty()
+	sentences = []
+	ok_parse(st, end)
+	do_precomputations()
+}
 function Node() {
 	var self = this
 	/*attributes from json*/
@@ -22,8 +55,7 @@ function Node() {
 	this.view = null
 	this.visible = false
 	this.graph = null
-	this.reorder_precompute_en = {from: null, to: null}
-	this.reorder_precompute_de = {from: null, to: null}
+	this.reorder_precompute = {from: null, to: null}
 
 	this.update_view_reorder = function () {
 		var view = this.get_view()
@@ -86,31 +118,31 @@ function Node() {
 		}
 	}
 	this.preview_action = function (param) {
-		//console.log('* *  PREVIEW REORDER ' + param.direction + '* *')
-		//console.log(this.s + ' with action:' + param.action + ' ' + param.direction)
+		console.log('* *  PREVIEW REORDER ' + param.direction + '* *')
+		console.log(this.s + ' with action:' + param.action + ' ' + param.direction)
 		if (param.action == 'external reorder') {
-			var gvn = _.filter(self.graph.nodes, function (node) {
-				return node.visible
-			})
-			//self.graph.sentence.remove_nodes(gvn)
-			var gvn = self.graph.sentence.sort_within_graph(gvn, self.graph.internal_reorder_by)
-			//var original_external_reorder_by = self.graph.external_reorder_by
-			//self.graph.external_reorder_by = param.direction
-			//var node_idx = self.graph.sentence.get_best_configuration(gvn, param.direction, gvn)
-			for (var i = 0; i < gvn.length; i++) {
-				var preview_n = gvn[i]
-				//var destination_position = parseInt(node_idx[0]) + parseInt(i)
-				//var from_pos = parseInt($(preview_n.get_view()).css('order'))
-				////console.log('will move ' + preview_n.s + 'from ' + from_pos + ' to ' + destination_position)
-				var p = 'reorder_precompute_' + param.direction
-				//console.log('using precomputation  move ' + preview_n.s + 'from ' + preview_n[p].from + ' to ' + preview_n[p].to)
+			if (self.graph.transfers) {
+				var gvn = _.filter(self.graph.nodes, function (node) {
+					return node.visible
+				})
+				_.each(gvn, function (n) {
+					var from = parseInt($(n.get_view()).css('order'))
+					var to = self.graph.sentence.get_best_configuration([n], param.direction, [n])
+					console.log('precomputed next possible transfer for ' + n.s)
+					console.log('from:' + from + ' to:' + to[0])
+				})
+			} else if (self.graph.swaps) {
+				console.log("this graph swaps with " + self.graph.swaps_with)
+			} else if (self.graph.splits) {
+				if (self.graph.currently_split) {
+					console.log("this graph will unsplit" + self.graph.unsplit_ordering)
+				} else {
+					console.log("this graph splits with " + self.graph.split_ordering)
+				}
+
 			}
-			//if (node_idx.length > 1) {
-			//    //console.log("multiple possible best configurations - external order!!!")
-			//}
-			//self.graph.external_reorder_by = original_external_reorder_by
 		}
-		//console.log('* * * *')
+
 	}
 	this.get_swaps_with_nodes = function (gvn) {
 		var g_ids = []
@@ -160,75 +192,87 @@ function Node() {
 			var gvn = _.filter(self.graph.nodes, function (node) {
 				return node.visible
 			})
-			//gvn = self.graph.sentence.sort_within_graph(gvn, self.graph.internal_reorder_by)
 
 			if (this.graph.splits) {
 				console.log("this graphs splits")
+				var target_order = []
+				if (self.graph.currently_split) {
+					target_order = self.graph.unsplit_ordering
+				} else {
+					target_order = self.graph.split_ordering
+				}
 				var split_nodes = gvn
-				assert(split_nodes.length == 2, "only can support 2 nodes splitting")
 				split_nodes = _.sortBy(split_nodes, function (sn) {
 					return parseInt($(sn.get_view()).css('order'))
 				})
-				var split_nodes_positions = _.map(split_nodes, function (sn) {
-					return parseInt($(sn.get_view()).css('order'))
-				})
-				self.graph.sentence.remove_nodes(gvn)
 
-				var separator_nodes = []
-				for (var i = 0; i < self.graph.separators.length; i++) {
-					var g = self.graph.sentence.get_graph_by_id(self.graph.separators[i])
-					separator_nodes = separator_nodes.concat(g.get_visible_nodes())
-				}
-				separator_nodes = _.sortBy(separator_nodes, function (sn) {
-					return parseInt($(sn.get_view()).css('order'))
-				})
-				var separator_nodes_positions = _.map(separator_nodes, function (sn) {
-					return parseInt($(sn.get_view()).css('order'))
-				})
-				assert(is_contiguous(separator_nodes_positions), 'separator nodes are not contiguous!!!')
-
-				if (!self.graph.currently_split) {
-					//split operation
-					var min_separator = _.min(separator_nodes_positions)
-					var max_separator = _.max(separator_nodes_positions)
-					new_positions = [min_separator, max_separator + 1 + 1]
-					for (var swn in split_nodes) {
-						split_nodes[swn].graph.external_reorder_by = param.direction
+				var separator_nodes = _.map(target_order, function (t_id) {
+					if (t_id != self.graph.id) {
+						var s_graph = self.graph.sentence.get_graph_by_id(t_id)
+						var sns = s_graph.get_visible_nodes()
+						sns = _.sortBy(sns, function (sn) {
+							return parseInt($(sn.get_view()).css('order'))
+						})
+						return sns
+					} else {
+						return ['INSERT HERE']
 					}
 
-					self.graph.sentence.add_nodes(split_nodes, new_positions, param)
-
-					self.graph.sentence.update_external_reorder_options(split_nodes, param)
-					_.each(split_nodes, function (i) {
-						i.update_view_reorder()
+				})
+				separator_nodes = _.flatten(separator_nodes)
+				var new_ordering_nodes = []
+				if (self.graph.currently_split) {
+					var insertions = _.reduce(separator_nodes, function (memo, sn) {
+						if (sn == 'INSERT HERE') {return memo + 1} else {return memo}
+					}, 0)
+					assert(insertions == 1, 'during un-splitting number insert sites 1')
+					new_ordering_nodes = _.map(separator_nodes, function (sn) {
+						if (sn == 'INSERT HERE') {
+							return split_nodes
+						} else {
+							return sn
+						}
 					})
-					self.graph.currently_split = true
+
 				} else {
-					//merge operation
-					console.log("not implemented...")
-					console.log("graph must be currently split - " + self.graph.currently_split)
-
-					separator_nodes = _.sortBy(separator_nodes, function (sn) {
-						return parseInt($(sn.get_view()).css('order'))
+					var insertions = _.reduce(separator_nodes, function (memo, sn) {
+						if (sn == 'INSERT HERE') {return memo + 1} else {return memo}
+					}, 0)
+					assert(insertions == split_nodes.length, 'during splitting number insert sites should be number of split nodes')
+					var split_ptr = 0
+					new_ordering_nodes = _.map(separator_nodes, function (sn) {
+						if (sn == 'INSERT HERE') {
+							var split_n = split_nodes[split_ptr]
+							split_ptr++
+							return split_n
+						} else {
+							return sn
+						}
 					})
-					var separator_nodes_positions = _.map(separator_nodes, function (sn) {
-						return parseInt($(sn.get_view()).css('order'))
-					})
-					var place_position = self.graph.separator_positions
-					assert(place_position.length == separator_nodes_positions.length, 'place position must equal number of separators')
-					var merge_position = self.get_split_merge_position(place_position, separator_nodes_positions)
-					var new_positions = _.range(gvn.length)
-					new_positions = _.map(new_positions, function (i) {
-						return i + merge_position
-					})
-					self.graph.sentence.add_nodes(split_nodes, new_positions, param)
-					self.graph.sentence.update_external_reorder_options(split_nodes, param)
-					_.each(split_nodes, function (i) {
-						i.update_view_reorder()
-					})
-					self.graph.currently_split = false
 
 				}
+				new_ordering_nodes = _.flatten(new_ordering_nodes)
+				var new_ordering_positions = _.map(new_ordering_nodes, function (nn) {
+					return parseInt($(nn.get_view()).css('order'))
+				})
+				var st = _.min(new_ordering_positions)
+				var new_pos = 0 + st
+				_.each(new_ordering_nodes, function (nn) {
+					var nnp = new_pos
+					if (_.contains(split_nodes, nn)) {
+						self.graph.sentence.remove_nodes([nn])
+						console.log("adding back " + nn.s + " in position " + nnp)
+						self.graph.sentence.add_nodes([nn], [nnp], param)
+					} else {
+						console.log(nn.s + " not in split, its position " + nnp)
+					}
+					new_pos += 1
+				})
+				self.graph.sentence.update_external_reorder_options(split_nodes, param)
+				_.each(split_nodes, function (i) {
+					i.update_view_reorder()
+				})
+				self.graph.currently_split = !self.graph.currently_split
 
 			} else if (this.graph.swaps) {
 				console.log("this graphs swaps")
@@ -280,6 +324,16 @@ function Node() {
 				_.each(gvn, function (i) {
 					i.update_view_reorder()
 				})
+
+				_.each(gvn, function (n) {
+					var from = parseInt($(n.get_view()).css('order'))
+					var new_direction = param.direction == 'en' ? 'de' : 'en'
+					var to = self.graph.sentence.get_best_configuration([n], new_direction, [n])
+					n.reorder_precompute = {'from': from, 'to': parseInt(to[0])}
+					console.log('precomputed next possible transfer for ' + n.s)
+					console.log('from:' + from + ' to:' + to[0])
+
+				})
 			}
 		} else if (param.action == 'translate') {
 			var modified_nodes = null
@@ -295,7 +349,7 @@ function Node() {
 					remove_positions.push(parseInt($(modified_nodes.remove[mnr].get_view()).css('order')))
 				}
 				gvn = self.graph.sentence.sort_within_graph(modified_nodes.add, self.graph.internal_reorder_by)
-				var node_idx = self.graph.sentence.get_best_configuration(gvn, self.graph.external_reorder_by, modified_nodes.remove)
+				//var node_idx = self.graph.sentence.get_best_configuration(gvn, self.graph.external_reorder_by, modified_nodes.remove)
 
 				self.graph.sentence.remove_nodes(modified_nodes.remove)
 				if (modified_nodes.add.length == 1 && modified_nodes.remove.length == 1) {
@@ -323,12 +377,47 @@ function Node() {
 						i.update_view_reorder()
 					})
 				} else if (modified_nodes.add.length == 1 && modified_nodes.remove.length > 1) {
-
+					console.log("ok")
+					var insert_idx = null
 					if (self.graph.splits) {
+						var target_order = self.graph.unsplit_ordering
+						var separator_nodes = _.map(target_order, function (t_id) {
+							if (t_id == self.graph.id) {
+								return ['INSERT HERE']
+							} else {
+								return self.graph.sentence.get_graph_by_id(t_id).get_visible_nodes()
+							}
+						})
+						separator_nodes = _.flatten(separator_nodes)
+						var separator_node_positions = _.map(separator_nodes, function (sn) {
+							if (sn == 'INSERT HERE') {
+								return 'INSERT HERE'
+							} else {
+								return parseInt($(sn.get_view()).css('order'))
+							}
+
+						})
+						console.log("ok")
+						var ih = _.findIndex(separator_node_positions, function (snp) {
+							return snp == 'INSERT HERE'
+						})
+						if (ih == 0) {
+							insert_idx = _.min(separator_node_positions)
+						} else {
+							insert_idx = separator_node_positions[ih - 1] + 1
+						}
+
+						self.graph.sentence.add_nodes(modified_nodes.add, [insert_idx], param)
+						self.graph.sentence.update_external_reorder_options(modified_nodes.add, param)
+						_.each(modified_nodes.add, function (i) {
+							i.update_view_reorder()
+						})
+
 						if (self.graph.currently_split) {
 							self.graph.currently_split = false
 							self.graph.external_reorder_by = self.graph.external_reorder_by == 'en' ? 'de' : 'en'
 						}
+
 					} else {
 						assert(is_contiguous(remove_positions))
 						insert_idx = [_.min(remove_positions)]
@@ -340,11 +429,6 @@ function Node() {
 					}
 				} else {
 					assert(0 > 1, 'translations from many to many is not possible anymore!!!')
-					self.graph.sentence.add_nodes(gvn, node_idx[0], param)
-					self.graph.sentence.update_external_reorder_options(gvn, param)
-					_.each(gvn, function (i) {
-						i.update_view_reorder()
-					})
 				}
 			}
 		} else {
@@ -472,18 +556,13 @@ function Graph() {
 	this.is_separator = false
 	this.split_interactions = null
 
-	this.initial_possibility_precomputations = function () {
+	this.split_ordering = null
+	this.unsplit_ordering = null
+
+	this.set_initial_view = function () {
 		for (var i = 0; i < this.nodes.length; i++) {
 			var n = this.nodes[i]
 			if (n.visible) {
-				if (this.transfers) {
-					var new_direction = n.graph.external_reorder_by == 'en' ? 'de' : 'en'
-					n.precompute_transfer_possibility({action: 'external reorder', direction: new_direction })
-					//console.log(n.s + " precomputed possibility en:" + n.reorder_precompute_en.from + " " + n.reorder_precompute_en.to)
-					//console.log(n.s + " precomputed possibility de:" + n.reorder_precompute_de.from + " " + n.reorder_precompute_de.to)
-				} else {
-					//console.log("not doing any precomputations")
-				}
 				n.update_view_reorder()
 			}
 		}
@@ -574,6 +653,8 @@ function Sentence() {
 	this.graphs = []
 	this.visible_nodes = []
 	this.container = null
+	this.initial_order_by = null
+
 	this.get_graph_by_id = function (gid) {
 		for (var i = 0; i < this.graphs.length; i++) {
 			var g = this.graphs[i]
@@ -584,13 +665,14 @@ function Sentence() {
 	}
 	this.initialize = function () {
 		self.container = self.get_container()
-		$(document.body).append($(self.get_container()))
+		$('#mainbody').append($(self.get_container()))
 		self.graphs = _.sortBy(self.graphs, function (graph) {
 			return graph.initial_order
 		})
 		for (var i in self.graphs) {
 			self.graphs[i].initialize(self)
 		}
+
 	}
 	this.sort_visible_nodes_by_display_order = function () {
 		self.visible_nodes = _.sortBy(self.visible_nodes, function (node) {
@@ -778,10 +860,8 @@ function Sentence() {
 	}
 	this.get_neighbor_graph_ids = function (ps, neighbor_direction, base_array) {
 		var graphs_ids = []
-		//var prev = null
 		if (neighbor_direction == 'right') {
 			for (var i = ps + 1; i < base_array.length; i++) {
-				//if (prev != base_array[i].graph.id) {
 				var g = base_array[i].graph
 				var lst = [g.id]
 				if (g.swaps) {
@@ -794,8 +874,7 @@ function Sentence() {
 					lst = lst.concat(g.split_interactions)
 				}
 				graphs_ids.push(lst)
-				//    prev = base_array[i].graph.id
-				//}
+
 			}
 			graphs_ids.push(['*EN*'])
 		} else if (neighbor_direction == 'left') {
@@ -849,18 +928,20 @@ function Sentence() {
 			return this.container
 		}
 	}
-	this.initial_possibility_precomputations = function () {
+	this.set_initial_view = function () {
 		for (var i = 0; i < this.graphs.length; i++) {
-			this.graphs[i].initial_possibility_precomputations()
+			this.graphs[i].set_initial_view()
 		}
 	}
 	this.initial_order = function () {
 		//assigns order of the visible nodes initially
+		console.log('ok')
 		for (var i in self.visible_nodes) {
 			var item = self.visible_nodes[i].get_view()
 			$(item).css('order', i)
 		}
 	}
+
 	this.update_visible_nodes = function () {
 		//console.log("drawing node items...")
 		for (var i in self.visible_nodes) {
@@ -908,13 +989,7 @@ Node.parse = function (input) {
 	n.ir = input.ir
 	return n
 }
-/*
-Reorder.parse = function (input) {
-	var r = new Reorder()
-	r.type = input.type
-	r.anchor = input.anchor
-	return r
-}*/
+
 Graph.parse = function (input) {
 	var g = new Graph()
 	g.id = input.id
@@ -932,6 +1007,8 @@ Graph.parse = function (input) {
 	g.separator_positions = input.separator_positions
 	g.is_separator = input.is_separator
 	g.split_interactions = input.split_interactions
+	g.split_ordering = input.split_ordering
+	g.unsplit_ordering = input.unsplit_ordering
 	for (var i in input.nodes) {
 		g.nodes.push(Node.parse(input.nodes[i]))
 	}
@@ -947,6 +1024,7 @@ Sentence.parse = function (input) {
 	s.de = input.de
 	s.id = input.id
 	s.alignment = input.alignment
+	s.initial_order_by = input.initial_order_by
 	for (var i in input.graphs) {
 		s.graphs.push(Graph.parse(input.graphs[i]))
 	}
@@ -963,25 +1041,30 @@ function async(your_function, arg, callback) {
 
 function precomputations(i) {
 	var s = sentences[i]
-	s.initial_possibility_precomputations()
+	s.set_initial_view()
 }
 
 function do_precomputations() {
-	for (var i = 0; i < json_str_arr.length; i++) {
+	for (var i = 0; i < sentences.length; i++) {
 		async(precomputations, i, null)
 	}
 }
 
-function ok_parse() {
-	for (var i in json_str_arr) {
+function ok_parse(st, end) {
+	for (var i = st; i < end; i++) {
 		var jo = JSON.parse(json_str_arr[i])
 		var s = Sentence.parse(jo)
 		s.initialize()
+		s.visible_nodes = _.sortBy(s.visible_nodes, function (vn) {
+			if (s.initial_order_by == 'en') {
+				return vn.en_id
+			} else {
+				return vn.de_id
+			}
+		})
+		s.assign_display_order_by_array_order()
 		s.update_visible_nodes()
-		s.initial_order()
 		sentences.push(s)
-		//s.initial_possibility_precomputations()
-		//async(s.initial_possibility_precomputations, null);
 	}
-	//console.log("done")
+
 }
