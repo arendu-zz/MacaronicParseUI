@@ -6,7 +6,6 @@ from collection_of_edits import Sentence, Node, Graph, EN_LANG, DE_LANG, START, 
 import json
 import sys
 import operator
-import pdb
 
 '''
 reload(sys)
@@ -312,6 +311,27 @@ def make_edges(from_nodes, to_nodes):
     for fn in from_nodes:
         for tn in to_nodes:
             edges += get_edges(fn, tn)
+            # print fn.s, tn.s
+    return edges
+
+
+def make_edges_with_intermediate_nodes(from_nodes, to_nodes, intermediate, graph):
+    edges = []
+    for fn in from_nodes:
+        for tn in to_nodes:
+            int_token = intermediate[(fn.s, tn.s)]
+            int_node = fn.makecopy()
+
+            int_node.id = len(graph.nodes)
+            int_node.s = int_token
+            int_node.to_en = True
+            int_node.to_de = True
+            int_node.en_id = int_node.en_id if int_node.en_id is not None else tn.en_id
+            int_node.de_id = int_node.de_id if int_node.de_id is not None else tn.de_id
+            graph.nodes.append(int_node)
+            edges += get_edges(fn, int_node)
+            edges += get_edges(int_node, tn)
+            # print fn.s, tn.s
     return edges
 
 
@@ -357,19 +377,31 @@ def propagate_split_info(sent):
                 g_other.split_iteraction = list(interacts_with)
 
 
+def find_nearest_node_with_property(n, direction, graph):
+    if direction == DE_LANG:
+        de_n = Node(None, None, None, None, None, None)
+        while de_n.de_left is None or de_n.de_right is None or de_n.de_id is None:
+            de_neighbors = graph.get_neighbor_nodes(n, DE_LANG)
+            de_n = de_neighbors[0]
+
+
 def propagate(graph):
     for n in graph.nodes:
         if n.de_id is None or n.de_left is None or n.de_right is None:
-            de_neighbors = graph.get_neighbor_nodes(n, DE_LANG)
-            de_n = de_neighbors[0]
+            de_n = n
+            while de_n.de_left is None or de_n.de_right is None or de_n.de_id is None:
+                de_neighbors = graph.get_neighbor_nodes(de_n, DE_LANG)
+                de_n = de_neighbors[0]
             assert de_n.de_left is not None and de_n.de_right is not None and de_n.de_id is not None
             n.de_id = de_n.de_id
             n.de_right = [i for i in de_n.de_right]
             n.de_left = [i for i in de_n.de_left]
 
         if n.en_id is None or n.en_left is None or n.en_right is None:
-            en_neighbors = graph.get_neighbor_nodes(n, EN_LANG)
-            en_n = en_neighbors[0]
+            en_n = n
+            while en_n.en_left is None or en_n.en_right is None or en_n.en_id is None:
+                en_neighbors = graph.get_neighbor_nodes(en_n, EN_LANG)
+                en_n = en_neighbors[0]
             assert en_n.en_id is not None and en_n.en_left is not None and en_n.en_right is not None
             n.en_id = en_n.en_id
             n.en_right = [i for i in en_n.en_right]
@@ -407,17 +439,22 @@ if __name__ == '__main__':
 
     opt.add_option('-i', dest='input_mt', default='../web/newstest2013/newstest2013.input.tok.1')
     opt.add_option('-o', dest='output_mt', default='../web/newstest2013/newstest2013.output.1.wa')
+    opt.add_option('-e', dest='intermediate', default='../web/newstest2013/intermediate_nodes.txt')
     # opt.add_option('--e2f', dest='e2f', default='../web/newstest2013/lex1.e2f.small')
     # opt.add_option('--f2e', dest='f2e', default='../web/newstest2013/lex1.f2e.small')
     (options, _) = opt.parse_args()
 
     input_mt = codecs.open(options.input_mt, 'r', 'utf-8').readlines()
     output_mt = codecs.open(options.output_mt, 'r', 'utf-8').readlines()
+    intermediate_nodes = {}
+    for l in codecs.open(options.intermediate, 'r', 'utf-8').readlines():
+        w1, w2, inter = l.strip().split()
+        intermediate_nodes[(w1, w2)] = inter
     assert len(input_mt) == len(output_mt)
     sent_idx = 0
     eps_word_alignment = 0
     coe_sentences = []
-    for input_line, output_line in zip(input_mt, output_mt)[:300]:
+    for input_line, output_line in zip(input_mt, output_mt)[:30]:
 
         sys.stderr.write('SENT' + str(sent_idx) + '\n')
         input_sent = input_line.strip().split()
@@ -500,8 +537,10 @@ if __name__ == '__main__':
                 if len(to_nodes) > 1:
                     assert len(from_nodes) == 1  # or (len(iu) == 2 and len(ou) == 2)
                     pass
-                coe_graph.edges = make_edges(from_nodes, to_nodes)
                 coe_graph.nodes = from_nodes + to_nodes
+                coe_graph.edges = make_edges(from_nodes, to_nodes)
+                coe_graph.edges = make_edges_with_intermediate_nodes(from_nodes, to_nodes,
+                                                                     intermediate=intermediate_nodes, graph=coe_graph)
                 coe_sentence.graphs.append(coe_graph)
                 group_idx += 1
                 # input_coverage[inp_span[0]: inp_span[1] + 1] = ['1'] * ((inp_span[1] + 1) - inp_span[0])
@@ -563,15 +602,15 @@ if __name__ == '__main__':
 
             for n in g.nodes:
                 if n.lang == EN_LANG:
-                    assert n.s == output_sent[n.en_id]
-                    n.en_left = [START] + output_tok_group[:n.en_id]
-                    n.en_left.reverse()
-                    n.en_right = output_tok_group[n.en_id + 1:] + [END]
+                    if n.s == output_sent[n.en_id]:
+                        n.en_left = [START] + output_tok_group[:n.en_id]
+                        n.en_left.reverse()
+                        n.en_right = output_tok_group[n.en_id + 1:] + [END]
                 if n.lang == DE_LANG:
-                    assert n.s == input_sent[n.de_id]
-                    n.de_left = [START] + input_tok_group[:n.de_id]
-                    n.de_left.reverse()
-                    n.de_right = input_tok_group[n.de_id + 1:] + [END]
+                    if n.s == input_sent[n.de_id]:
+                        n.de_left = [START] + input_tok_group[:n.de_id]
+                        n.de_left.reverse()
+                        n.de_right = input_tok_group[n.de_id + 1:] + [END]
 
             propagate(g)
 

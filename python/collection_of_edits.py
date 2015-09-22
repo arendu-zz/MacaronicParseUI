@@ -51,6 +51,11 @@ class Node(dict):
         self.to_de = to_de
         self.ir = ir
 
+    def makecopy(self):
+        n = Node(self.id, self.s, self.en_id, self.de_id, self.lang, self.visible, self.en_left, self.en_right,
+                 self.de_left, self.en_right, to_en=self.to_en, to_de=self.to_de)
+        return n
+
     def __eq__(self, other):
         return self.s == other.s and self.graph.id == other.graph.id and self.id == other.id
 
