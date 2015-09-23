@@ -1,19 +1,18 @@
 __author__ = 'arenduchintala'
 import codecs
 from optparse import OptionParser
-from itertools import groupby
+from itertools import groupby, product
 from collection_of_edits import Sentence, Node, Graph, EN_LANG, DE_LANG, START, END, get_edges
 import json
 import sys
 import operator
 
-'''
 reload(sys)
 sys.setdefaultencoding('utf-8')
 sys.stdin = codecs.getreader('utf-8')(sys.stdin)
 sys.stdout = codecs.getwriter('utf-8')(sys.stdout)
 sys.stdout.encoding = 'utf-8'
-'''
+
 VIS_LANG = 'de'
 
 
@@ -317,23 +316,32 @@ def make_edges(from_nodes, to_nodes):
 
 def make_edges_with_intermediate_nodes(from_nodes, to_nodes, intermediate, graph):
     edges = []
-    for fn in from_nodes:
-        for tn in to_nodes:
-            int_token = intermediate.get((fn.s, tn.s), None)
-            if int_token is not None:
-                int_node = fn.makecopy()
-                int_node.id = len(graph.nodes)
-                int_node.s = int_token
-                int_node.to_en = True
-                int_node.to_de = True
-                int_node.en_id = int_node.en_id if int_node.en_id is not None else tn.en_id
-                int_node.de_id = int_node.de_id if int_node.de_id is not None else tn.de_id
-                graph.nodes.append(int_node)
-                edges += get_edges(fn, int_node)
-                edges += get_edges(int_node, tn)
-                # print fn.s, tn.s
+    has_intermediate = False
+    for f, t in product(from_nodes, to_nodes):
+        int_tok = intermediate.get((f.s, t.s), None)
+        has_intermediate = (int_tok is not None and int_tok != 'NULL' and f.s != t.s) or has_intermediate
+
+    if has_intermediate:
+        for f, t in product(from_nodes, to_nodes):
+            int_tok = intermediate.get((f.s, t.s), None)
+            if int_tok is None or int_tok == 'NULL' or f.s == t.s:
+                int_tok = f.s
             else:
-                edges += get_edges(fn, tn)
+                pass
+            sys.stderr.write('int:' + int_tok + ' in:' + f.s + '-' + t.s + '\n')
+            int_node = f.makecopy()
+            int_node.id = len(graph.nodes)
+            int_node.s = int_tok
+            int_node.to_en = True
+            int_node.to_de = True
+            int_node.en_id = int_node.en_id if int_node.en_id is not None else t.en_id
+            int_node.de_id = int_node.de_id if int_node.de_id is not None else t.de_id
+            graph.nodes.append(int_node)
+            edges += get_edges(f, int_node)
+            edges += get_edges(int_node, t)
+    else:
+        for f, t in product(from_nodes, to_nodes):
+            edges += get_edges(f, t)
     return edges
 
 
@@ -441,7 +449,7 @@ if __name__ == '__main__':
 
     opt.add_option('-i', dest='input_mt', default='../web/newstest2013/newstest2013.input.tok.1')
     opt.add_option('-o', dest='output_mt', default='../web/newstest2013/newstest2013.output.1.wa')
-    opt.add_option('-e', dest='intermediate', default='../web/newstest2013/intermediate_nodes.txt')
+    opt.add_option('-e', dest='intermediate', default='../web/newstest2013/intermediate_nodes.en.txt')
     # opt.add_option('--e2f', dest='e2f', default='../web/newstest2013/lex1.e2f.small')
     # opt.add_option('--f2e', dest='f2e', default='../web/newstest2013/lex1.f2e.small')
     (options, _) = opt.parse_args()
@@ -456,7 +464,7 @@ if __name__ == '__main__':
     sent_idx = 0
     eps_word_alignment = 0
     coe_sentences = []
-    for input_line, output_line in zip(input_mt, output_mt)[:30]:
+    for input_line, output_line in zip(input_mt, output_mt)[:300]:
 
         sys.stderr.write('SENT' + str(sent_idx) + '\n')
         input_sent = input_line.strip().split()
