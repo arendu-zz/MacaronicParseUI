@@ -319,19 +319,21 @@ def make_edges_with_intermediate_nodes(from_nodes, to_nodes, intermediate, graph
     edges = []
     for fn in from_nodes:
         for tn in to_nodes:
-            int_token = intermediate[(fn.s, tn.s)]
-            int_node = fn.makecopy()
-
-            int_node.id = len(graph.nodes)
-            int_node.s = int_token
-            int_node.to_en = True
-            int_node.to_de = True
-            int_node.en_id = int_node.en_id if int_node.en_id is not None else tn.en_id
-            int_node.de_id = int_node.de_id if int_node.de_id is not None else tn.de_id
-            graph.nodes.append(int_node)
-            edges += get_edges(fn, int_node)
-            edges += get_edges(int_node, tn)
-            # print fn.s, tn.s
+            int_token = intermediate.get((fn.s, tn.s), None)
+            if int_token is not None:
+                int_node = fn.makecopy()
+                int_node.id = len(graph.nodes)
+                int_node.s = int_token
+                int_node.to_en = True
+                int_node.to_de = True
+                int_node.en_id = int_node.en_id if int_node.en_id is not None else tn.en_id
+                int_node.de_id = int_node.de_id if int_node.de_id is not None else tn.de_id
+                graph.nodes.append(int_node)
+                edges += get_edges(fn, int_node)
+                edges += get_edges(int_node, tn)
+                # print fn.s, tn.s
+            else:
+                edges += get_edges(fn, tn)
     return edges
 
 
