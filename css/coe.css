@@ -66,6 +66,11 @@ div {
     /*background: gray;*/
 }
 
+.preview {
+    pointer-events: none;
+    : #028090;
+}
+
 .node_menu_container {
     display: flex;
     background: transparent;

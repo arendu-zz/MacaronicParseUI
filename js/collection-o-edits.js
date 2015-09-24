@@ -28,7 +28,7 @@ gotoNextPage = function () {
 	if (end > total) {
 		end = total
 		$('#nextbtn').prop("disabled", true)
-	}else{
+	} else {
 		$('#nextbtn').prop("disabled", false)
 	}
 	$('#mainbody').empty()
@@ -53,9 +53,15 @@ function Node() {
 	this.ir = null
 	/*attributes created in js*/
 	this.view = null
+	this.preview_view = null
 	this.visible = false
 	this.graph = null
 	this.reorder_precompute = {from: null, to: null}
+
+	this.get_view_position = function () {
+		var v = self.get_view()
+		return {top: v.offsetTop, left: v.offsetLeft, height: v.offsetHeight, width: v.offsetWidth}
+	}
 
 	this.update_view_reorder = function () {
 		var view = this.get_view()
@@ -91,7 +97,7 @@ function Node() {
 			$(view.external_reorder_selector_to_de).hide()
 		}
 	}
-	this.precompute_transfer_possibility = function (param) {
+	/*this.precompute_transfer_possibility = function (param) {
 		if (param.action == 'external reorder') {
 			var gvn = _.filter(self.graph.nodes, function (node) {
 				return node.visible
@@ -116,7 +122,21 @@ function Node() {
 			}
 			self.graph.external_reorder_by = original_external_reorder_by
 		}
+	}*/
+
+	this.unpreview_action = function () {
+		if (self.preview_view == null) {
+
+		} else {
+			_.each(self.preview_view, function (pv) {
+				$(pv).remove()
+			})
+
+			self.preview_view = null
+		}
+
 	}
+
 	this.preview_action = function (param) {
 		console.log('* *  PREVIEW REORDER ' + param.direction + '* *')
 		console.log(this.s + ' with action:' + param.action + ' ' + param.direction)
@@ -128,11 +148,20 @@ function Node() {
 				_.each(gvn, function (n) {
 					var from = parseInt($(n.get_view()).css('order'))
 					var to = self.graph.sentence.get_best_configuration([n], param.direction, [n])
-					console.log('precomputed next possible transfer for ' + n.s)
-					console.log('from:' + from + ' to:' + to[0])
 				})
 			} else if (self.graph.swaps) {
-				console.log("this graph swaps with " + self.graph.swaps_with)
+
+				assert(self.graph.swaps_with.length == 1, 'should only swap with one other graph')
+				var graph_bounds = self.graph.get_bounding_of_visible_nodes()
+				var other_graph_bounds = self.graph.sentence.get_graph_by_id(self.graph.swaps_with[0]).get_bounding_of_visible_nodes()
+				console.log(graph_bounds)
+				console.log(other_graph_bounds)
+				var arrows = self.get_preview_view(graph_bounds, other_graph_bounds)
+				var container = self.graph.sentence.get_container()
+				_.each(arrows, function (arrow) {
+					$(container).append(arrow)
+				})
+
 			} else if (self.graph.splits) {
 				if (self.graph.currently_split) {
 					console.log("this graph will unsplit" + self.graph.unsplit_ordering)
@@ -142,8 +171,8 @@ function Node() {
 
 			}
 		}
-
 	}
+
 	this.get_swaps_with_nodes = function (gvn) {
 		var g_ids = []
 		for (var i = 0; i < gvn.length; i++) {
@@ -160,7 +189,7 @@ function Node() {
 		return swaps_with_vn
 	}
 
-	this.get_split_merge_position = function (place_position, separator_nodes_positions) {
+	/*this.get_split_merge_position = function (place_position, separator_nodes_positions) {
 		var merge_pos = null
 		var zip = _.zip(place_position, separator_nodes_positions)
 		for (var z = 0; z < zip.length; z++) {
@@ -173,9 +202,10 @@ function Node() {
 			}
 		}
 		return pos + 1
-	}
+	}*/
 	this.take_action = function (param) {
 		console.log('action triggered:' + param.action + ',' + param.direction)
+		self.unpreview_action()
 		if (param.action == 'internal reorder') {
 			var gvn = _.filter(self.graph.nodes, function (node) {
 				return node.visible
@@ -435,6 +465,55 @@ function Node() {
 			//console.log("Invalid action:  " + param.action)
 		}
 	}
+	this.get_preview_view = function (bounds, other_bounds) {
+		var gap = Math.abs(bounds.left - other_bounds.left)
+		var bounds_mid = (bounds.left + bounds.right) / 2
+		var other_bounds_mid = (other_bounds.left + other_bounds.right) / 2
+		var mid_x = bounds_mid < other_bounds_mid ? bounds_mid + gap / 2 : other_bounds_mid + gap / 2
+		var mid_y = bounds.top + (bounds.height / 2)
+
+		var sentence_container = this.graph.sentence.get_container()
+		var preview_view = $(sentence_container).curvedArrow({
+																 p0x: bounds_mid,
+																 p0y: bounds.top + bounds.height / 2 + 10,
+																 p1x: mid_x,
+																 p1y: mid_y + bounds.height + 20,
+																 p2x: other_bounds_mid,
+																 p2y: other_bounds.top + other_bounds.height / 2 + 10,
+																 id: "previewOverlayArrow"
+															 })
+		var preview_view2 = $(sentence_container).curvedArrow({
+																  p2x: bounds_mid,
+																  p2y: bounds.top + bounds.height / 2 - 10,
+																  p1x: mid_x,
+																  p1y: mid_y - bounds.height - 20,
+																  p0x: other_bounds_mid,
+																  p0y: other_bounds.top + other_bounds.height / 2 - 10,
+																  id: "previewOverlayArrow"
+															  })
+		var line = $(sentence_container).straightline({
+														  p0x: bounds.left + 5,
+														  p0y: bounds.top + bounds.height / 2 + 10,
+														  p1x: bounds.right - 5,
+														  p1y: bounds.top + bounds.height / 2 + 10,
+														  id: "previewLine"
+													  })
+		var line2 = $(sentence_container).straightline({
+														   p0x: other_bounds.left + 5,
+														   p0y: other_bounds.top + other_bounds.height / 2 + 10,
+														   p1x: other_bounds.right - 5,
+														   p1y: other_bounds.top + other_bounds.height / 2 + 10,
+														   id: "previewLine"
+													   })
+
+		$(preview_view).addClass("preview")
+		$(preview_view2).addClass("preview")
+		$(line).addClass("preview")
+		$(line2).addClass("preview")
+		this.preview_view = [preview_view, preview_view2, line, line2]
+		return [preview_view, preview_view2, line, line2]
+
+	}
 	this.get_view = function () {
 		if (this.view == null) {
 			this.view = document.createElement('div')
@@ -473,6 +552,11 @@ function Node() {
 			$(external_reorder_selector).on('mouseover', function () {
 				self.preview_action({action: 'external reorder', direction: 'de'})
 			})
+
+			$(external_reorder_selector).on('mouseout', function () {
+				self.unpreview_action()
+			})
+
 			if (this.graph.external_reorder_by == 'de') {
 				$(external_reorder_selector).hide()
 			}
@@ -514,6 +598,9 @@ function Node() {
 			})
 			$(external_reorder_selector).on('mouseover', function () {
 				self.preview_action({action: 'external reorder', direction: 'en'})
+			})
+			$(external_reorder_selector).on('mouseout', function () {
+				self.unpreview_action()
 			})
 			if (this.graph.external_reorder_by == 'en') {
 				$(external_reorder_selector).hide()
@@ -559,6 +646,21 @@ function Graph() {
 	this.split_ordering = null
 	this.unsplit_ordering = null
 
+	this.get_bounding_of_visible_nodes = function () {
+		var my_vn = self.get_visible_nodes()
+		var min_left = Number.POSITIVE_INFINITY
+		var max_right = 0
+		var max_height = 0
+		var min_top = Number.POSITIVE_INFINITY
+		_.each(my_vn, function (mvn) {
+			var pos = mvn.get_view_position()
+			min_left = min_left < pos.left ? min_left : pos.left
+			max_right = max_right > pos.left + pos.width ? max_right : pos.left + pos.width
+			min_top = min_top < pos.top ? min_top : pos.top
+			max_height = max_height > pos.height ? max_height : pos.height
+		})
+		return {top: min_top, left: min_left, right: max_right, height: max_height}
+	}
 	this.set_initial_view = function () {
 		for (var i = 0; i < this.nodes.length; i++) {
 			var n = this.nodes[i]
@@ -879,7 +981,6 @@ function Sentence() {
 			graphs_ids.push(['*EN*'])
 		} else if (neighbor_direction == 'left') {
 			for (var i = ps - 1; i >= 0; i--) {
-				//if (prev != base_array[i].graph.id) {
 				var g = base_array[i].graph
 				var lst = [g.id]
 				if (g.swaps) {
@@ -892,8 +993,6 @@ function Sentence() {
 					lst = lst.concat(g.split_interactions)
 				}
 				graphs_ids.push(lst)
-				//    prev = base_array[i].graph.id
-				//}
 			}
 			graphs_ids.push(['*ST*'])
 		} else {
@@ -943,7 +1042,6 @@ function Sentence() {
 	}
 
 	this.update_visible_nodes = function () {
-		//console.log("drawing node items...")
 		for (var i in self.visible_nodes) {
 			var item = self.visible_nodes[i].get_view()
 			////console.log("order :" + $(item).css('order') + "  is the order of " + item.node.s)
@@ -962,7 +1060,6 @@ function Sentence() {
 				////console.log("no movement")
 			}
 		}
-		//console.log("completed drawing node items...")
 	}
 }
 Edge.parse = function (input) {
@@ -1015,7 +1112,6 @@ Graph.parse = function (input) {
 	for (var i in input.edges) {
 		g.edges.push(Edge.parse(input.edges[i]))
 	}
-	//g.reorder = Reorder.parse(input.reorder)
 	return g
 }
 Sentence.parse = function (input) {
@@ -1066,5 +1162,4 @@ function ok_parse(st, end) {
 		s.update_visible_nodes()
 		sentences.push(s)
 	}
-
 }
