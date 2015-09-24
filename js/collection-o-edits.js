@@ -145,18 +145,40 @@ function Node() {
 				var gvn = _.filter(self.graph.nodes, function (node) {
 					return node.visible
 				})
+				var bounds = self.graph.get_bounding_of_visible_nodes()
+				var froms = []
+				var from_nodes = []
+				var tos = []
 				_.each(gvn, function (n) {
 					var from = parseInt($(n.get_view()).css('order'))
 					var to = self.graph.sentence.get_best_configuration([n], param.direction, [n])
+					froms.push(from)
+					tos.push(to)
+					from_nodes.push(n)
+				})
+				//todo : assuming the tos are contiguous, must test non contiguous case
+				var min_to = _.min(tos)
+
+				var other_graph = null
+				_.each(self.graph.sentence.visible_nodes, function (vn) {
+					if (parseInt($(vn.get_view()).css('order')) == min_to) {
+						other_graph = vn.graph
+					}
+				})
+				var moving_to_end = min_to >= self.graph.sentence.visible_nodes.length
+				var draw_up = param.direction == 'en'
+				var other_bounds = other_graph.get_bounding_of_visible_nodes()
+				var arrows = self.get_transfer_preview_view(bounds, other_bounds, draw_up, moving_to_end)
+				var container = self.graph.sentence.get_container()
+				_.each(arrows, function (arrow) {
+					$(container).append(arrow)
 				})
 			} else if (self.graph.swaps) {
 
 				assert(self.graph.swaps_with.length == 1, 'should only swap with one other graph')
 				var graph_bounds = self.graph.get_bounding_of_visible_nodes()
 				var other_graph_bounds = self.graph.sentence.get_graph_by_id(self.graph.swaps_with[0]).get_bounding_of_visible_nodes()
-				console.log(graph_bounds)
-				console.log(other_graph_bounds)
-				var arrows = self.get_preview_view(graph_bounds, other_graph_bounds)
+				var arrows = self.get_swap_preview_view(graph_bounds, other_graph_bounds)
 				var container = self.graph.sentence.get_container()
 				_.each(arrows, function (arrow) {
 					$(container).append(arrow)
@@ -465,7 +487,45 @@ function Node() {
 			//console.log("Invalid action:  " + param.action)
 		}
 	}
-	this.get_preview_view = function (bounds, other_bounds) {
+
+	this.get_transfer_preview_view = function (bounds, other_bounds, draw_up, moving_to_end) {
+		var gap = Math.abs(bounds.left - other_bounds.left)
+		var bounds_mid = (bounds.left + bounds.right) / 2
+		var other_bounds_mid = null
+		if (other_bounds.left < bounds.left) {
+			other_bounds_mid = other_bounds.left
+		} else {
+			other_bounds_mid = other_bounds.right
+		}
+		var mid_x = bounds_mid < other_bounds_mid ? bounds_mid + gap / 2 : other_bounds_mid + gap / 2
+		var mid_y = bounds.top + (bounds.height / 2)
+		var sentence_container = this.graph.sentence.get_container()
+		var curve_up = draw_up ? bounds.height + 20 : -bounds.height - 20
+		var shift_up = draw_up ? 10 : -10
+		var preview_view = $(sentence_container).curvedArrow({
+																 p0x: bounds_mid,
+																 p0y: bounds.top + bounds.height / 2 + shift_up,
+																 p1x: mid_x,
+																 p1y: mid_y + curve_up,
+																 p2x: other_bounds_mid,
+																 p2y: other_bounds.top + other_bounds.height / 2 + shift_up,
+																 id: "previewOverlayArrow"
+															 })
+		var line = $(sentence_container).straightline({
+														  p0x: bounds.left + 5,
+														  p0y: bounds.top + bounds.height / 2 + 10,
+														  p1x: bounds.right - 5,
+														  p1y: bounds.top + bounds.height / 2 + 10,
+														  id: "previewLine"
+													  })
+		$(preview_view).addClass("preview")
+		$(line).addClass("preview")
+		this.preview_view = [preview_view, line]
+		return [preview_view, line]
+
+	}
+
+	this.get_swap_preview_view = function (bounds, other_bounds) {
 		var gap = Math.abs(bounds.left - other_bounds.left)
 		var bounds_mid = (bounds.left + bounds.right) / 2
 		var other_bounds_mid = (other_bounds.left + other_bounds.right) / 2
@@ -661,6 +721,7 @@ function Graph() {
 		})
 		return {top: min_top, left: min_left, right: max_right, height: max_height}
 	}
+
 	this.set_initial_view = function () {
 		for (var i = 0; i < this.nodes.length; i++) {
 			var n = this.nodes[i]
