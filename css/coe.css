@@ -33,7 +33,7 @@ div {
     justify-content: space-around;
     flex-direction: column;
 
-    height: 50px;
+    height: 40px;
 
     /*transition: height 0.25s;*/
     /*padding: 0px;*/
@@ -68,7 +68,7 @@ div {
 
 .preview {
     pointer-events: none;
-    : #028090;
+: #028090;
 }
 
 .node_menu_container {
@@ -89,8 +89,8 @@ div {
 .translation_selector {
     border: 1px solid #9BC65C;
     background: white;
-    height: 5px;
-    width: 3px;
+    height: 4px;
+    flex-grow: 1;
     padding: 0px;
 
 }
@@ -102,8 +102,9 @@ div {
 .external_reorder_selector {
     background: transparent;
     border: 1px solid #028090;
-    height: 5px;
-    width: 3px;
+    height: 4px;
+    /*width: 3px;*/
+    flex-grow: 1;
     padding: 0px;
 
 }
@@ -116,7 +117,8 @@ div {
     background: transparent;
     border: 1px solid #BD587C;
     height: 5px;
-    width: 3px;
+    /*width: 3px;*/
+    flex-grow: 1;
     padding: 0px;
 
 }

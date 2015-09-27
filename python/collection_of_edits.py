@@ -71,19 +71,25 @@ class Node(dict):
         return n
 
 
-class Reorder(dict):
+class Swap(dict):
     def __init__(self):
         dict.__init__(self)
         self.__dict__ = self
-        self.type = None  #
-        self.anchor = None
+        self.graphs = []
+        self.other_graphs = []
+
+    def make_copy(self):
+        s = Swap()
+        s.graphs = [i for i in self.graphs]
+        s.other_graphs = [i for i in self.other_graphs]
+        return s
 
     @staticmethod
     def from_dict(dict_):
-        r = Reorder()
-        r.type = dict_['type']
-        r.anchor = dict_['anchor']
-        return r
+        s = Swap()
+        s.graphs = dict_['graphs']
+        s.other_graphs = dict_['other_graphs']
+        return s
 
 
 class Graph(dict):
@@ -101,10 +107,12 @@ class Graph(dict):
         self.splits = False
         self.is_separator = False
         self.split_interaction = None
-        self.transfers = False
-        self.swaps = False
 
-        self.swaps_with = None
+        self.swaps = False
+        self.swap_toward_en = []
+        self.swap_toward_de = []
+        self.dependents = []
+
         self.separators = None
         self.currently_split = False
         self.separator_positions = None
@@ -123,11 +131,16 @@ class Graph(dict):
         g.splits = dict_['splits']
         g.currently_split = dict_['currently_split']
         g.swaps = dict_['swaps']
+        g.swap_toward_de = list(map(Swap.from_dict, dict_['swap_toward_de']))
+        g.swap_toward_en = list(map(Swap.from_dict, dict_['swap_toward_en']))
+        g.dependents = dict_['dependents']
+
         g.separator_positions = dict_['separator_position']
         g.separators = dict_['separators']
+
         g.is_separator = dict_['is_separator']
         g.split_interaction = dict_['split_interaction']
-        g.swaps_with = dict_['swaps_with']
+
         g.unsplit_ordering = dict_['unsplit_ordering']
         g.split_ordering = dict_['split_ordering']
         g.nodes = list(map(Node.from_dict, dict_['nodes']))
@@ -280,180 +293,11 @@ def propagate(graph):
 
 if __name__ == '__main__':
     all_sent = []
-    '''en = "please shut the door"
-    de = "bitte mach die tur zu"
-    alignment = "blank"
-    g0 = Graph(0)
-    n0 = Node(0, 'please', 0, 0, EN_LANG, True, [START], [1, 2, 2, END], [START], [1, 2, 2, 1, END], to_de=True,
-              to_en=False)
-    n1 = Node(1, 'bitte', 0, 0, DE_LANG, False, [START], [1, 2, 2, END], [START], [1, 2, 2, 1, END], to_de=False,
-              to_en=True)
-    g0.nodes = [n0, n1]
-    g0.edges = get_edges(n0, n1)
 
-    g1 = Graph(1)
-    n0 = Node(0, 'shut', 0, 0, EN_LANG, True, [0, START], [2, 2, END], [0, START], [2, 2, END], to_de=True, to_en=False)
-    n1 = Node(1, 'make', 0, 0, EN_LANG, False, [0, START], [1, 2, 2, END], [0, START], [2, 2, 1, END], to_de=True,
-              to_en=True)
-    n2 = Node(3, 'mach', 0, 0, DE_LANG, False, [0, START], [1, 2, 2, END], [0, START], [2, 2, 1, END], to_de=False,
-              to_en=True)
-    n3 = Node(2, 'close', 1, 1, EN_LANG, False, [1, 0, START], [2, 2, END], [2, 2, 1, 0, START], [END], to_de=True,
-              to_en=True)
-    n4 = Node(4, 'zu', 1, 1, DE_LANG, False, [1, 0, START], [2, 2, END], [2, 2, 1, 0, START], [END], to_de=False,
-              to_en=True)
-    g1.er = True
-    g1.nodes = [n0, n1, n2, n3, n4]
-    g1.edges = get_edges(n0, n1) + get_edges(n0, n3) + get_edges(n1, n2) + get_edges(n3, n4)
-
-    g2 = Graph(2)
-    n0 = Node(0, 'the', 0, 0, EN_LANG, True, [1, 0, START], [2, END], [1, 0, START], [2, 1, END], to_de=True,
-              to_en=False)
-    n1 = Node(2, 'die', 0, 0, DE_LANG, False, [1, 0, START], [2, END], [1, 0, START], [2, 1, END], to_de=False,
-              to_en=True)
-    n2 = Node(1, 'door', 1, 1, EN_LANG, True, [2, 1, 0, START], [END], [2, 1, 0, START], [1, END], to_de=True,
-              to_en=False)
-    n3 = Node(3, 'tur', 1, 1, DE_LANG, False, [2, 1, 0, START], [END], [2, 1, 0, START], [1, END], to_de=False,
-              to_en=True)
-
-    g2.nodes = [n0, n1, n2, n3]
-    g2.edges = get_edges(n0, n1) + get_edges(n2, n3)
-    g2.er = True
-
-    s0 = Sentence(0, en, de, alignment)
-    s0.graphs = [g0, g1, g2]
-
-
-    # json_n3 = json.dumps(n3, indent=4)
-    # n_load = Node.from_dict(json.loads(json_n3))
-    # print n_load.en_left
-
-    json_sentence_str = json.dumps(s0, indent=4, sort_keys=True)
-    all_sent.append(' '.join(json_sentence_str.split()))
-    # print json_sentence_str
-
-    en = "I like to eat chocolate cake"
-    de = "Ich mag zu Schokoladenkuchen essen"
-    alignment = "blank"
-    g0 = Graph(0)
-    n0 = Node(5, 'I', 0, 0, EN_LANG, True, [START], [0, 0, 1, 2, 2, END], [START], [0, 0, 2, 1, END], to_en=False,
-              to_de=True)
-    n1 = Node(4, 'Ich', 0, 0, DE_LANG, False, [START], [0, 0, 1, 2, 2, END], [START], [0, 0, 2, 1, END], to_en=True,
-              to_de=False)
-    n2 = Node(3, 'like', 1, 1, EN_LANG, True, [0, START], [0, 1, 2, 2, END], [0, START], [0, 2, 1, END], to_en=False,
-              to_de=True)
-    n3 = Node(2, 'mag', 1, 1, DE_LANG, False, [0, START], [0, 1, 2, 2, END], [0, START], [0, 2, 1, END], to_en=True,
-              to_de=False)
-    n4 = Node(1, 'to', 2, 2, EN_LANG, True, [0, 0, START], [1, 2, 2, END], [0, 0, START], [2, 1, END], to_en=False,
-              to_de=True)
-    n5 = Node(0, 'zu', 2, 2, DE_LANG, False, [0, 0, START], [1, 2, 2, END], [0, 0, START], [2, 1, END], to_en=True,
-              to_de=False)
-    g0.nodes = [n0, n1, n2, n3, n4, n5]
-    g0.edges = get_edges(n0, n1) + get_edges(n2, n3) + get_edges(n4, n5)
-
-    g1 = Graph(1)
-    n0 = Node(0, 'eat', 0, 0, EN_LANG, True, [0, 0, 0, START], [2, 2, END], [2, 0, 0, 0, START], [END], to_en=False,
-              to_de=True)
-    n1 = Node(1, 'essen', 0, 0, DE_LANG, False, [0, 0, 0, START], [2, 2, END], [2, 0, 0, 0, START], [END], to_en=True,
-              to_de=False)
-    g1.nodes = [n0, n1]
-    g1.edges = get_edges(n0, n1)
-    g1.er = True
-
-    g2 = Graph(2)
-    n0 = Node(0, 'chocolate', 0, 0, EN_LANG, True, [1, 0, 0, 0, START], [2, END], [0, 0, 0, START], [2, 1, END],
-              to_en=False, to_de=True)
-    n1 = Node(1, 'Schokolade', 0, 0, DE_LANG, False, [1, 0, 0, 0, START], [2, END], [0, 0, 0, START], [2, 1, END],
-              to_en=True, to_de=True)
-    n2 = Node(2, 'cake', 1, 1, EN_LANG, True, [2, 1, 0, 0, 0, START], [END], [2, 0, 0, 0, START], [1, END], to_en=False,
-              to_de=True)
-    n3 = Node(3, 'kuchen', 1, 1, DE_LANG, False, [2, 1, 0, 0, 0, START], [END], [2, 0, 0, 0, START], [1, END],
-              to_en=True, to_de=True)
-    n4 = Node(4, 'SchocoladenKuchen', 0, 0, DE_LANG, False, [1, 0, 0, 0, START], [END], [0, 0, 0, START], [1, END],
-              to_en=True, to_de=False)
-    g2.nodes = [n0, n1, n2, n3, n4]
-    g2.edges = get_edges(n0, n1) + get_edges(n2, n3) + get_edges(n1, n4) + get_edges(n3, n4)
-    g2.er = True
-
-    s1 = Sentence(1, en, de, alignment)
-    s1.graphs = [g0, g1, g2]
-
-    json_sentence_str = json.dumps(s1, indent=4, sort_keys=True)
-    all_sent.append(' '.join(json_sentence_str.split()))
-    # print 'var json_str_arr = ', all_sent
-    # print json_sentence_str
-
-    s2 = Sentence(2, en, de, alignment)
-    g0 = Graph(0)
-    n0 = Node(0, 'A', 0, 0, EN_LANG, True, [START], [0, 0, 1, END], [START], [0, 1, 1, END], to_en=False, to_de=True)
-    n1 = Node(1, 'B', 1, 1, EN_LANG, True, [0, START], [0, 1, END], [START], [1, 1, END], to_en=False, to_de=True)
-    n2 = Node(2, 'C', 2, 2, EN_LANG, True, [0, 0, START], [1, END], [0, START], [1, 1, END], to_en=False, to_de=True)
-    n3 = Node(3, '1', 0, 0, DE_LANG, False, [START], [0, 0, 1, END], [START], [0, 1, 1, END], to_en=True, to_de=False)
-    n4 = Node(4, '2', 1, 1, DE_LANG, False, [0, START], [1, END], [START], [0, 1, 1, END], to_en=True, to_de=False)
-    g0.nodes = [n0, n1, n2, n3, n4]
-    g0.edges = get_edges(n0, n3) + get_edges(n1, n4) + get_edges(n2, n4)
-    g0.er = False
-
-    g1 = Graph(1)
-    n0 = Node(0, 'D', 0, 0, EN_LANG, True, [0, 0, 0, START], [END], [0, 0, START], [END], to_en=False, to_de=True)
-    n1 = Node(1, '3', 0, 0, DE_LANG, False, [0, 0, 0, START], [END], [0, 0, START], [2, 1, END], to_en=True,
-              to_de=False)
-    n2 = Node(2, '4', 1, 1, DE_LANG, False, [0, 0, 0, START], [END], [2, 1, 0, 0, START], [END], to_en=True,
-              to_de=False)
-    g1.nodes = [n0, n1, n2]
-    g1.edges = get_edges(n0, n1) + get_edges(n0, n2)
-    g1.er = False
-
-    g2 = Graph(2)
-    n0 = Node(0, 'E', 0, 0, EN_LANG, True, [1, 0, 0, 0, START], [END], [1, 0, 0, START], [1, END], to_de=True,
-              to_en=False)
-    n1 = Node(1, '3.5', 0, 0, DE_LANG, False, [1, 0, 0, 0, START], [END], [1, 0, 0, START], [1, END], to_de=False,
-              to_en=True)
-    g2.nodes = [n0, n1]
-    g2.edges = get_edges(n0, n1)
-    g2.er = True
-    s2.graphs = [g0, g1, g2]
-
-    json_sentence_str = json.dumps(s2, indent=4, sort_keys=True)
-    all_sent.append(' '.join(json_sentence_str.split()))
-
-    s3 = Sentence(3, en, de, alignment)
-    g0 = Graph(0)
-    n0 = Node(0, 'A', 0, 0, EN_LANG, True, [START], [0, 0, 1, END], [START], [0, 1, 1, END], to_en=False, to_de=True)
-    n1 = Node(1, 'B', 1, 1, EN_LANG, True, [0, START], [0, 1, END], [START], [1, 1, END], to_en=False, to_de=True)
-    n2 = Node(2, 'C', 2, 2, EN_LANG, True, [0, 0, START], [1, END], [0, START], [1, 1, END], to_en=False, to_de=True)
-    n3 = Node(3, '1', 0, 0, DE_LANG, False, [START], [0, 0, 1, END], [START], [0, 1, 1, END], to_en=True, to_de=False)
-    n4 = Node(4, '2', 1, 1, DE_LANG, False, [0, START], [1, END], [START], [0, 1, 1, END], to_en=True, to_de=False)
-    g0.nodes = [n0, n1, n2, n3, n4]
-    g0.edges = get_edges(n0, n3) + get_edges(n1, n3) + get_edges(n1, n4) + get_edges(n2, n4)
-    g0.er = False
-
-    g1 = Graph(1)
-    n0 = Node(0, 'D', 0, 0, EN_LANG, True, [0, 0, 0, START], [END], [0, 0, START], [END], to_en=False, to_de=True)
-    n1 = Node(1, '3', 0, 0, DE_LANG, False, [0, 0, 0, START], [END], [0, 0, START], [2, 1, END], to_en=True,
-              to_de=False)
-    n2 = Node(2, '4', 1, 1, DE_LANG, False, [0, 0, 0, START], [END], [2, 1, 0, 0, START], [END], to_en=True,
-              to_de=False)
-    g1.nodes = [n0, n1, n2]
-    g1.edges = get_edges(n0, n1) + get_edges(n0, n2)
-    g1.er = False
-
-    g2 = Graph(2)
-    n0 = Node(0, 'E', 0, 0, EN_LANG, True, [1, 0, 0, 0, START], [END], [1, 0, 0, START], [1, END], to_de=True,
-              to_en=False)
-    n1 = Node(1, '3.5', 0, 0, DE_LANG, False, [1, 0, 0, 0, START], [END], [1, 0, 0, START], [1, END], to_de=False,
-              to_en=True)
-    g2.nodes = [n0, n1]
-    g2.edges = get_edges(n0, n1)
-    g2.er = True
-    s3.graphs = [g0, g1, g2]
-
-    json_sentence_str = json.dumps(s3, indent=4, sort_keys=True)
-    all_sent.append(' '.join(json_sentence_str.split()))
-    '''
     s0 = Sentence(0, "A B C", "1 3 2", None)
     g0 = Graph(0)
-    n0 = Node(0, 'A', 0, 0, EN_LANG, True, [START], [1, 2, 3, END], [START], [2, 1, 3, END], to_en=False, to_de=True)
-    n1 = Node(1, '1', 0, 0, DE_LANG, False, [START], [1, 2, 3, END], [START], [2, 1, 3, END], to_en=True, to_de=False)
+    n0 = Node(0, 'A', 0, 0, EN_LANG, True, to_en=False, to_de=True)
+    n1 = Node(1, '1', 0, 0, DE_LANG, False, to_en=True, to_de=False)
 
     g0.nodes = [n0, n1]
     g0.edges = get_edges(n0, n1)
@@ -461,23 +305,32 @@ if __name__ == '__main__':
     s0.graphs.append(g0)
 
     g1 = Graph(1)
-    n0 = Node(0, 'B', 1, 2, EN_LANG, True, [0, START], [2, END], [2, 0, START], [END], to_en=False, to_de=True)
-    n1 = Node(1, '2', 1, 2, DE_LANG, False, [0, START], [2, END], [2, 0, START], [END], to_en=True, to_de=False)
+    n0 = Node(0, 'B', 1, 2, EN_LANG, True, to_en=False, to_de=True)
+    n1 = Node(1, '2', 1, 2, DE_LANG, False, to_en=True, to_de=False)
     g1.nodes = [n0, n1]
     g1.edges = get_edges(n0, n1)
     propagate(g1)
     s0.graphs.append(g1)
 
     g2 = Graph(2)
-    n0 = Node(0, 'C', 2, 1, EN_LANG, True, [1, 0, START], [END], [0, START], [1, END], to_en=False, to_de=True)
-    n1 = Node(1, '3', 1, 2, DE_LANG, False, [1, 0, START], [END], [0, START], [1, END], to_en=True, to_de=False)
+    n0 = Node(0, 'C', 2, 1, EN_LANG, True, to_en=False, to_de=True)
+    n1 = Node(1, '3', 1, 2, DE_LANG, False, to_en=True, to_de=False)
 
     g2.nodes = [n0, n1]
     g2.edges = get_edges(n0, n1)
     g1.swaps = True
     g2.swaps = True
-    g1.swaps_with = [g2.id]
-    g2.swaps_with = [g1.id]
+    s_obj = Swap()
+    s_obj.graphs = [g1.id]
+    s_obj.other_graphs = [g2.id]
+    g1.swap_toward_de = [s_obj]
+    s_obj = Swap()
+    s_obj.graphs = [g1.id]
+    s_obj.other_graphs = [g2.id]
+    g2.swap_toward_de = [s_obj]
+    g1.swap_toward_en = []
+    g2.swap_toward_en = []
+
     propagate(g2)
     s0.graphs.append(g2)
 
@@ -486,17 +339,15 @@ if __name__ == '__main__':
 
     s1 = Sentence(1, "A B C D E F", "1 4 2 3 6 5", None)
     g0 = Graph(0)
-    n0 = Node(0, 'A', 0, 0, EN_LANG, True, [START], [1, 2, 3, END], [START], [3, 1, 2, END], to_en=False, to_de=True)
-    n1 = Node(1, '1', 0, 0, DE_LANG, False, [START], [1, 2, 3, END], [START], [3, 1, 2, END], to_en=True, to_de=False)
+    n0 = Node(0, 'A', 0, 5, EN_LANG, True, to_en=False, to_de=True)
+    n1 = Node(1, '1', 0, 5, DE_LANG, False, to_en=True, to_de=False)
 
     g0.nodes = [n0, n1]
     g0.edges = get_edges(n0, n1)
-    propagate(g0)
-    s1.graphs.append(g0)
 
     g1 = Graph(1)
-    n0 = Node(0, 'B', 1, 2, EN_LANG, True, [0, START], [2, 3, END], [3, 1, 0, START], [2, END], to_en=False, to_de=True)
-    n1 = Node(1, '2', 1, 2, DE_LANG, False, [0, START], [2, 3, END], [3, 1, 0, START], [2, END], to_en=True,
+    n0 = Node(0, 'B', 1, 1, EN_LANG, True, to_en=False, to_de=True)
+    n1 = Node(1, '2', 1, 1, DE_LANG, False, to_en=True,
               to_de=False)
 
     g1.nodes = [n0, n1]
@@ -505,8 +356,8 @@ if __name__ == '__main__':
     s1.graphs.append(g1)
 
     g2 = Graph(2)
-    n0 = Node(0, 'C', 2, 1, EN_LANG, True, [1, 0, START], [3, END], [1, 3, 0, START], [END], to_en=False, to_de=True)
-    n1 = Node(1, '3', 1, 2, DE_LANG, False, [1, 0, START], [3, END], [1, 3, 0, START], [END], to_en=True, to_de=False)
+    n0 = Node(0, 'C', 2, 2, EN_LANG, True, to_en=False, to_de=True)
+    n1 = Node(1, '3', 2, 2, DE_LANG, False, to_en=True, to_de=False)
 
     g2.nodes = [n0, n1]
     g2.edges = get_edges(n0, n1)
@@ -514,59 +365,93 @@ if __name__ == '__main__':
     s1.graphs.append(g2)
 
     g3 = Graph(3)
-    n0 = Node(0, 'D', 3, 1, EN_LANG, True, [2, 1, 0, START], [4, 5, END], [0, START], [1, 2, 4, 5, END], to_en=False,
+    n0 = Node(0, 'D', 3, 0, EN_LANG, True, to_en=False,
               to_de=True)
-    n1 = Node(1, '4', 3, 1, DE_LANG, False, [2, 1, 0, START], [END], [0, START], [1, 2, 4, 5, END], to_en=True,
+    n1 = Node(1, '4', 3, 0, DE_LANG, False, to_en=True,
               to_de=False)
 
     g3.nodes = [n0, n1]
     g3.edges = get_edges(n0, n1)
-    g3.transfers = True
+    g3.swaps = True
+    g1.swaps = True
+    g2.swaps = True
+    s_obj = Swap()
+    s_obj.graphs = [g1.id, g2.id]
+    s_obj.other_graphs = [g3.id]
+    g3.swap_toward_de = [s_obj.make_copy()]
+    g3.swap_toward_en = []
+    g1.swap_toward_de = [s_obj.make_copy()]
+    g1.swap_toward_en = []
+    g2.swap_toward_de = [s_obj.make_copy()]
+    g2.swap_toward_en = []
     propagate(g3)
     s1.graphs.append(g3)
 
     g4 = Graph(4)
-    n0 = Node(0, 'E', 4, 5, EN_LANG, True, [None], [None], [None], [None], to_en=False, to_de=True)
-    n1 = Node(1, '5', 4, 5, DE_LANG, False, [None], [None], [None], [None], to_en=False, to_de=True)
+    n0 = Node(0, 'E', 4, 4, EN_LANG, True, to_en=False, to_de=True)
+    n1 = Node(1, '5', 4, 4, DE_LANG, False, to_en=False, to_de=True)
     g4.nodes = [n0, n1]
     g4.edges = get_edges(n0, n1)
     g5 = Graph(5)
-    n0 = Node(0, 'F', 5, 4, EN_LANG, True, [None], [None], [None], [None], to_en=False, to_de=True)
-    n1 = Node(1, '6', 5, 4, DE_LANG, False, [None], [None], [None], [None], to_en=False, to_de=True)
+    n0 = Node(0, 'F', 5, 3, EN_LANG, True, to_en=False, to_de=True)
+    n1 = Node(1, '6', 5, 3, DE_LANG, False, to_en=False, to_de=True)
     g5.nodes = [n0, n1]
     g5.edges = get_edges(n0, n1)
-    g4.swaps = True
-    g4.swaps_with = [g5.id]
+
+    s_obj = Swap()
+    s_obj.graphs = [g5.id]
+    s_obj.other_graphs = [g4.id]
 
     g5.swaps = True
-    g5.swaps_with = [g4.id]
+    g4.swaps = True
+    g4.swap_toward_de = [s_obj.make_copy()]
+    g5.swap_toward_de = [s_obj.make_copy()]
+    g4.swap_toward_en = []
+    g5.swap_toward_en = []
     propagate(g4)
     propagate(g5)
     s1.graphs.append(g4)
     s1.graphs.append(g5)
 
+    g0.swaps = True
+    s_obj = Swap()
+    s_obj.graphs = [g0.id]
+    s_obj.other_graphs = [g1.id, g2.id, g3.id, g4.id, g5.id]
+    g0.swap_toward_de = [s_obj.make_copy()]
+    g0.swap_toward_en = []
+    g1.swap_toward_de.append(s_obj.make_copy())
+    g2.swap_toward_de.append(s_obj.make_copy())
+    g3.swap_toward_de.append(s_obj.make_copy())
+    g4.swap_toward_de.append(s_obj.make_copy())
+    g5.swap_toward_de.append(s_obj.make_copy())
+
+    propagate(g0)
+    s1.graphs.append(g0)
+
     json_sentence_str = json.dumps(s1, indent=4, sort_keys=True)
     all_sent.append(' '.join(json_sentence_str.split()))
-
+    print 'var json_str_arr = ', all_sent
+    exit()
+    '''
     s2 = Sentence(2, "A B C", "1 21 3 22", None)
     g0 = Graph(0)
-    n0 = Node(0, 'A', 0, 0, EN_LANG, True, [START], [1, 2, END], [START], [1, 2, 1, END], to_en=False, to_de=True)
-    n1 = Node(1, '1', 0, 0, DE_LANG, False, [START], [1, 2, END], [START], [1, 2, 1, END], to_en=True, to_de=False)
+    n0 = Node(0, 'A', 0, 0, EN_LANG, True, to_en=False, to_de=True)
+    n1 = Node(1, '1', 0, 0, DE_LANG, False, to_en=True, to_de=False)
     g0.nodes = [n0, n1]
     g0.edges = get_edges(n0, n1)
     propagate(g0)
     s2.graphs.append(g0)
 
     g1 = Graph(1)
-    n0 = Node(0, 'B', 1, 1, EN_LANG, True, [0, START], [2, END], [0, START], [2, END], to_de=True, to_en=False)
-    n1 = Node(1, '2a', 1, 1, DE_LANG, False, [0, START], [2, END], [0, START], [END], to_de=False, to_en=True)
-    n2 = Node(2, '2b', 1, 3, DE_LANG, False, [0, START], [2, END], [0, START], [END], to_de=False, to_en=True)
+    n0 = Node(0, 'B', 1, 1, EN_LANG, True, to_de=True, to_en=False)
+    n1 = Node(1, '2a', 1, 1, DE_LANG, False, to_de=False, to_en=True)
+    n2 = Node(2, '2b', 1, 3, DE_LANG, False, to_de=False, to_en=True)
     g1.nodes = [n0, n1, n2]
     g1.edges = get_edges(n0, n1) + get_edges(n0, n2)
 
     g2 = Graph(2)
-    n0 = Node(0, 'C', 2, 2, EN_LANG, True, [1, 2, START], [END], [1, 0, START], [1, END], to_de=True, to_en=False)
-    n1 = Node(1, '3', 2, 2, DE_LANG, False, [1, 2, START], [END], [1, 0, START], [1, END], to_de=False, to_en=True)
+    n0 = Node(0, 'C', 2, 2, EN_LANG, True, to_de=True, to_en=False)
+    n1 = Node(1, '3', 2, 2, DE_LANG, False, to_de=False, to_en=True)
     g2.nodes = [n0, n1]
     g2.edges = get_edges(n0, n1)
     propagate(g2)
@@ -674,8 +559,9 @@ if __name__ == '__main__':
     s4.graphs = [g0, g1, g2, g3]
     json_sentence_str = json.dumps(s4, indent=4, sort_keys=True)
     all_sent.append(' '.join(json_sentence_str.split()))
+    '''
 
-    print 'var json_str_arr = ', all_sent
+
 
 
 
