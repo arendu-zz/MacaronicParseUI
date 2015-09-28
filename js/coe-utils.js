@@ -47,6 +47,11 @@ function is_contiguous(list) {
 	}
 	return true
 }
+
+function sortNumber(a, b) {
+	return a - b;
+}
+
 function get_possible_configurations(length_of_items, length_of_items_to_insert, gap) {
 	var root = new NP(-1, length_of_items, length_of_items + length_of_items_to_insert, null, gap)
 	root.populate_children()
@@ -64,6 +69,17 @@ function get_possible_configurations(length_of_items, length_of_items_to_insert,
 		}
 	}
 	return paths
+}
+
+function removeFromArray(item) {
+	var what, a = arguments, L = a.length, ax;
+	while (L && this.length) {
+		what = a[--L];
+		while ((ax = this.indexOf(what)) !== -1) {
+			this.splice(ax, 1);
+		}
+	}
+	return this;
 }
 function pad_array(arr, to_lenght) {
 	for (var i = arr.length; i < to_lenght; i++) {
