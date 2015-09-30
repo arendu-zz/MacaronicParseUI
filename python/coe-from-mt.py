@@ -491,7 +491,7 @@ if __name__ == '__main__':
     opt.add_option('-o', dest='output_mt', default='../web/newstest2013/newstest2013.output.1.wa')
     opt.add_option('-e', dest='intermediate', default='../web/newstest2013/intermediate_nodes.en.txt')
     # opt.add_option('-p', dest='input_parse', default='../web/newstest2013/newstest2013.input.tok.1.parsed')
-    opt.add_option('-p', dest='input_parse', default='../web/newstest2013/hhh.dep.parsed')
+    opt.add_option('-p', dest='input_parse', default='../web/newstest2013/newstest2013.input.tok.1.dep.parsed')
     # opt.add_option('--e2f', dest='e2f', default='../web/newstest2013/lex1.e2f.small')
     # opt.add_option('--f2e', dest='f2e', default='../web/newstest2013/lex1.f2e.small')
     (options, _) = opt.parse_args()
