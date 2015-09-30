@@ -273,7 +273,7 @@ function Node() {
 				return node.visible
 			})
 
-			if (this.graph.splits) {
+			if (this.graph.splits && !this.graph.swaps) {
 				console.log("this graphs splits")
 				var target_order = []
 				if (self.graph.currently_split) {

@@ -3,17 +3,19 @@ import codecs
 from optparse import OptionParser
 from itertools import groupby, product
 from collection_of_edits import Sentence, Node, Graph, EN_LANG, DE_LANG, START, END, get_edges, Swap
-from pets import get_swap_rules
+from pets import get_swap_rules, get_split_sets
 import json
 import sys
 import operator
+# import pdb
 
+'''
 reload(sys)
 sys.setdefaultencoding('utf-8')
 sys.stdin = codecs.getreader('utf-8')(sys.stdin)
 sys.stdout = codecs.getwriter('utf-8')(sys.stdout)
 sys.stdout.encoding = 'utf-8'
-
+'''
 VIS_LANG = 'de'
 
 
@@ -51,8 +53,6 @@ def get_lr(input_list, output_list):
 
 
 def mark_swaps_transfers_interrupts(input_tok_group, output_tok_group):
-    swaps_inp = []
-    swaps_out = []
     split_inp = {}
     split_out = {}
     split_orderings = {}
@@ -60,8 +60,6 @@ def mark_swaps_transfers_interrupts(input_tok_group, output_tok_group):
     separator_inp = []
     separatee_out = []
     separator_out = []
-    transfer = []
-    swap_long = {}
     for i in set(input_tok_group):
         tmp = [idx_x for idx_x, x in enumerate(input_tok_group) if x == i]
         c = get_contiguous(tmp)
@@ -78,8 +76,10 @@ def mark_swaps_transfers_interrupts(input_tok_group, output_tok_group):
                                      interrupting_group]
             split_inp[i] = (interrupting_group, interrupting_group_lr)
             involved_graphs = set((interrupting_group + [i]))
-            o1 = [ix for ix in output_tok_group if ix in involved_graphs]
-            o2 = [ix for ix in input_tok_group if ix in involved_graphs]
+            # o1 = [ix for ix in output_tok_group if ix in involved_graphs]
+            # o2 = [ix for ix in input_tok_group if ix in involved_graphs]
+            o1 = [ix for ix in input_tok_group if ix in involved_graphs]
+            o2 = [ix for ix in output_tok_group if ix in involved_graphs]
             # assert len(o1) != len(o2)  #todo: must address this exception
             if len(o1) > len(o2):
                 split_orderings[i] = {'split_ordering': o1, 'unsplit_ordering': o2}
@@ -123,45 +123,7 @@ def mark_swaps_transfers_interrupts(input_tok_group, output_tok_group):
         else:
             pass
 
-    interrupts_inp_flat = [item for sublist in separator_inp for item in sublist]
-    interrupts_out_flat = [item for sublist in separator_out for item in sublist]
-
-    input_lr, output_lr = get_lr(input_tok_group, output_tok_group)
-
-    for i, (li, ri) in input_lr.items():
-        (lo, ro) = output_lr[i]
-        if li == ro and lo != ri and i not in interrupts_inp_flat and i not in separatee_inp and ro not in separatee_out and ro not in interrupts_out_flat:
-            swaps_inp.append(i)
-            swaps_out.append(ro)
-
-    input_chk_transfer = [swap_notation(i, swaps_inp, swaps_out) for i in input_tok_group]
-    output_chk_transfer = [swap_notation(i, swaps_inp, swaps_out) for i in output_tok_group]
-    input_lr, output_lr = get_lr(input_chk_transfer, output_chk_transfer)
-
-    for i, (li, ri) in input_lr.items():
-        (lo, ro) = output_lr[i]
-        if li != lo and ri != ro:
-            if i not in swaps_inp and i not in swaps_out and i not in split_inp and i not in split_out and isinstance(
-                    i, int):
-                transfer.append(i)
-                # swap_long[i] = lo
-                before_inp = set(input_tok_group[: input_tok_group.index(i)])
-                after_inp = set(input_tok_group[input_tok_group.index(i) + 1:])
-                before_out = set(output_tok_group[: output_tok_group.index(i)])
-                after_out = set(output_tok_group[output_tok_group.index(i) + 1:])
-                ps1 = before_inp.intersection(after_out)
-                ps2 = before_out.intersection(after_inp)
-                sys.stderr.write(
-                    str(i) + 'swapping asym with ' + str(ps1) + ' or ' + str(ps2) + '\n')
-                if len(ps1) + len(ps2) > 0:
-                    if len(ps1) > len(ps2):
-                        swap_long[i] = tuple(ps1)
-                    else:
-                        swap_long[i] = tuple(ps2)
-                else:
-                    pass
-
-    return swaps_inp, swaps_out, transfer, split_inp, split_out, split_orderings, swap_long
+    return split_inp, split_out, split_orderings
 
 
 def swap_notation(i, swap_i, swap_o):
@@ -506,7 +468,7 @@ if __name__ == '__main__':
     sent_idx = 0
     eps_word_alignment = 0
     coe_sentences = []
-    for input_line, output_line, input_parse in zip(input_mt, output_mt, input_parsed)[:20]:
+    for input_line, output_line, input_parse in zip(input_mt, output_mt, input_parsed)[:100]:
 
         sys.stderr.write('SENT' + str(sent_idx) + '\n')
         input_sent = input_line.strip().split()
@@ -538,12 +500,9 @@ if __name__ == '__main__':
             # print '\twa:', wa
             wa_no_null = insert_epsilon_edge(wa, input_sent[inp_span[0]:inp_span[1] + 1],
                                              output_sent[out_span[0]:out_span[1] + 1])
-            # print '\twa-no-null:', wa_no_null
             sym_coverage, sym_wa = make_symmetric(wa_no_null)
-            # print '\tsym wa2:', sym_wa
             assert sym_coverage == 0
             untangle = untangle_wa(sym_wa)
-            # print '\tfinal wa:', untangle
             final_groups = {}
             for iu in sorted(untangle):
                 ou = untangle[iu]
@@ -555,8 +514,6 @@ if __name__ == '__main__':
                     pass
                 final_groups[group_idx] = (iu, ou, inp_span, out_span)
                 coe_graph = Graph(group_idx)
-                # sys.stderr.write('\t\tGROUP' + str(group_idx) + '\n')
-                # sys.stderr.write('\t\t\t')
                 to_nodes = []
                 node_idx = 0
                 for iu_idx in iu:
@@ -568,9 +525,7 @@ if __name__ == '__main__':
                              None, None, None, None, True, False, False)
                     node_idx += 1
                     to_nodes.append(n)
-                    # sys.stderr.write(' ' + input_sent[inp_span[0] + iu_idx] + ' ')
 
-                # sys.stderr.write('---')
                 from_nodes = []
                 for ou_idx in ou:
                     assert out_phrase[ou_idx] == output_sent[out_span[0] + ou_idx]
@@ -580,9 +535,7 @@ if __name__ == '__main__':
                              None, None, None, None, False, True, False)
                     node_idx += 1
                     from_nodes.append(n)
-                    # sys.stderr.write(' ' + output_sent[out_span[0] + ou_idx] + ' ')
 
-                # sys.stderr.write('\n')
                 if len(from_nodes) > 1:
                     assert len(to_nodes) == 1  # or (len(iu) == 2 and len(ou) == 2)
                     pass
@@ -595,7 +548,6 @@ if __name__ == '__main__':
                                                                      intermediate=intermediate_nodes, graph=coe_graph)
                 coe_sentence.graphs.append(coe_graph)
                 group_idx += 1
-                # input_coverage[inp_span[0]: inp_span[1] + 1] = ['1'] * ((inp_span[1] + 1) - inp_span[0])
 
         if 0 in input_coverage:
             eps_word_alignment += 1
@@ -605,23 +557,20 @@ if __name__ == '__main__':
         sys.stderr.write(' '.join([str(i) for i in input_tok_group]) + '\n')
         sys.stderr.write(' '.join([str(i) for i in output_tok_group]) + '\n')
 
-        swaps_inp, swaps_out, transfer, split_inp, split_out, split_orderings, swap_long = mark_swaps_transfers_interrupts(
+        split_inp, split_out, split_orderings = mark_swaps_transfers_interrupts(
             input_tok_group,
             output_tok_group)
-        swap_rules = get_swap_rules(coe_sentence, input_tok_group, output_tok_group, input_parse)
+        split_sets = get_split_sets(split_inp, split_out)
+        swap_rules = get_swap_rules(coe_sentence, input_tok_group, output_tok_group, input_parse, split_sets)
         for sr in swap_rules:
             sys.stderr.write('swaps-pets:' + str(sr) + '\n')
-        swaps_str = ' '.join([str(i) + ',' + str(j) for i, j in zip(swaps_inp, swaps_out)])
 
-        transfer_str = ','.join([str(i) for i in transfer])
-        sys.stderr.write('swaps:' + swaps_str + '\n')
-        sys.stderr.write('transfer:' + transfer_str + '\n')
         split_inp_str = ' '.join([str(i) + "-" + ','.join([str(k) for k in j[0]]) for i, j in split_inp.items()])
         sys.stderr.write('split inp:' + split_inp_str + '\n')
         split_out_str = ' '.join([str(i) + "-" + ','.join([str(k) for k in j[0]]) for i, j in split_out.items()])
         sys.stderr.write('split out:' + split_out_str + '\n')
-        sw_keys = list(swap_long.keys())
-        sys.stderr.write('swap long' + str(sw_keys) + '\n')
+        if len(split_inp) or len(split_out):
+            pass  # pdb.set_trace()
         swap_objs = []
         for sr in swap_rules:
             s_obj = Swap()

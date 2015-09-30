@@ -457,9 +457,7 @@ if __name__ == '__main__':
 
     json_sentence_str = json.dumps(s1, indent=4, sort_keys=True)
     all_sent.append(' '.join(json_sentence_str.split()))
-    print 'var json_str_arr = ', all_sent
-    exit()
-    '''
+
     s2 = Sentence(2, "A B C", "1 21 3 22", None)
     g0 = Graph(0)
     n0 = Node(0, 'A', 0, 0, EN_LANG, True, to_en=False, to_de=True)
@@ -543,6 +541,64 @@ if __name__ == '__main__':
 
     json_sentence_str = json.dumps(s3, indent=4, sort_keys=True)
     all_sent.append(' '.join(json_sentence_str.split()))
+    print 'var json_str_arr = ', all_sent
+
+    s4 = Sentence(3, "A B C D", "1 31 2 32 4", None)
+    g0 = Graph(0)
+    n0 = Node(0, 'A', 0, 0, EN_LANG, True, [START], [1, 2, END], [START], [1, 2, 1, END], to_en=False, to_de=True)
+    n1 = Node(1, '1', 0, 0, DE_LANG, False, [START], [1, 2, END], [START], [1, 2, 1, END], to_en=True, to_de=False)
+    g0.nodes = [n0, n1]
+    g0.edges = get_edges(n0, n1)
+    propagate(g0)
+    s4.graphs.append(g0)
+
+    g1 = Graph(1)
+    n0 = Node(0, 'B', 1, 2, EN_LANG, True, [0, START], [2, END], [0, START], [2, END], to_de=True, to_en=False)
+    n1 = Node(1, '2', 1, 2, DE_LANG, False, [0, START], [2, END], [0, START], [END], to_de=False, to_en=True)
+    g1.nodes = [n0, n1]
+    g1.edges = get_edges(n0, n1)
+    propagate(g1)
+    s4.graphs.append(g1)
+
+    g3 = Graph(3)
+    n0 = Node(0, 'D', 3, 4, EN_LANG, True, [2, 1, 0, START], [END], [2, 1, 2, 0, START], [END], to_de=True, to_en=False)
+    n1 = Node(1, '4', 3, 4, DE_LANG, False, [2, 1, 0, START], [END], [2, 1, 2, 0, START], [END], to_de=False,
+              to_en=True)
+    g3.nodes = [n0, n1]
+    g3.edges = get_edges(n0, n1)
+    propagate(g3)
+    s4.graphs.append(g3)
+
+    g2 = Graph(2)
+    n0 = Node(0, 'C', 2, 2, EN_LANG, True, [1, 0, START], [3, END], [1, 0, START], [4, END], to_de=True, to_en=False)
+    n1 = Node(1, 'C1', 2, 1, DE_LANG, False, [1, 2, START], [END], [0, START], [1, 2, 3, END], to_de=False, to_en=True)
+    n2 = Node(2, 'C4', 2, 3, DE_LANG, False, [1, 2, START], [END], [1, 2, START], [1, END], to_de=False, to_en=True)
+    g2.nodes = [n0, n1, n2]
+    g2.edges = get_edges(n0, n1) + get_edges(n0, n2)
+    g2.splits = True
+
+    g2.currently_split = False
+    g2.separators = [g1.id, g3.id]
+    g1.is_separator = True
+    g1.split_interaction = [g2.id, g3.id]
+    g3.is_separator = True
+    g3.split_interaction = [g2.id, g1.id]
+    g2.separator_positions = ['left', 'right']
+    g2.split_ordering = [g2.id, g1.id, g3.id, g2.id]
+    g2.unsplit_ordering = [g1.id, g2.id, g3.id]
+    propagate(g2)
+    s4.graphs.append(g2)
+
+    s_obj = Swap()
+    s_obj.graphs = [g0.id]
+    s_obj.other_graphs = [g1.id, g2.id, g3.id]
+    s_obj.head = 0
+    for g in [g0, g1, g2, g3]:
+        g.swaps = True
+        g.swap_toward_de = [s_obj.make_copy()]
+
+    json_sentence_str = json.dumps(s4, indent=4, sort_keys=True)
+    all_sent.append(' '.join(json_sentence_str.split()))
 
     s4 = Sentence(4, "A1 A2 B A3 C D", "1 2 3 4", None)
     s4.initial_order_by = EN_LANG
@@ -586,7 +642,8 @@ if __name__ == '__main__':
     s4.graphs = [g0, g1, g2, g3]
     json_sentence_str = json.dumps(s4, indent=4, sort_keys=True)
     all_sent.append(' '.join(json_sentence_str.split()))
-    '''
+    print 'var json_str_arr = ', all_sent
+
 
 
 

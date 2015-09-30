@@ -1,10 +1,6 @@
 __author__ = 'arenduchintala'
-from nltk.tree import Tree
-from itertools import groupby, chain, product
-from collection_of_edits import Sentence, Graph, Node
-from pprint import pprint
-from operator import itemgetter
-import pdb
+from itertools import groupby, product
+import sys
 
 
 class SplitNode(object):
@@ -137,28 +133,36 @@ def split(alignment, idx_a, idx_g):
     return splits
 
 
-def check_for_heads(g1_phrase, g2_phrase, dep_parse):
+def check_for_heads(dep_parse, coe_sentence, gidx1, gidx2):
+    g_phrase1 = [coe_sentence.get_graph_by_id(gid).get_visible_phrase_with_idx('de')
+                 for gid in gidx1]
+    g_phrase2 = [coe_sentence.get_graph_by_id(gid).get_visible_phrase_with_idx('de')
+                 for gid in gidx2]
+    g1_phrase = [val for sublist in g_phrase1 for val in sublist]
+    g2_phrase = [val for sublist in g_phrase2 for val in sublist]
+
+    # dependency edge from group 1 to group 2
     g1_g2 = False
+    for g1, g2 in product(g1_phrase, g2_phrase):
+        if (g1, g2) in dep_parse:
+            g1_g2 = True
+
+    # dependency edge from group 2 to group 1
     g2_g1 = False
+    for g1, g2 in product(g2_phrase, g1_phrase):
+        if (g1, g2) in dep_parse:
+            g2_g1 = True
+    '''
     g1_g1 = False
-    g2_g2 = False
     for g1a, g1b in product(g1_phrase, g1_phrase):
         if (g1a, g1b) in dep_parse:
             g1_g1 = True
 
+    g2_g2 = False
     for g2a, g2b in product(g2_phrase, g2_phrase):
         if (g2a, g2b) in dep_parse:
             g2_g2 = True
-
-    for g1, g2 in product(g1_phrase, g2_phrase):
-        if (g1, g2) in dep_parse:
-            # print (g1, g2), 'g1->g2'
-            g1_g2 = True
-
-    for g1, g2 in product(g2_phrase, g1_phrase):
-        if (g1, g2) in dep_parse:
-            # print (g1, g2), 'g2->g1'
-            g2_g1 = True
+    '''
 
     if g1_g2 and not g2_g1:
         # print 'valid split and group 1 is the head', g1_g2, g1_g1, g2_g1, g2_g2
@@ -174,10 +178,35 @@ def check_for_heads(g1_phrase, g2_phrase, dep_parse):
         return False, 0  # not a valid split
 
 
-def get_swap_rules(coe_sentence, input_tok_group, output_tok_group, dep_parse):
+def get_unique(tok_group):
+    u = set([])
+    tok_idx = []
+    tok_unique = []
+    for t_idx, t in enumerate(tok_group):
+        if t not in u:
+            u.add(t)
+            tok_unique.append(t)
+            tok_idx.append(t_idx)
+    return tok_unique, tok_idx
+
+
+def get_split_sets(split_inp, split_out):
+    split_sets = []
+    for i, j in split_inp.items():
+        s = set([i] + j[0])
+        split_sets.append(s)
+    for i, j in split_out.items():
+        s = set([i] + j[0])
+        split_sets.append(s)
+    return split_sets
+
+
+def get_swap_rules(coe_sentence, input_tok_group, output_tok_group, dep_parse, split_sets=[]):
     rules = []
-    input_unique = [i[0] for i in groupby(input_tok_group)]
-    output_unique = [i[0] for i in groupby(output_tok_group)]
+    # input_unique = [i[0] for i in groupby(input_tok_group)]
+    # output_unique = [i[0] for i in groupby(output_tok_group)]
+    input_unique, input_idx = get_unique(input_tok_group)
+    output_unique, output_idx = get_unique(output_tok_group)
     alignment = [output_unique.index(i) for i in input_unique]
     alignment_idx = range(len(alignment))
     min_a = min(alignment)
@@ -217,14 +246,8 @@ def get_swap_rules(coe_sentence, input_tok_group, output_tok_group, dep_parse):
                     legal = True
                     head = 0
                     if swaps:
-                        g_phrase1 = [coe_sentence.get_graph_by_id(gid).get_visible_phrase_with_idx('de')
-                                     for gid in gidx1]
-                        g_phrase2 = [coe_sentence.get_graph_by_id(gid).get_visible_phrase_with_idx('de')
-                                     for gid in gidx2]
-                        g_phrase1 = [val for sublist in g_phrase1 for val in sublist]
-                        g_phrase2 = [val for sublist in g_phrase2 for val in sublist]
                         # print s1, s_idx1, g_phrase1, 'swaps with', s2, s_idx2, g_phrase2
-                        legal, head = check_for_heads(g_phrase1, g_phrase2, dep_parse)
+                        legal, head = check_for_heads(dep_parse, coe_sentence, gidx1, gidx2)
                     if legal:
                         sn_child = SplitNode(s1, s2, s_idx1, s_idx2, gidx1, gidx2, swaps, head)
                         sn.add_child(sn_child, 1)
@@ -237,26 +260,28 @@ def get_swap_rules(coe_sentence, input_tok_group, output_tok_group, dep_parse):
                     legal = True
                     head = 0
                     if swaps:
-                        g_phrase1 = [coe_sentence.get_graph_by_id(gid).get_visible_phrase_with_idx('de')
-                                     for gid in gidx1]
-                        g_phrase2 = [coe_sentence.get_graph_by_id(gid).get_visible_phrase_with_idx('de')
-                                     for gid in gidx2]
-                        g_phrase1 = [val for sublist in g_phrase1 for val in sublist]
-                        g_phrase2 = [val for sublist in g_phrase2 for val in sublist]
                         # print s1, s_idx1, g_phrase1, 'swaps with', s2, s_idx2, g_phrase2
-                        legal, head = check_for_heads(g_phrase1, g_phrase2, dep_parse)
+                        legal, head = check_for_heads(dep_parse, coe_sentence, gidx1, gidx2)
                     if legal:
                         sn_child = SplitNode(s1, s2, s_idx1, s_idx2, gidx1, gidx2, swaps, head)
                         sn.add_child(sn_child, 2)
                         _stack.append(sn_child)
 
         root_node.keep_one()
-        # print 'ok'
         rs = root_node.get_one_derivation(align, rs)
-        rules += [r for r in rs if r[0]]
+        # rules += [r for r in rs if r[0]]
+        for r in rs:
+            if r[0]:
+                involved_g = set(r[3])
+                if involved_g not in split_sets:
+                    rules.append(r)
+                else:
+                    sys.stderr.write('skipping split rule:' + str(r) + '\n')
+
     return rules
 
 
+'''
 if __name__ == '__main__':
     alignment = [0, 4, 0, 3, 2, 1, 5, 6, 7, 8, 10, 9, 11]
     input_tok_group = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 12, 13, 14, 13, 15, 16, 17, 18, 19, 22, 20, 20, 21, 21,
@@ -294,7 +319,7 @@ if __name__ == '__main__':
             sub_alignment_idx = alignment_idx[prev_split:]
             if False in sub_list:
                 list_of_lists.append((sub_alignment, sub_alignment_idx))
-    '''
+
     for s in split(a, 0, len(a)):
         print 'splits:', s[0], 'and', s[1]
 
@@ -309,7 +334,7 @@ if __name__ == '__main__':
     a = [4, 3, 2, 1, 0]
     for s in split(a, 0, 5):
         print 'splits:', s[0], s[1]
-    '''
+
     print 'wtf'
     for align, align_idx in list_of_lists:
         pdb.set_trace()
@@ -350,3 +375,4 @@ if __name__ == '__main__':
         rules = root_node.get_one_derivation(align, rules)
         for r in rules:
             print r
+        '''
