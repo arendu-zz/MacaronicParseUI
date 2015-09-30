@@ -67,23 +67,32 @@ function Node() {
 		var view = this.get_view()
 		var graph = self.graph
 		if (graph.swaps) {
-			if (graph.swap_toward_de.length > 0) {
-				$(view.external_reorder_selector_to_de).show()
-			} else {
-				$(view.external_reorder_selector_to_de).hide()
+			$(view.external_reorder_selector_to_de).hide()
+			$(view.external_reorder_selector_to_en).hide()
+			var s_obj = graph.get_swap('de')
+			if (s_obj != null) {
+				if (s_obj.head != '0') {
+					if (s_obj.head == '1' && _.contains(s_obj.other_graphs, graph.id)) {
+						$(view.external_reorder_selector_to_de).show()
+					} else if (s_obj.head == '2' && _.contains(s_obj.graphs, graph.id)) {
+						$(view.external_reorder_selector_to_de).show()
+					}
+				} else {
+					$(view.external_reorder_selector_to_de).show()
+				}
 			}
-			if (graph.swap_toward_en.length > 0) {
-				$(view.external_reorder_selector_to_en).show()
-			} else {
-				$(view.external_reorder_selector_to_en).hide()
+			var s_obj = graph.get_swap('en')
+			if (s_obj != null) {
+				if (s_obj.head != '0') {
+					if (s_obj.head == '1' && _.contains(s_obj.other_graphs, graph.id)) {
+						$(view.external_reorder_selector_to_en).show()
+					} else if (s_obj.head == '2' && _.contains(s_obj.graphs, graph.id)) {
+						$(view.external_reorder_selector_to_en).show()
+					}
+				} else {
+					$(view.external_reorder_selector_to_en).show()
+				}
 			}
-			/*if (graph.external_reorder_by == 'en') {
-				$(view.external_reorder_selector_to_en).hide()
-				$(view.external_reorder_selector_to_de).show()
-			} else {
-				$(view.external_reorder_selector_to_en).show()
-				$(view.external_reorder_selector_to_de).hide()
-			}*/
 		} else if (graph.splits) {
 			var vn_ids = _.map(this.graph.get_visible_nodes(), function (vn) {
 				return vn.id
@@ -151,49 +160,57 @@ function Node() {
 		console.log('* *  PREVIEW REORDER ' + param.direction + '* *')
 		console.log(this.s + ' with action:' + param.action + ' ' + param.direction)
 		if (param.action == 'external reorder') {
-			if (self.graph.transfers) {
-				var gvn = _.filter(self.graph.nodes, function (node) {
-					return node.visible
-				})
-				var bounds = self.graph.get_bounding_of_visible_nodes()
-				var froms = []
-				var from_nodes = []
-				var tos = []
-				_.each(gvn, function (n) {
-					var from = parseInt($(n.get_view()).css('order'))
-					var to = self.graph.sentence.get_best_configuration([n], param.direction, [n])
-					froms.push(from)
-					tos.push(to)
-					from_nodes.push(n)
-				})
-				//todo : assuming the tos are contiguous, must test non contiguous case
-				var min_to = _.min(tos)
-
-				var other_graph = null
-				_.each(self.graph.sentence.visible_nodes, function (vn) {
-					if (parseInt($(vn.get_view()).css('order')) == min_to) {
-						other_graph = vn.graph
+			if (self.graph.swaps) {
+				var self_1 = false
+				var self_2 = false
+				var swap_obj = self.graph.get_swap(param.direction)
+				var bounds = {'height': 0, 'left': Number.POSITIVE_INFINITY, 'right': Number.NEGATIVE_INFINITY, 'top': 0 }
+				_.each(swap_obj.graphs, function (gid) {
+					var g = self.graph.sentence.get_graph_by_id(gid)
+					self_1 = self_1 || gid == self.graph.id
+					var b = g.get_bounding_of_visible_nodes()
+					if (b.left < bounds.left) {
+						bounds.left = b.left
 					}
+					if (b.right > bounds.right) {
+						bounds.right = b.right
+					}
+					bounds.top = b.top
+					bounds.height = b.height
 				})
-				var moving_to_end = min_to >= self.graph.sentence.visible_nodes.length
-				var draw_up = param.direction == 'en'
-				var other_bounds = other_graph.get_bounding_of_visible_nodes()
-				var arrows = self.get_transfer_preview_view(bounds, other_bounds, draw_up, moving_to_end)
+				var other_bounds = {'height': 0, 'left': Number.POSITIVE_INFINITY, 'right': Number.NEGATIVE_INFINITY, 'top': 0 }
+				_.each(swap_obj.other_graphs, function (gid) {
+					var g = self.graph.sentence.get_graph_by_id(gid)
+					self_2 = self_2 || gid == self.graph.id
+					var b = g.get_bounding_of_visible_nodes()
+					if (b.left < other_bounds.left) {
+						other_bounds.left = b.left
+					}
+					if (b.right > other_bounds.right) {
+						other_bounds.right = b.right
+					}
+					other_bounds.top = b.top
+					other_bounds.height = b.height
+				})
+				var arrows = null
+				if (self_1 && !self_2) {
+					arrows = self.get_swap_preview_view(bounds, other_bounds, swap_obj.head == 0)
+				} else if (self_2 && !self_1) {
+					arrows = self.get_swap_preview_view(other_bounds, bounds, swap_obj.head == 0)
+				} else {
+					arrows = self.get_swap_preview_view(bounds, other_bounds, swap_obj.head == 0)
+				}
+
 				var container = self.graph.sentence.get_container()
 				_.each(arrows, function (arrow) {
 					$(container).append(arrow)
 				})
-			} else if (self.graph.swaps) {
-
-
 				//assert(self.graph.swaps_with.length == 1, 'should only swap with one other graph')
+				/*
 				var graph_bounds = self.graph.get_bounding_of_visible_nodes()
 				var other_graph_bounds = self.graph.sentence.get_graph_by_id(self.graph.swaps_with[0]).get_bounding_of_visible_nodes()
-				var arrows = self.get_swap_preview_view(graph_bounds, other_graph_bounds)
-				var container = self.graph.sentence.get_container()
-				_.each(arrows, function (arrow) {
-					$(container).append(arrow)
-				})
+
+				*/
 
 			} else if (self.graph.splits) {
 				if (self.graph.currently_split) {
@@ -567,30 +584,42 @@ function Node() {
 
 	}
 
-	this.get_swap_preview_view = function (bounds, other_bounds) {
+	this.get_swap_preview_view = function (bounds, other_bounds, is_sym) {
 		var gap = Math.abs(bounds.left - other_bounds.left)
 		var bounds_mid = (bounds.left + bounds.right) / 2
-		var other_bounds_mid = (other_bounds.left + other_bounds.right) / 2
+		var other_bounds_mid = 0
+		if (is_sym) {
+			other_bounds_mid = (other_bounds.left + other_bounds.right) / 2
+		} else {
+			if (other_bounds.left > bounds.left) {
+				other_bounds_mid = other_bounds.right
+			}
+			if (other_bounds.left < bounds.left) {
+				other_bounds_mid = other_bounds.left
+			}
+		}
+
 		var mid_x = bounds_mid < other_bounds_mid ? bounds_mid + gap / 2 : other_bounds_mid + gap / 2
 		var mid_y = bounds.top + (bounds.height / 2)
 
 		var sentence_container = this.graph.sentence.get_container()
 		var preview_view = $(sentence_container).curvedArrow({
 																 p0x: bounds_mid,
-																 p0y: bounds.top + bounds.height / 2 + 10,
+																 p0y: bounds.top + bounds.height / 2 - 10,
 																 p1x: mid_x,
-																 p1y: mid_y + bounds.height + 20,
+																 p1y: mid_y - bounds.height - 20,
 																 p2x: other_bounds_mid,
-																 p2y: other_bounds.top + other_bounds.height / 2 + 10,
+																 p2y: other_bounds.top + other_bounds.height / 2 - 10,
 																 id: "previewOverlayArrow"
 															 })
+
 		var preview_view2 = $(sentence_container).curvedArrow({
 																  p2x: bounds_mid,
-																  p2y: bounds.top + bounds.height / 2 - 10,
+																  p2y: bounds.top + bounds.height / 2 + 10,
 																  p1x: mid_x,
-																  p1y: mid_y - bounds.height - 20,
+																  p1y: mid_y + bounds.height + 20,
 																  p0x: other_bounds_mid,
-																  p0y: other_bounds.top + other_bounds.height / 2 - 10,
+																  p0y: other_bounds.top + other_bounds.height / 2 + 10,
 																  id: "previewOverlayArrow"
 															  })
 		var line = $(sentence_container).straightline({
@@ -612,8 +641,13 @@ function Node() {
 		$(preview_view2).addClass("preview")
 		$(line).addClass("preview")
 		$(line2).addClass("preview")
-		this.preview_view = [preview_view, preview_view2, line, line2]
-		return [preview_view, preview_view2, line, line2]
+		if (is_sym) {
+			this.preview_view = [preview_view, preview_view2, line, line2]
+			return [preview_view, preview_view2, line, line2]
+		} else {
+			this.preview_view = [preview_view, line, line2]
+			return [preview_view, line, line2]
+		}
 
 	}
 	this.get_view = function () {
@@ -651,13 +685,13 @@ function Node() {
 			$(external_reorder_selector).on('click', function () {
 				self.take_action({action: 'external reorder', direction: 'de'})
 			})
-			/*$(external_reorder_selector).on('mouseover', function () {
+			$(external_reorder_selector).on('mouseover', function () {
 				self.preview_action({action: 'external reorder', direction: 'de'})
-			})*/
+			})
 
-			/*$(external_reorder_selector).on('mouseout', function () {
+			$(external_reorder_selector).on('mouseout', function () {
 				self.unpreview_action()
-			})*/
+			})
 
 			if (this.graph.external_reorder_by == 'de') {
 				$(external_reorder_selector).hide()
@@ -698,12 +732,12 @@ function Node() {
 			$(external_reorder_selector).on('click', function () {
 				self.take_action({action: 'external reorder', direction: 'en'})
 			})
-			/*$(external_reorder_selector).on('mouseover', function () {
+			$(external_reorder_selector).on('mouseover', function () {
 				self.preview_action({action: 'external reorder', direction: 'en'})
 			})
 			$(external_reorder_selector).on('mouseout', function () {
 				self.unpreview_action()
-			})*/
+			})
 			if (this.graph.external_reorder_by == 'en') {
 				$(external_reorder_selector).hide()
 			}
@@ -723,6 +757,7 @@ function Edge() {
 	this.graph = null
 }
 function Swap() {
+	this.head = null
 	this.graphs = []
 	this.other_graphs = []
 
@@ -1219,6 +1254,7 @@ Node.parse = function (input) {
 }
 Swap.parse = function (input) {
 	var s = new Swap()
+	s.head = input.head
 	s.graphs = input.graphs
 	s.other_graphs = input.other_graphs
 	s.graphs.sort(sortNumber)

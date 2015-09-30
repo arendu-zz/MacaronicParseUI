@@ -77,9 +77,11 @@ class Swap(dict):
         self.__dict__ = self
         self.graphs = []
         self.other_graphs = []
+        self.head = None
 
     def make_copy(self):
         s = Swap()
+        s.head = self.head
         s.graphs = [i for i in self.graphs]
         s.other_graphs = [i for i in self.other_graphs]
         return s
@@ -87,6 +89,7 @@ class Swap(dict):
     @staticmethod
     def from_dict(dict_):
         s = Swap()
+        s.head = dict_['head']
         s.graphs = dict_['graphs']
         s.other_graphs = dict_['other_graphs']
         return s
@@ -111,7 +114,6 @@ class Graph(dict):
         self.swaps = False
         self.swap_toward_en = []
         self.swap_toward_de = []
-        self.dependents = []
 
         self.separators = None
         self.currently_split = False
@@ -239,6 +241,31 @@ class Graph(dict):
             if n.id == node_id:
                 return n
         return None
+
+    def get_visible_phrase(self, vis_lang, en_sent, de_sent):
+
+        if vis_lang == 'de':
+            vns = [(n.de_id, n) for n in self.nodes if n.visible]
+            vns.sort()
+            phrase = ' '.join([de_sent[p] for p, n in vns])
+        else:
+            vns = [(n.de_id, n) for n in self.nodes if n.visible]
+            vns.sort()
+            phrase = ' '.join([en_sent[p] for p, n in vns])
+
+        return phrase
+
+    def get_visible_phrase_with_idx(self, vis_lang):
+        if vis_lang == 'de':
+            vns = [(n.de_id, n) for n in self.nodes if n.visible]
+            vns.sort()
+            vns = [n.s + '-' + str(np + 1) if n.s != '@-@'else '@' + '-' + str(np + 1) for np, n in vns]
+            return vns
+        else:
+            vns = [(n.de_id, n) for n in self.nodes if n.visible]
+            vns.sort()
+            vns = [n.s + '-' + str(np + 1) if n.s != '@-@'else '@' + '-' + str(np + 1) for np, n in vns]
+            return vns
 
 
 class Sentence(dict):
