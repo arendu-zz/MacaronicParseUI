@@ -71,6 +71,16 @@ class Node(dict):
         return n
 
 
+class Split(dict):
+    def __init__(self):
+        dict.__init__(self)
+        self.__dict__ = self
+        self.split_order = []
+        self.unsplit_order = []
+        self.separators = []
+        self.currently_split = []
+
+
 class Swap(dict):
     def __init__(self):
         dict.__init__(self)
@@ -119,8 +129,8 @@ class Graph(dict):
         self.currently_split = False
         self.separator_positions = None
 
-        self.split_ordering = None
-        self.unsplit_ordering = None
+        self.split_order_by_de = None
+        self.split_order_by_en = None
 
     @staticmethod
     def from_dict(dict_):
@@ -143,8 +153,8 @@ class Graph(dict):
         g.is_separator = dict_['is_separator']
         g.split_interaction = dict_['split_interaction']
 
-        g.unsplit_ordering = dict_['unsplit_ordering']
-        g.split_ordering = dict_['split_ordering']
+        g.split_order_by_de = dict_['split_order_by_de']
+        g.split_order_by_en = dict_['split_order_by_en']
         g.nodes = list(map(Node.from_dict, dict_['nodes']))
         g.edges = list(map(Edge.from_dict, dict_['edges']))
         return g
@@ -485,8 +495,9 @@ if __name__ == '__main__':
     g1.splits = True
     g1.separators = [g2.id]
     g1.separator_positions = ['right']
-    g1.split_ordering = [g1.id, g2.id, g1.id]
-    g1.unsplit_ordering = [g1.id, g2.id]
+    g1.split_order_by_de = [g1.id, g2.id, g1.id]
+    g1.split_order_by_en = [g1.id, g2.id]
+    g1.split_to = 'de'
     propagate(g1)
     s2.graphs.append(g1)
 
@@ -534,14 +545,14 @@ if __name__ == '__main__':
     g3.is_separator = True
     g3.split_interaction = [g2.id, g1.id]
     g2.separator_positions = ['left', 'right']
-    g2.split_ordering = [g2.id, g1.id, g3.id, g2.id]
-    g2.unsplit_ordering = [g1.id, g2.id, g3.id]
+    g2.split_order_by_de = [g2.id, g1.id, g3.id, g2.id]
+    g2.split_order_by_en = [g1.id, g2.id, g3.id]
+    g2.split_to = 'de'
     propagate(g2)
     s3.graphs.append(g2)
 
     json_sentence_str = json.dumps(s3, indent=4, sort_keys=True)
     all_sent.append(' '.join(json_sentence_str.split()))
-    print 'var json_str_arr = ', all_sent
 
     s4 = Sentence(3, "A B C D", "1 31 2 32 4", None)
     g0 = Graph(0)
@@ -584,8 +595,9 @@ if __name__ == '__main__':
     g3.is_separator = True
     g3.split_interaction = [g2.id, g1.id]
     g2.separator_positions = ['left', 'right']
-    g2.split_ordering = [g2.id, g1.id, g3.id, g2.id]
-    g2.unsplit_ordering = [g1.id, g2.id, g3.id]
+    g2.split_order_by_de = [g2.id, g1.id, g3.id, g2.id]
+    g2.split_order_by_en = [g1.id, g2.id, g3.id]
+    g2.split_to = 'de'
     propagate(g2)
     s4.graphs.append(g2)
 
@@ -620,9 +632,9 @@ if __name__ == '__main__':
     g0.separators = [g1.id]
     g1.split_interaction = [g1.id]
     g1.is_separator = True
-    g0.split_ordering = [g0.id, g0.id, g1.id, g0.id]
-    g0.unsplit_ordering = [g0.id, g1.id]
-    g0.currently_split = True
+    g0.split_order_by_en = [g0.id, g0.id, g1.id, g0.id]
+    g0.split_order_by_de = [g0.id, g1.id]
+    g0.split_to = 'de'
     propagate(g1)
 
     g2 = Graph(2)

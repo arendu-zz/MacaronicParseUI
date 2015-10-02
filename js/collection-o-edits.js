@@ -93,27 +93,34 @@ function Node() {
 					$(view.external_reorder_selector_to_en).show()
 				}
 			}
-		} else if (graph.splits) {
+		} else {
+			$(view.external_reorder_selector_to_de).hide()
+			$(view.external_reorder_selector_to_en).hide()
+		}
+		if (graph.splits) {
+
 			var vn_ids = _.map(this.graph.get_visible_nodes(), function (vn) {
 				return vn.id
 			})
 			var are_equal = vn_ids.length > 1
 
 			if (are_equal) {
-				if (graph.external_reorder_by == 'en') {
-					$(view.external_reorder_selector_to_en).hide()
-					$(view.external_reorder_selector_to_de).show()
+				if (graph.split_to == 'en') {
+
+					$(view.split_reorder_selector_to_de).hide()
+					$(view.split_reorder_selector_to_en).show()
 				} else {
-					$(view.external_reorder_selector_to_en).show()
-					$(view.external_reorder_selector_to_de).hide()
+					$(view.split_reorder_selector_to_en).hide()
+					$(view.split_reorder_selector_to_de).show()
+
 				}
 			} else {
-				$(view.external_reorder_selector_to_en).hide()
-				$(view.external_reorder_selector_to_de).hide()
+				$(view.split_reorder_selector_to_de).hide()
+				$(view.split_reorder_selector_to_en).hide()
 			}
 		} else {
-			$(view.external_reorder_selector_to_en).hide()
-			$(view.external_reorder_selector_to_de).hide()
+			$(view.split_reorder_selector_to_de).hide()
+			$(view.split_reorder_selector_to_en).hide()
 		}
 	}
 	/*this.precompute_transfer_possibility = function (param) {
@@ -206,81 +213,24 @@ function Node() {
 					$(container).append(arrow)
 				})
 				//assert(self.graph.swaps_with.length == 1, 'should only swap with one other graph')
-				/*
-				var graph_bounds = self.graph.get_bounding_of_visible_nodes()
-				var other_graph_bounds = self.graph.sentence.get_graph_by_id(self.graph.swaps_with[0]).get_bounding_of_visible_nodes()
-
-				*/
 
 			} else if (self.graph.splits) {
-				if (self.graph.currently_split) {
-					console.log("this graph will unsplit" + self.graph.unsplit_ordering)
-				} else {
-					console.log("this graph splits with " + self.graph.split_ordering)
-				}
 
 			}
 		}
 	}
 
-	/*this.get_swaps_with_nodes = function (gvn) {
-		var g_ids = []
-		for (var i = 0; i < gvn.length; i++) {
-			if (gvn[i].graph.swaps_with != null) {
-				g_ids = g_ids.concat(gvn[i].graph.swaps_with)
-			}
-		}
-		g_ids = _.uniq(g_ids);
-		var swaps_with_vn = []
-		for (var i = 0; i < g_ids.length; i++) {
-			var g = this.graph.sentence.get_graph_by_id(g_ids[i])
-			swaps_with_vn = swaps_with_vn.concat(g.get_visible_nodes())
-		}
-		return swaps_with_vn
-	}*/
-
-	/*this.get_split_merge_position = function (place_position, separator_nodes_positions) {
-		var merge_pos = null
-		var zip = _.zip(place_position, separator_nodes_positions)
-		for (var z = 0; z < zip.length; z++) {
-			var step = zip[z][0]
-			var pos = zip[z][1]
-			if (step == 'left') {
-				merge_pos = pos
-			} else {
-				return pos
-			}
-		}
-		return pos + 1
-	}*/
 	this.take_action = function (param) {
 		console.log('action triggered:' + param.action + ',' + param.direction)
 		self.unpreview_action()
-		if (param.action == 'internal reorder') {
+		if (param.action == 'split reorder') {
 			var gvn = _.filter(self.graph.nodes, function (node) {
 				return node.visible
 			})
-			self.graph.sentence.remove_nodes(gvn)
-			gvn = self.graph.sentence.sort_within_graph(gvn, param.direction)
-			self.graph.internal_reorder_by = param.direction
-			var node_idx = self.graph.sentence.get_best_configuration(gvn, self.graph.external_reorder_by, gvn)
-			if (node_idx.length > 1) {
-				//console.log("multiple possible best configurations - internal order!!!")
-			}
-			self.graph.sentence.add_nodes(gvn, node_idx[0], param)
-		} else if (param.action == 'external reorder') {
-			var gvn = _.filter(self.graph.nodes, function (node) {
-				return node.visible
-			})
-
-			if (this.graph.splits && !this.graph.swaps) {
+			if (this.graph.splits) {
 				console.log("this graphs splits")
-				var target_order = []
-				if (self.graph.currently_split) {
-					target_order = self.graph.unsplit_ordering
-				} else {
-					target_order = self.graph.split_ordering
-				}
+
+				var target_order = self.graph['split_order_by_' + param.direction]
 				var split_nodes = gvn
 				split_nodes = _.sortBy(split_nodes, function (sn) {
 					return parseInt($(sn.get_view()).css('order'))
@@ -301,11 +251,11 @@ function Node() {
 				})
 				separator_nodes = _.flatten(separator_nodes)
 				var new_ordering_nodes = []
-				if (self.graph.currently_split) {
-					var insertions = _.reduce(separator_nodes, function (memo, sn) {
-						if (sn == 'INSERT HERE') {return memo + 1} else {return memo}
-					}, 0)
-					assert(insertions == 1, 'during un-splitting number insert sites 1')
+				var insertions = _.reduce(separator_nodes, function (memo, sn) {
+					if (sn == 'INSERT HERE') {return memo + 1} else {return memo}
+				}, 0)
+				if (insertions == 1) {
+					//currently split and should be unsplit
 					new_ordering_nodes = _.map(separator_nodes, function (sn) {
 						if (sn == 'INSERT HERE') {
 							return split_nodes
@@ -313,12 +263,8 @@ function Node() {
 							return sn
 						}
 					})
-
-				} else {
-					var insertions = _.reduce(separator_nodes, function (memo, sn) {
-						if (sn == 'INSERT HERE') {return memo + 1} else {return memo}
-					}, 0)
-					assert(insertions == split_nodes.length, 'during splitting number insert sites should be number of split nodes')
+				} else if (insertions == split_nodes.length) {
+					//currently not split and should be split
 					var split_ptr = 0
 					new_ordering_nodes = _.map(separator_nodes, function (sn) {
 						if (sn == 'INSERT HERE') {
@@ -329,8 +275,8 @@ function Node() {
 							return sn
 						}
 					})
-
 				}
+
 				new_ordering_nodes = _.flatten(new_ordering_nodes)
 				var new_ordering_positions = _.map(new_ordering_nodes, function (nn) {
 					return parseInt($(nn.get_view()).css('order'))
@@ -348,13 +294,18 @@ function Node() {
 					}
 					new_pos += 1
 				})
-				self.graph.sentence.update_external_reorder_options(split_nodes, param)
+				self.graph.split_to = param.direction == 'en' ? 'de' : 'en'
 				_.each(split_nodes, function (i) {
 					i.update_view_reorder()
 				})
-				self.graph.currently_split = !self.graph.currently_split
 
-			} else if (this.graph.swaps) {
+			}
+		} else if (param.action == 'external reorder') {
+			var gvn = _.filter(self.graph.nodes, function (node) {
+				return node.visible
+			})
+
+			if (this.graph.swaps) {
 				console.log("this graphs swaps")
 				var swap_obj = self.graph.get_swap(param.direction)
 				assert(swap_obj != null, 'swap object is null!!')
@@ -427,17 +378,6 @@ function Node() {
 
 				})
 
-				/*_.each(self.graph.sentence.visible_nodes, function (vns) {
-					console.log(vns.s)
-					console.log("de swaps: ")
-					_.each(vns.graph.swap_toward_de, function (sobj) {
-						console.log(sobj.graphs + " , " + sobj.other_graphs)
-					})
-					console.log("en swaps:")
-					_.each(vns.graph.swap_toward_en, function (sobj) {
-						console.log(sobj.graphs + " , " + sobj.other_graphs)
-					})
-				})*/
 				_.each(gvn, function (i) {
 					i.update_view_reorder()
 				})
@@ -477,10 +417,7 @@ function Node() {
 						pos += 1
 						return pos - 1
 					})
-					if (self.graph.splits && self.graph.currently_split) {
-						self.graph.currently_split = false
-						self.graph.external_reorder_by = self.graph.external_reorder_by == 'en' ? 'de' : 'en'
-					}
+
 					self.graph.sentence.add_nodes(gvn, insert_idx, param)
 					self.graph.sentence.update_external_reorder_options(gvn, param)
 
@@ -491,7 +428,7 @@ function Node() {
 					console.log("ok")
 					var insert_idx = null
 					if (self.graph.splits) {
-						var target_order = self.graph.unsplit_ordering
+						var target_order = self.graph['split_order_by_' + param.direction]
 						var separator_nodes = _.map(target_order, function (t_id) {
 							if (t_id == self.graph.id) {
 								return ['INSERT HERE']
@@ -517,17 +454,13 @@ function Node() {
 						} else {
 							insert_idx = separator_node_positions[ih - 1] + 1
 						}
+						self.graph.split_to = param.direction == 'en' ? 'de' : 'en'
 
 						self.graph.sentence.add_nodes(modified_nodes.add, [insert_idx], param)
 						self.graph.sentence.update_external_reorder_options(modified_nodes.add, param)
 						_.each(modified_nodes.add, function (i) {
 							i.update_view_reorder()
 						})
-
-						if (self.graph.currently_split) {
-							self.graph.currently_split = false
-							self.graph.external_reorder_by = self.graph.external_reorder_by == 'en' ? 'de' : 'en'
-						}
 
 					} else {
 						assert(is_contiguous(remove_positions))
@@ -669,15 +602,13 @@ function Node() {
 			if (!this.to_de) {
 				$(translation_selector).hide()
 			}
-			var internal_reorder_selector = document.createElement('div')
-			$(internal_reorder_selector).addClass('internal_reorder_selector')
-			$(menu_container).append($(internal_reorder_selector))
-			$(internal_reorder_selector).on('click', function () {
-				self.take_action({action: 'internal reorder', direction: 'de'})
+			var split_reorder_selector = document.createElement('div')
+			$(split_reorder_selector).addClass('split_reorder_selector')
+			$(menu_container).append($(split_reorder_selector))
+			$(split_reorder_selector).on('click', function () {
+				self.take_action({action: 'split reorder', direction: 'de'})
 			})
-			if (!this.ir) {
-				$(internal_reorder_selector).hide()
-			}
+
 			var external_reorder_selector = document.createElement('div')
 			$(external_reorder_selector).addClass('external_reorder_selector')
 			$(external_reorder_selector).addClass('tode')
@@ -693,11 +624,8 @@ function Node() {
 				self.unpreview_action()
 			})
 
-			if (this.graph.external_reorder_by == 'de') {
-				$(external_reorder_selector).hide()
-			}
 			this.view.translation_selector_to_de = translation_selector
-			this.view.internal_reorder_selector_to_de = internal_reorder_selector
+			this.view.split_reorder_selector_to_de = split_reorder_selector
 			this.view.external_reorder_selector_to_de = external_reorder_selector
 			var s = document.createElement('span')
 			s.innerHTML = this.s
@@ -716,15 +644,13 @@ function Node() {
 			if (!this.to_en) {
 				$(translation_selector).hide()
 			}
-			var internal_reorder_selector = document.createElement('div')
-			$(internal_reorder_selector).addClass('internal_reorder_selector')
-			$(bottom_menu_container).append($(internal_reorder_selector))
-			$(internal_reorder_selector).on('click', function () {
-				self.take_action({action: 'internal reorder', direction: 'en'})
+			var split_reorder_selector = document.createElement('div')
+			$(split_reorder_selector).addClass('split_reorder_selector')
+			$(bottom_menu_container).append($(split_reorder_selector))
+			$(split_reorder_selector).on('click', function () {
+				self.take_action({action: 'split reorder', direction: 'en'})
 			})
-			if (!this.ir) {
-				$(internal_reorder_selector).hide()
-			}
+
 			var external_reorder_selector = document.createElement('div')
 			$(external_reorder_selector).addClass('external_reorder_selector')
 			$(external_reorder_selector).addClass('toen')
@@ -738,11 +664,9 @@ function Node() {
 			$(external_reorder_selector).on('mouseout', function () {
 				self.unpreview_action()
 			})
-			if (this.graph.external_reorder_by == 'en') {
-				$(external_reorder_selector).hide()
-			}
+
 			this.view.translation_selector_to_en = translation_selector
-			this.view.internal_reorder_selector_to_en = internal_reorder_selector
+			this.view.split_reorder_selector_to_en = split_reorder_selector
 			this.view.external_reorder_selector_to_en = external_reorder_selector
 			return this.view
 		} else {
@@ -794,14 +718,14 @@ function Graph() {
 	this.swap_toward_en = []
 
 	this.splits = false
-	this.currently_split = false
 	this.separators = null
 	this.separator_positions = null
 	this.is_separator = false
 	this.split_interactions = null
 
-	this.split_ordering = null
-	this.unsplit_ordering = null
+	this.split_order_by_en = null
+	this.split_order_by_de = null
+	this.split_to = null
 
 	this.get_swap = function (direction) {
 		var swap_sized = _.sortBy(self['swap_toward_' + direction], function (s) {
@@ -1111,9 +1035,6 @@ function Sentence() {
 				n.graph.external_reorder_by = param.direction
 
 			}
-			if (n.graph.splits && param.action == 'external reorder') {
-				n.graph.external_reorder_by = param.direction
-			}
 
 		}
 	}
@@ -1273,12 +1194,13 @@ Graph.parse = function (input) {
 	g.splits = input.splits
 	g.swaps = input.swaps
 	g.separators = input.separators
-	g.currently_split = input.currently_split
+
 	g.separator_positions = input.separator_positions
 	g.is_separator = input.is_separator
 	g.split_interactions = input.split_interactions
-	g.split_ordering = input.split_ordering
-	g.unsplit_ordering = input.unsplit_ordering
+	g.split_order_by_en = input.split_order_by_en
+	g.split_order_by_de = input.split_order_by_de
+	g.split_to = input.split_to
 
 	for (var i in input.swap_toward_de) {
 		g.swap_toward_de.push(Swap.parse(input.swap_toward_de[i]))

@@ -113,17 +113,17 @@ div {
     background: #028090;
 }
 
-.internal_reorder_selector {
+.split_reorder_selector {
     background: transparent;
     border: 1px solid #BD587C;
-    height: 5px;
+    height: 4px;
     /*width: 3px;*/
     flex-grow: 1;
     padding: 0px;
 
 }
 
-.internal_reorder_selector:hover {
+.split_reorder_selector:hover {
     background: #BD587C;
 }
 

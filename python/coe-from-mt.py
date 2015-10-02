@@ -17,6 +17,7 @@ sys.stdout = codecs.getwriter('utf-8')(sys.stdout)
 sys.stdout.encoding = 'utf-8'
 '''
 VIS_LANG = 'de'
+INPUT_LANG = 'de'
 
 
 def get_contiguous(lst):
@@ -594,26 +595,42 @@ if __name__ == '__main__':
                     # print 'not there', g.id
                     pass
             if g.id in split_out.keys():
+                # output language is split
                 g.splits = True
                 g.separators = list(set(split_out[g.id][0]))
                 g.separator_positions = split_out[g.id][1]
-                g.split_ordering = split_orderings[g.id]['split_ordering']
-                g.unsplit_ordering = split_orderings[g.id]['unsplit_ordering']
-                if VIS_LANG == 'de':  # de is the input language and de is the visible language
-                    g.currently_split = False
+                if INPUT_LANG == 'en':
+                    g.split_order_by_de = split_orderings[g.id]['split_ordering']
+                    g.split_order_by_en = split_orderings[g.id]['unsplit_ordering']
                 else:
-                    g.currently_split = True
+                    g.split_order_by_de = split_orderings[g.id]['unsplit_ordering']
+                    g.split_order_by_en = split_orderings[g.id]['split_ordering']
+                # g.split_ordering = split_orderings[g.id]['split_ordering']
+                # g.unsplit_ordering = split_orderings[g.id]['unsplit_ordering']
+                g.split_to = 'de' if VIS_LANG == 'de' else 'en'
+                # if VIS_LANG == 'de':  # de is the input language and de is the visible language
+                # g.currently_split = False
+                # else:
+                # g.currently_split = True
 
             if g.id in split_inp.keys():
+                # input language is split
                 g.splits = True
                 g.separators = list(set(split_inp[g.id][0]))
                 g.separator_positions = split_inp[g.id][1]
-                g.split_ordering = split_orderings[g.id]['split_ordering']
-                g.unsplit_ordering = split_orderings[g.id]['unsplit_ordering']
-                if VIS_LANG == 'de':  # de is the input language and de is the visible language
-                    g.currently_split = True
+                if INPUT_LANG == 'en':
+                    g.split_order_by_en = split_orderings[g.id]['split_ordering']
+                    g.split_order_by_de = split_orderings[g.id]['unsplit_ordering']
                 else:
-                    g.currently_split = False
+                    g.split_order_by_en = split_orderings[g.id]['unsplit_ordering']
+                    g.split_order_by_de = split_orderings[g.id]['split_ordering']
+                # g.split_ordering = split_orderings[g.id]['split_ordering']
+                # g.unsplit_ordering = split_orderings[g.id]['unsplit_ordering']
+                g.split_to = 'de' if VIS_LANG == 'en' else 'en'
+                # if VIS_LANG == 'de':  # de is the input language and de is the visible language
+                # g.currently_split = True
+                # else:
+                # g.currently_split = False
 
             for n in g.nodes:
                 if n.lang == EN_LANG:
