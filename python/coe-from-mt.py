@@ -7,15 +7,12 @@ from pets import get_swap_rules, get_split_sets
 import json
 import sys
 import operator
-# import pdb
 
-'''
 reload(sys)
 sys.setdefaultencoding('utf-8')
 sys.stdin = codecs.getreader('utf-8')(sys.stdin)
 sys.stdout = codecs.getwriter('utf-8')(sys.stdout)
 sys.stdout.encoding = 'utf-8'
-'''
 VIS_LANG = 'de'
 INPUT_LANG = 'de'
 

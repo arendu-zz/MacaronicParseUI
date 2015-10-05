@@ -66,39 +66,57 @@ function Node() {
 	this.update_view_reorder = function () {
 		var view = this.get_view()
 		var graph = self.graph
+		$(view.external_reorder_selector_to_de).hide()
+		$(view.external_reorder_selector_to_en).hide()
+		var swap_reorder_en = false
+		var swap_reorder_de = false
+		$(view.split_reorder_selector_to_de).hide()
+		$(view.split_reorder_selector_to_en).hide()
+		var split_reorder_de = false
+		var split_reorder_en = false
+		$(view.translation_selector_to_de).hide()
+		$(view.translation_selector_to_en).hide()
+		var translate_en = false
+		var translate_de = false
 		if (graph.swaps) {
-			$(view.external_reorder_selector_to_de).hide()
-			$(view.external_reorder_selector_to_en).hide()
 			var s_obj = graph.get_swap('de')
 			if (s_obj != null) {
 				if (s_obj.head != '0') {
 					if (s_obj.head == '1' && _.contains(s_obj.other_graphs, graph.id)) {
-						$(view.external_reorder_selector_to_de).show()
+						swap_reorder_de = true
+						//$(view.external_reorder_selector_to_de).show()
 					} else if (s_obj.head == '2' && _.contains(s_obj.graphs, graph.id)) {
-						$(view.external_reorder_selector_to_de).show()
+						swap_reorder_de = true
+						//$(view.external_reorder_selector_to_de).show()
 					}
 				} else {
-					$(view.external_reorder_selector_to_de).show()
+					swap_reorder_de = true
+					//$(view.external_reorder_selector_to_de).show()
 				}
 			}
 			var s_obj = graph.get_swap('en')
 			if (s_obj != null) {
 				if (s_obj.head != '0') {
 					if (s_obj.head == '1' && _.contains(s_obj.other_graphs, graph.id)) {
-						$(view.external_reorder_selector_to_en).show()
+						swap_reorder_en = true
+						//$(view.external_reorder_selector_to_en).show()
 					} else if (s_obj.head == '2' && _.contains(s_obj.graphs, graph.id)) {
-						$(view.external_reorder_selector_to_en).show()
+						swap_reorder_en = true
+						//$(view.external_reorder_selector_to_en).show()
 					}
 				} else {
-					$(view.external_reorder_selector_to_en).show()
+					//$(view.external_reorder_selector_to_en).show()
+					swap_reorder_en = true
+
 				}
 			}
 		} else {
-			$(view.external_reorder_selector_to_de).hide()
-			$(view.external_reorder_selector_to_en).hide()
+			swap_reorder_de = false
+			swap_reorder_en = false
+			//$(view.external_reorder_selector_to_de).hide()
+			//$(view.external_reorder_selector_to_en).hide()
 		}
 		if (graph.splits) {
-
 			var vn_ids = _.map(this.graph.get_visible_nodes(), function (vn) {
 				return vn.id
 			})
@@ -106,22 +124,67 @@ function Node() {
 
 			if (are_equal) {
 				if (graph.split_to == 'en') {
+					split_reorder_de = false
+					split_reorder_en = true
 
-					$(view.split_reorder_selector_to_de).hide()
-					$(view.split_reorder_selector_to_en).show()
+					//$(view.split_reorder_selector_to_de).hide()
+					//$(view.split_reorder_selector_to_en).show()
 				} else {
-					$(view.split_reorder_selector_to_en).hide()
-					$(view.split_reorder_selector_to_de).show()
+					split_reorder_de = true
+					split_reorder_en = false
+					//$(view.split_reorder_selector_to_en).hide()
+					//$(view.split_reorder_selector_to_de).show()
 
 				}
 			} else {
-				$(view.split_reorder_selector_to_de).hide()
-				$(view.split_reorder_selector_to_en).hide()
+				//$(view.split_reorder_selector_to_de).hide()
+				//$(view.split_reorder_selector_to_en).hide()
+				split_reorder_de = false
+				split_reorder_en = false
 			}
 		} else {
-			$(view.split_reorder_selector_to_de).hide()
-			$(view.split_reorder_selector_to_en).hide()
+			//$(view.split_reorder_selector_to_de).hide()
+			//$(view.split_reorder_selector_to_en).hide()
+			split_reorder_de = false
+			split_reorder_en = false
 		}
+		if (true) { //placeholder for adding a flag "graph.translates"
+			if (self.graph.translate_from(self, 'de') != null) {
+				//show translate button in 'de' direction
+				//$(view.translation_selector_to_de).show()
+				translate_de = true
+			}
+			if (self.graph.translate_from(self, 'en') != null) {
+				//show translate button in 'en' direction
+				//$(view.translation_selector_to_en).show()
+				translate_en = true
+			}
+
+		}
+
+		if (split_reorder_de) {
+			$(view.split_reorder_selector_to_de).show()
+		}
+		if (split_reorder_en) {
+			$(view.split_reorder_selector_to_en).show()
+		}
+		if (swap_reorder_de) {
+			$(view.external_reorder_selector_to_de).show()
+		}
+		if (swap_reorder_en) {
+			$(view.external_reorder_selector_to_en).show()
+		}
+		if (translate_de && !split_reorder_de) {
+			$(view.translation_selector_to_de).show()
+		} else if (translate_de && split_reorder_de) {
+			//do not show translation if a split is possible...
+		}
+		if (translate_en && !split_reorder_en) {
+			$(view.translation_selector_to_en).show()
+		} else if (translate_en && split_reorder_en) {
+			//do not show translation if split is possible
+		}
+
 	}
 	/*this.precompute_transfer_possibility = function (param) {
 		if (param.action == 'external reorder') {
@@ -599,9 +662,9 @@ function Node() {
 			$(translation_selector).on('click', function () {
 				self.take_action({action: 'translate', direction: 'de'})
 			})
-			if (!this.to_de) {
+			/*if (!this.to_de) {
 				$(translation_selector).hide()
-			}
+			}*/
 			var split_reorder_selector = document.createElement('div')
 			$(split_reorder_selector).addClass('split_reorder_selector')
 			$(menu_container).append($(split_reorder_selector))
@@ -641,9 +704,9 @@ function Node() {
 			$(translation_selector).on('click', function () {
 				self.take_action({action: 'translate', direction: 'en'})
 			})
-			if (!this.to_en) {
+			/*if (!this.to_en) {
 				$(translation_selector).hide()
-			}
+			}*/
 			var split_reorder_selector = document.createElement('div')
 			$(split_reorder_selector).addClass('split_reorder_selector')
 			$(bottom_menu_container).append($(split_reorder_selector))
