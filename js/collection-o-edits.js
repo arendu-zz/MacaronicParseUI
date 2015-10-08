@@ -5,6 +5,7 @@
 var sentences = []
 var page = 0;
 var sentences_per_page = 10
+var username = null
 
 gotoPrevPage = function () {
 	console.log("go to prev page")
@@ -918,9 +919,9 @@ function Sentence() {
 			}
 		}
 	}
-	this.initialize = function () {
+	this.initialize = function (mainview) {
 		self.container = self.get_container()
-		$('#mainbody').append($(self.get_container()))
+		mainview.append($(self.get_container()))
 		self.graphs = _.sortBy(self.graphs, function (graph) {
 			return graph.initial_order
 		})
@@ -1311,12 +1312,13 @@ function do_precomputations() {
 	}
 }
 
-function ok_parse(st, end) {
+function ok_parse(st, end, mainview, uname) {
+	username = uname
 	end = end < json_str_arr.length ? end : json_str_arr.length
 	for (var i = st; i < end; i++) {
 		var jo = JSON.parse(json_str_arr[i])
 		var s = Sentence.parse(jo)
-		s.initialize()
+		s.initialize(mainview)
 		s.visible_nodes = _.sortBy(s.visible_nodes, function (vn) {
 			if (s.initial_order_by == 'en') {
 				return vn.en_id
@@ -1328,4 +1330,5 @@ function ok_parse(st, end) {
 		s.update_visible_nodes()
 		sentences.push(s)
 	}
+	console.log('user name is ' + username)
 }

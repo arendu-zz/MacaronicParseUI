@@ -79,7 +79,7 @@ div {
     flex-direction: row;
     justify-content: space-around;
     opacity: 1;
-    transition: opacity 0.25s linear;
+   /* transition: opacity 0.25s linear;*/
 }
 
 /*.node_menu_container:hover {
