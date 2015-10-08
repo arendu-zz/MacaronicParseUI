@@ -5,9 +5,9 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
     <link href="css/coe.css" type="text/css" rel="stylesheet"/>
-    <link href="//code.jquery.com/ui/1.9.1/themes/base/jquery-ui.css" type="text/css" rel="stylesheet"/>
+    <!--link href="//code.jquery.com/ui/1.9.1/themes/base/jquery-ui.css" type="text/css" rel="stylesheet"/-->
     <script src="//code.jquery.com/jquery-latest.min.js" type="text/javascript"/>
-    <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"/>
+    <script type="text/javascript" src="js/jquery-ui.min.js"/>
     <script type="text/javascript" src="js/collection-o-edits.js"/>
     <script type="text/javascript" src="js/editdistance.js"/>
     <script type="text/javascript" src="js/treemethods.js"/>
@@ -20,7 +20,7 @@
     <script type="text/javascript">
 
         $(document).ready(function () {
-            ok_parse(page, sentences_per_page)
+            ok_parse(page, sentences_per_page, $('#mainbody'))
             do_precomputations()
         });
 
