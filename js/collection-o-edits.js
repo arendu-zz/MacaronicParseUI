@@ -7,6 +7,7 @@ var page = 0;
 var sentences_per_page = 10
 var username = null
 var socket = null
+var json_sentences = []
 
 gotoPrevPage = function () {
 	console.log("go to prev page")
@@ -1337,24 +1338,35 @@ function do_precomputations() {
 	}
 }
 
+function receivedJsonSentence(msg) {
+	console.log(msg)
+}
+
 function ok_parse(st, end, mainview, uname, socketObj) {
 	username = uname
 	socket = socketObj
-	end = end < json_str_arr.length ? end : json_str_arr.length
-	for (var i = st; i < end; i++) {
-		var jo = JSON.parse(json_str_arr[i])
-		var s = Sentence.parse(jo)
-		s.initialize(mainview)
-		s.visible_nodes = _.sortBy(s.visible_nodes, function (vn) {
-			if (s.initial_order_by == 'en') {
-				return vn.en_id
-			} else {
-				return vn.de_id
-			}
-		})
-		s.assign_display_order_by_array_order()
-		s.update_visible_nodes()
-		sentences.push(s)
+	if (socket != null) {
+		//get json_sentences from server
+		socket.emit('requestJsonSentences', 'please')
+		socket.on('JsonSentences', receivedJsonSentence);
+	} else {
+		end = end < json_str_arr.length ? end : json_str_arr.length
+		for (var i = st; i < end; i++) {
+			var jo = JSON.parse(json_str_arr[i])
+			var s = Sentence.parse(jo)
+			s.initialize(mainview)
+			s.visible_nodes = _.sortBy(s.visible_nodes, function (vn) {
+				if (s.initial_order_by == 'en') {
+					return vn.en_id
+				} else {
+					return vn.de_id
+				}
+			})
+			s.assign_display_order_by_array_order()
+			s.update_visible_nodes()
+			sentences.push(s)
+		}
 	}
+
 	console.log('user name is ' + username)
 }
