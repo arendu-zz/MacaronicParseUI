@@ -6,6 +6,7 @@ var sentences = []
 var page = 0;
 var sentences_per_page = 10
 var username = null
+var socket = null
 
 gotoPrevPage = function () {
 	console.log("go to prev page")
@@ -62,6 +63,14 @@ function Node() {
 	this.get_view_position = function () {
 		var v = self.get_view()
 		return {top: v.offsetTop, left: v.offsetLeft, height: v.offsetHeight, width: v.offsetWidth}
+	}
+
+	this.getLogObj = function () {
+		var logObj = {}
+		logObj['order'] = parseInt($(self.get_view()).css('order'))
+		logObj['string'] = self.s
+		logObj['lang'] = self.lang
+		return logObj
 	}
 
 	this.update_view_reorder = function () {
@@ -287,7 +296,10 @@ function Node() {
 	this.take_action = function (param) {
 		console.log('action triggered:' + param.action + ',' + param.direction)
 		self.unpreview_action()
+		var before = JSON.stringify(self.graph.sentence.getLogObjs())
+		var rule = param.action
 		if (param.action == 'split reorder') {
+
 			var gvn = _.filter(self.graph.nodes, function (node) {
 				return node.visible
 			})
@@ -542,6 +554,12 @@ function Node() {
 		} else {
 			//console.log("Invalid action:  " + param.action)
 		}
+		var after = JSON.stringify(self.graph.sentence.getLogObjs())
+		var sm = SocketMessage(username, rule, before, after)
+		if (socket != null) {
+			socket.emit('logEvent', sm)
+		}
+
 	}
 
 	this.get_transfer_preview_view = function (bounds, other_bounds, draw_up, moving_to_end) {
@@ -699,7 +717,7 @@ function Node() {
 			var bottom_menu_container = document.createElement('div')
 			$(bottom_menu_container).addClass('node_menu_container')
 			$(this.view).append($(bottom_menu_container))
-			var translation_selector = document.createElement('div')
+			translation_selector = document.createElement('div')
 			$(translation_selector).addClass('translation_selector')
 			$(bottom_menu_container).append($(translation_selector))
 			$(translation_selector).on('click', function () {
@@ -708,14 +726,14 @@ function Node() {
 			/*if (!this.to_en) {
 				$(translation_selector).hide()
 			}*/
-			var split_reorder_selector = document.createElement('div')
+			split_reorder_selector = document.createElement('div')
 			$(split_reorder_selector).addClass('split_reorder_selector')
 			$(bottom_menu_container).append($(split_reorder_selector))
 			$(split_reorder_selector).on('click', function () {
 				self.take_action({action: 'split reorder', direction: 'en'})
 			})
 
-			var external_reorder_selector = document.createElement('div')
+			external_reorder_selector = document.createElement('div')
 			$(external_reorder_selector).addClass('external_reorder_selector')
 			$(external_reorder_selector).addClass('toen')
 			$(bottom_menu_container).append($(external_reorder_selector))
@@ -1102,6 +1120,13 @@ function Sentence() {
 
 		}
 	}
+	this.getLogObjs = function () {
+		var logObjs = []
+		_.each(self.visible_nodes, function (vn) {
+			logObjs.push(vn.getLogObj())
+		})
+		return logObjs
+	}
 	this.add_nodes = function (nodes, nodes_idx, param) {
 		self.sort_visible_nodes_by_display_order()
 		for (var c = 0; c < nodes_idx.length; c++) {
@@ -1312,8 +1337,9 @@ function do_precomputations() {
 	}
 }
 
-function ok_parse(st, end, mainview, uname) {
+function ok_parse(st, end, mainview, uname, socketObj) {
 	username = uname
+	socket = socketObj
 	end = end < json_str_arr.length ? end : json_str_arr.length
 	for (var i = st; i < end; i++) {
 		var jo = JSON.parse(json_str_arr[i])
