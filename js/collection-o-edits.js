@@ -8,24 +8,38 @@ var sentences_per_page = 10
 var username = null
 var socket = null
 var json_sentences = []
+var mainview = null
 
 gotoPrevPage = function () {
 	console.log("go to prev page")
 	page -= 1
+	var st = page * sentences_per_page
+	var total = json_sentences.length
+	var end = st + sentences_per_page
 	if (page >= 0) {
-		var total = json_str_arr.length
-		var st = page * sentences_per_page
-		var end = st + sentences_per_page
 		$('#mainbody').empty()
 		sentences = []
 		ok_parse(st, end)
 		do_precomputations()
 	}
+	if (page <= 0) {
+		page = 0
+		$('#prevbtn').prop("disabled", true)
+	} else {
+		$('#prevbtn').prop("disabled", false)
+
+	}
+	if (end > total) {
+		end = total
+		$('#nextbtn').prop("disabled", true)
+	} else {
+		$('#nextbtn').prop("disabled", false)
+	}
 }
 gotoNextPage = function () {
 	console.log("go to next page")
 	page += 1
-	var total = json_str_arr.length
+	var total = json_sentences.length
 	var st = page * sentences_per_page
 	var end = st + sentences_per_page
 	if (end > total) {
@@ -34,6 +48,13 @@ gotoNextPage = function () {
 	} else {
 		$('#nextbtn').prop("disabled", false)
 	}
+	if (page == 0) {
+		$('#prevbtn').prop("disabled", true)
+	} else {
+		$('#prevbtn').prop("disabled", false)
+
+	}
+
 	$('#mainbody').empty()
 	sentences = []
 	ok_parse(st, end)
@@ -1340,9 +1361,32 @@ function do_precomputations() {
 
 function receivedJsonSentence(msg) {
 	console.log(msg)
+	json_sentences = msg
+	ok_parse(0, 10)
+	do_precomputations()
 }
 
-function ok_parse(st, end, mainview, uname, socketObj) {
+function ok_parse(st, end) {
+	end = sentences_per_page < json_sentences.length ? end : json_sentences.length
+	for (var i = st; i < end; i++) {
+		var jo = JSON.parse(json_sentences[i])
+		var s = Sentence.parse(jo)
+		s.initialize(mainview)
+		s.visible_nodes = _.sortBy(s.visible_nodes, function (vn) {
+			if (s.initial_order_by == 'en') {
+				return vn.en_id
+			} else {
+				return vn.de_id
+			}
+		})
+		s.assign_display_order_by_array_order()
+		s.update_visible_nodes()
+		sentences.push(s)
+	}
+}
+
+function setup(mview, uname, socketObj) {
+	mainview = mview
 	username = uname
 	socket = socketObj
 	if (socket != null) {
@@ -1350,7 +1394,12 @@ function ok_parse(st, end, mainview, uname, socketObj) {
 		socket.emit('requestJsonSentences', 'please')
 		socket.on('JsonSentences', receivedJsonSentence);
 	} else {
-		end = end < json_str_arr.length ? end : json_str_arr.length
+		json_sentences = json_str_arr
+		ok_parse(0, 10)
+		do_precomputations()
+
+		/*var end = sentences_per_page < json_str_arr.length ? sentences_per_page : json_str_arr.length
+		var st = 0
 		for (var i = st; i < end; i++) {
 			var jo = JSON.parse(json_str_arr[i])
 			var s = Sentence.parse(jo)
@@ -1365,7 +1414,7 @@ function ok_parse(st, end, mainview, uname, socketObj) {
 			s.assign_display_order_by_array_order()
 			s.update_visible_nodes()
 			sentences.push(s)
-		}
+		}*/
 	}
 
 	console.log('user name is ' + username)
