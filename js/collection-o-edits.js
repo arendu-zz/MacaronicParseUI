@@ -555,10 +555,9 @@ function Node() {
 			//console.log("Invalid action:  " + param.action)
 		}
 		var after = JSON.stringify(self.graph.sentence.getLogObjs())
-		var sm = SocketMessage(username, rule, before, after)
-		console.log(sm.user + sm.rule + sm.before + sm.after)
+		var sm = new SocketMessage(username, rule, before, after)
 		if (socket != null) {
-			socket.emit('logEvent', {'hello': 'hello val'})
+			socket.emit('logEvent', sm)
 		}
 
 	}
