@@ -1,6 +1,6 @@
 function SocketMessage(user, rule, before, after) {
-	this.user = user
+	this.username = user
 	this.rule = rule
-	this.before = before
-	this.after = after
+	this.state_before = before
+	this.state_after = after
 }
