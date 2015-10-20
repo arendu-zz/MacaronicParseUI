@@ -77,14 +77,26 @@ function Node() {
 	this.ir = null
 	/*attributes created in js*/
 	this.view = null
-	this.preview_view = null
+	this.preview_views = []
 	this.visible = false
 	this.graph = null
-	this.reorder_precompute = {from: null, to: null}
+	this.split_reorder_en = false
+	this.split_reorder_de = false
+	this.swap_reorder_de = false
+	this.swap_reorder_en = false
+	this.translate_en = false
+	this.translate_de = false
+	this.out_of_main_view = true
+	this.out_of_preview_view = true
 
 	this.get_view_position = function () {
 		var v = self.get_view()
 		return {top: v.offsetTop, left: v.offsetLeft, height: v.offsetHeight, width: v.offsetWidth}
+	}
+	this.get_view_text_position = function () {
+		var ts = self.get_view().textSpan
+		return {top: ts.offsetTop, left: ts.offsetLeft, height: ts.offsetHeight, width: ts.offsetWidth}
+
 	}
 
 	this.getLogObj = function () {
@@ -100,224 +112,293 @@ function Node() {
 		var graph = self.graph
 		$(view.external_reorder_selector_to_de).hide()
 		$(view.external_reorder_selector_to_en).hide()
-		var swap_reorder_en = false
-		var swap_reorder_de = false
+		self.swap_reorder_en = false
+		self.swap_reorder_de = false
 		$(view.split_reorder_selector_to_de).hide()
 		$(view.split_reorder_selector_to_en).hide()
-		var split_reorder_de = false
-		var split_reorder_en = false
+		self.split_reorder_de = false
+		self.split_reorder_en = false
 		$(view.translation_selector_to_de).hide()
 		$(view.translation_selector_to_en).hide()
-		var translate_en = false
-		var translate_de = false
+		self.translate_en = false
+		self.translate_de = false
 		if (graph.swaps) {
 			var s_obj = graph.get_swap('de')
 			if (s_obj != null) {
 				if (s_obj.head != '0') {
 					if (s_obj.head == '1' && _.contains(s_obj.other_graphs, graph.id)) {
-						swap_reorder_de = true
-						//$(view.external_reorder_selector_to_de).show()
+						self.swap_reorder_de = true
 					} else if (s_obj.head == '2' && _.contains(s_obj.graphs, graph.id)) {
-						swap_reorder_de = true
-						//$(view.external_reorder_selector_to_de).show()
+						self.swap_reorder_de = true
 					}
 				} else {
-					swap_reorder_de = true
-					//$(view.external_reorder_selector_to_de).show()
+					self.swap_reorder_de = true
 				}
 			}
 			var s_obj = graph.get_swap('en')
 			if (s_obj != null) {
 				if (s_obj.head != '0') {
 					if (s_obj.head == '1' && _.contains(s_obj.other_graphs, graph.id)) {
-						swap_reorder_en = true
-						//$(view.external_reorder_selector_to_en).show()
+						self.swap_reorder_en = true
 					} else if (s_obj.head == '2' && _.contains(s_obj.graphs, graph.id)) {
-						swap_reorder_en = true
-						//$(view.external_reorder_selector_to_en).show()
+						self.swap_reorder_en = true
 					}
 				} else {
-					//$(view.external_reorder_selector_to_en).show()
-					swap_reorder_en = true
-
+					self.swap_reorder_en = true
 				}
 			}
 		} else {
-			swap_reorder_de = false
-			swap_reorder_en = false
-			//$(view.external_reorder_selector_to_de).hide()
-			//$(view.external_reorder_selector_to_en).hide()
+			self.swap_reorder_de = false
+			self.swap_reorder_en = false
 		}
 		if (graph.splits) {
 			var vn_ids = _.map(this.graph.get_visible_nodes(), function (vn) {
 				return vn.id
 			})
 			var are_equal = vn_ids.length > 1
-
 			if (are_equal) {
 				if (graph.split_to == 'en') {
-					split_reorder_de = false
-					split_reorder_en = true
-
-					//$(view.split_reorder_selector_to_de).hide()
-					//$(view.split_reorder_selector_to_en).show()
+					self.split_reorder_de = false
+					self.split_reorder_en = true
 				} else {
-					split_reorder_de = true
-					split_reorder_en = false
-					//$(view.split_reorder_selector_to_en).hide()
-					//$(view.split_reorder_selector_to_de).show()
-
+					self.split_reorder_de = true
+					self.split_reorder_en = false
 				}
 			} else {
-				//$(view.split_reorder_selector_to_de).hide()
-				//$(view.split_reorder_selector_to_en).hide()
-				split_reorder_de = false
-				split_reorder_en = false
+				self.split_reorder_de = false
+				self.split_reorder_en = false
 			}
 		} else {
-			//$(view.split_reorder_selector_to_de).hide()
-			//$(view.split_reorder_selector_to_en).hide()
-			split_reorder_de = false
-			split_reorder_en = false
+			self.split_reorder_de = false
+			self.split_reorder_en = false
 		}
-		if (true) { //placeholder for adding a flag "graph.translates"
+		if (true) {
 			if (self.graph.translate_from(self, 'de') != null) {
-				//show translate button in 'de' direction
-				//$(view.translation_selector_to_de).show()
-				translate_de = true
+				self.translate_de = true
 			}
 			if (self.graph.translate_from(self, 'en') != null) {
-				//show translate button in 'en' direction
-				//$(view.translation_selector_to_en).show()
-				translate_en = true
+				self.translate_en = true
 			}
-
 		}
 
-		if (split_reorder_de) {
+		if (self.split_reorder_de) {
 			$(view.split_reorder_selector_to_de).show()
 		}
-		if (split_reorder_en) {
+		if (self.split_reorder_en) {
 			$(view.split_reorder_selector_to_en).show()
 		}
-		if (swap_reorder_de) {
+		if (self.swap_reorder_de) {
 			$(view.external_reorder_selector_to_de).show()
 		}
-		if (swap_reorder_en) {
+		if (self.swap_reorder_en) {
 			$(view.external_reorder_selector_to_en).show()
 		}
-		if (translate_de && !split_reorder_de) {
+		if (self.translate_de && !self.split_reorder_de) {
 			$(view.translation_selector_to_de).show()
-		} else if (translate_de && split_reorder_de) {
+		} else if (self.translate_de && self.split_reorder_de) {
 			//do not show translation if a split is possible...
 		}
-		if (translate_en && !split_reorder_en) {
+		if (self.translate_en && !self.split_reorder_en) {
 			$(view.translation_selector_to_en).show()
-		} else if (translate_en && split_reorder_en) {
+		} else if (self.translate_en && self.split_reorder_en) {
 			//do not show translation if split is possible
 		}
-
 	}
-	/*this.precompute_transfer_possibility = function (param) {
-		if (param.action == 'external reorder') {
-			var gvn = _.filter(self.graph.nodes, function (node) {
-				return node.visible
-			})
-			//gvn = self.graph.sentence.sort_within_graph(gvn, self.graph.internal_reorder_by)
-			var original_external_reorder_by = self.graph.external_reorder_by
-			self.graph.external_reorder_by = param.direction
-			var node_idx = self.graph.sentence.get_best_configuration(gvn, param.direction, gvn)
-			for (var i = 0; i < gvn.length; i++) {
-				var preview_n = gvn[i]
-				var destination_position = parseInt(node_idx[0]) + parseInt(i)
-				var from_pos = parseInt($(preview_n.get_view()).css('order'))
-				//console.log('precomputed movement ' + param.direction + ' :' + preview_n.s + 'from ' + from_pos + ' to ' + destination_position)
-				var p = 'reorder_precompute_' + param.direction
-				preview_n[p] = {from: parseInt(from_pos), to: parseInt(destination_position)}
-				//console.log('precompute will move ' + preview_n.s + 'from ' + from_pos + ' to ' + destination_position)
-				var p2 = 'reorder_precompute_' + (param.direction == 'en' ? 'de' : 'en')
-				preview_n[p2] = {from: null, to: null}
-			}
-			if (node_idx.length > 1) {
-				//console.log("multiple possible best configurations - external order!!!")
-			}
-			self.graph.external_reorder_by = original_external_reorder_by
-		}
-	}*/
 
 	this.unpreview_action = function () {
-		if (self.preview_view == null) {
-
-		} else {
-			_.each(self.preview_view, function (pv) {
-				$(pv).remove()
-			})
-
-			self.preview_view = null
+		_.each(self.preview_views, function (pv) {
+			$(pv).remove()
+		})
+		self.preview_views = []
+	}
+	this.onPreview = function (fromview) {
+		if (fromview == 'onPreview') {
+			self.out_of_preview_view = false
+			console.log('on preview from ' + fromview)
+		} else if (fromview == 'onView') {
+			self.out_of_main_view = false
+			console.log('on preview from ' + fromview)
 		}
-
 	}
 
-	this.preview_action = function (param) {
-		console.log('* *  PREVIEW REORDER ' + param.direction + '* *')
-		console.log(this.s + ' with action:' + param.action + ' ' + param.direction)
-		if (param.action == 'external reorder') {
-			if (self.graph.swaps) {
-				var self_1 = false
-				var self_2 = false
-				var swap_obj = self.graph.get_swap(param.direction)
-				var bounds = {'height': 0, 'left': Number.POSITIVE_INFINITY, 'right': Number.NEGATIVE_INFINITY, 'top': 0 }
-				_.each(swap_obj.graphs, function (gid) {
-					var g = self.graph.sentence.get_graph_by_id(gid)
-					self_1 = self_1 || gid == self.graph.id
-					var b = g.get_bounding_of_visible_nodes()
-					if (b.left < bounds.left) {
-						bounds.left = b.left
-					}
-					if (b.right > bounds.right) {
-						bounds.right = b.right
-					}
-					bounds.top = b.top
-					bounds.height = b.height
-				})
-				var other_bounds = {'height': 0, 'left': Number.POSITIVE_INFINITY, 'right': Number.NEGATIVE_INFINITY, 'top': 0 }
-				_.each(swap_obj.other_graphs, function (gid) {
-					var g = self.graph.sentence.get_graph_by_id(gid)
-					self_2 = self_2 || gid == self.graph.id
-					var b = g.get_bounding_of_visible_nodes()
-					if (b.left < other_bounds.left) {
-						other_bounds.left = b.left
-					}
-					if (b.right > other_bounds.right) {
-						other_bounds.right = b.right
-					}
-					other_bounds.top = b.top
-					other_bounds.height = b.height
-				})
-				var arrows = null
-				if (self_1 && !self_2) {
-					arrows = self.get_swap_preview_view(bounds, other_bounds, swap_obj.head == 0)
-				} else if (self_2 && !self_1) {
-					arrows = self.get_swap_preview_view(other_bounds, bounds, swap_obj.head == 0)
-				} else {
-					arrows = self.get_swap_preview_view(bounds, other_bounds, swap_obj.head == 0)
+	this.preview_action = function (direction) {
+
+		self.graph.sentence.remove_all_previews(self)
+		//console.log('* *  PREVIEW REORDER ' + direction + '* *')
+
+		var pv = document.createElement('div')
+		$(pv).addClass("previewDiv")
+		$(pv).addClass(direction)
+
+		$(pv).on('mouseleave', function () {
+			//self.offView('offPreview')
+			self.unpreview_action()
+		})
+		$(pv).on('mouseenter', function () {
+			self.onPreview('onPreview')
+		})
+		var pv_menu = document.createElement('div')
+		$(pv_menu).addClass("previewMenu")
+		$(pv).append($(pv_menu))
+		var pv_translate = document.createElement('div')
+		$(pv_translate).addClass("previewTranslateContainer")
+		$(pv_translate).addClass(direction)
+		$(pv).append($(pv_translate))
+		var pv_bounds = self.get_view_text_position()
+		pv_bounds['right'] = pv_bounds.left + pv_bounds.width
+
+		var btns = []
+
+		if (self.graph.swaps && self["swap_reorder_" + direction]) {
+			var self_1 = false
+			var self_2 = false
+			var swap_obj = self.graph.get_swap(direction)
+			var bounds = {'height': 0, 'left': Number.POSITIVE_INFINITY, 'right': Number.NEGATIVE_INFINITY, 'top': 0 }
+			_.each(swap_obj.graphs, function (gid) {
+				var g = self.graph.sentence.get_graph_by_id(gid)
+				self_1 = self_1 || gid == self.graph.id
+				var b = g.get_bounding_of_visible_nodes()
+				if (b.left < bounds.left) {
+					bounds.left = b.left
+				}
+				if (b.right > bounds.right) {
+					bounds.right = b.right
+				}
+				bounds.top = b.top
+				bounds.height = b.height
+			})
+			var other_bounds = {'height': 0, 'left': Number.POSITIVE_INFINITY, 'right': Number.NEGATIVE_INFINITY, 'top': 0 }
+			_.each(swap_obj.other_graphs, function (gid) {
+				var g = self.graph.sentence.get_graph_by_id(gid)
+				self_2 = self_2 || gid == self.graph.id
+				var b = g.get_bounding_of_visible_nodes()
+				if (b.left < other_bounds.left) {
+					other_bounds.left = b.left
+				}
+				if (b.right > other_bounds.right) {
+					other_bounds.right = b.right
+				}
+				other_bounds.top = b.top
+				other_bounds.height = b.height
+			})
+			var arrows = null
+			if (self_1 && !self_2) {
+				arrows = self.get_swap_preview_view(bounds, other_bounds, swap_obj.head == 0)
+				if (Math.abs(bounds.left - bounds.right) > Math.abs(pv_bounds.left - pv_bounds.right)) {
+					pv_bounds = bounds
 				}
 
-				var container = self.graph.sentence.get_container()
-				_.each(arrows, function (arrow) {
-					$(container).append(arrow)
-				})
-				//assert(self.graph.swaps_with.length == 1, 'should only swap with one other graph')
+			} else if (self_2 && !self_1) {
+				arrows = self.get_swap_preview_view(other_bounds, bounds, swap_obj.head == 0)
 
-			} else if (self.graph.splits) {
-
+				if (Math.abs(other_bounds.left - other_bounds.right) > Math.abs(pv_bounds.left - pv_bounds.right)) {
+					pv_bounds = other_bounds
+				}
+			} else {
+				arrows = self.get_swap_preview_view(bounds, other_bounds, swap_obj.head == 0)
+				if (Math.abs(bounds.left - bounds.right) > Math.abs(pv_bounds.left - pv_bounds.right)) {
+					pv_bounds = bounds
+				}
 			}
+
+			var container = self.graph.sentence.get_container()
+			_.each(arrows, function (arrow) {
+				$(container).append(arrow)
+				self.preview_views.push(arrow)
+			})
+			var sd = document.createElement('div')
+			$(sd).on('mouseenter', function () {
+				console.log("setting css of .preview.swap")
+				$('.preview.swap').css('opacity', '1.0')
+			})
+			$(sd).on('mouseleave', function () {
+				$('.preview.swap').css('opacity', '0.2')
+			})
+			$(sd).on('click', function () {
+				console.log("i have been clicked swap btn")
+				self.take_action({action: 'external reorder', direction: direction})
+
+			})
+			$(sd).addClass("swap btn")
+			//$(pv_menu).append($(sd))
+			btns.push(sd)
+
 		}
+		if (self.graph.splits) {
+			var sd = document.createElement('div')
+			$(sd).addClass("split btn")
+			$(sd).on('mouseenter', function () {
+				$(".preview.split").css('opacity', '1.0')
+			})
+			$(sd).on('mouseleave', function () {
+				$(".preview.split").css('opacity', '0.2')
+			})
+			$(sd).on('click', function () {
+				console.log("i have been clicked split btn")
+				self.take_action({action: 'split reorder', direction: direction})
+			})
+			btns.push(sd)
+			//$(pv_menu).append($(sd))
+		}
+
+		var modified_nodes = null
+		if (direction == 'de') {
+			modified_nodes = self.graph.translate_from(self, 'de')
+		} else {
+			modified_nodes = self.graph.translate_from(self, 'en')
+		}
+		if (modified_nodes != null) {
+			var bounds = get_bounding_of_nodes(modified_nodes.remove)
+			if (Math.abs(bounds.left - bounds.right) > Math.abs(pv_bounds.left - pv_bounds.right)) {
+				pv_bounds = bounds
+			}
+			var translation_items = self.get_translate_preview_view(modified_nodes.add, bounds)
+
+			_.each(translation_items, function (wordSpan) {
+				$(pv_translate).append(wordSpan)
+
+			})
+
+			var sd = document.createElement('div')
+			$(sd).on('mouseenter', function () {
+				$('.preview.translation').css('opacity', '1.0')
+			})
+			$(sd).on('mouseleave', function () {
+				$('.preview.translation').css('opacity', '0.2')
+			})
+			$(sd).on('click', function () {
+				console.log("i have been clicked translation btn")
+				self.take_action({action: 'translate', direction: direction})
+			})
+			$(sd).addClass("translation btn")
+			btns.push(sd)
+			//$(pv_menu).append($(sd))
+		}
+
+		if (btns.length > 0) {
+			_.each(btns, function (btn) {
+				$(pv_menu).append($(btn))
+			})
+			self.preview_views.push(pv)
+			var container = self.graph.sentence.get_container()
+			$(container).append($(pv))
+			var shift = direction == 'en' ? +pv_bounds.height / 2 + 7 : -pv_bounds.height / 2 - 15
+			var bounds_mid = (pv_bounds.left + pv_bounds.right) / 2
+			var jspv = $(pv)
+			jspv.css({
+						 "top": pv_bounds.top + shift,
+						 "left": bounds_mid,
+						 "min-width": Math.abs(pv_bounds.left - pv_bounds.right)
+					 });
+		} else {
+			self.preview_views = []
+		}
+
 	}
 
 	this.take_action = function (param) {
 		console.log('action triggered:' + param.action + ',' + param.direction)
-		self.unpreview_action()
+		self.graph.sentence.remove_all_previews(null)
 		var before = JSON.stringify(self.graph.sentence.getLogObjs())
 		var rule = param.action
 		if (param.action == 'split reorder') {
@@ -498,8 +579,6 @@ function Node() {
 					remove_positions.push(parseInt($(modified_nodes.remove[mnr].get_view()).css('order')))
 				}
 				gvn = self.graph.sentence.sort_within_graph(modified_nodes.add, self.graph.internal_reorder_by)
-				//var node_idx = self.graph.sentence.get_best_configuration(gvn, self.graph.external_reorder_by, modified_nodes.remove)
-
 				self.graph.sentence.remove_nodes(modified_nodes.remove)
 				if (modified_nodes.add.length == 1 && modified_nodes.remove.length == 1) {
 					//simple case
@@ -523,7 +602,7 @@ function Node() {
 						i.update_view_reorder()
 					})
 				} else if (modified_nodes.add.length == 1 && modified_nodes.remove.length > 1) {
-					console.log("ok")
+
 					var insert_idx = null
 					if (self.graph.splits) {
 						var target_order = self.graph['split_order_by_' + param.direction]
@@ -581,7 +660,30 @@ function Node() {
 		if (socket != null) {
 			socket.emit('logEvent', sm)
 		}
+	}
 
+	this.get_translate_preview_view = function (addNodes, bounds) {
+
+		var preview_elements = {main: [], additional: []}
+		/*var pv = document.createElement('div')
+		$(pv).addClass('previewDiv')
+		$(pv).on('mouseover', function () {
+			self.onPreview()
+		})
+		$(pv).on('mouseleave', function () {
+			self.offView('offPreview')
+		})*/
+		_.each(addNodes, function (an) {
+			var ps = document.createElement('span')
+			ps.innerHTML = an.s
+			$(ps).addClass("preview translation")
+			$(ps).addClass(an.lang)
+			//pv.appendChild(ps)
+			preview_elements.main.push(ps)
+		})
+
+		//return [pv]
+		return preview_elements
 	}
 
 	this.get_transfer_preview_view = function (bounds, other_bounds, draw_up, moving_to_end) {
@@ -616,7 +718,6 @@ function Node() {
 													  })
 		$(preview_view).addClass("preview")
 		$(line).addClass("preview")
-		this.preview_view = [preview_view, line]
 		return [preview_view, line]
 
 	}
@@ -664,6 +765,7 @@ function Node() {
 														  p0y: bounds.top + bounds.height / 2 + 10,
 														  p1x: bounds.right - 5,
 														  p1y: bounds.top + bounds.height / 2 + 10,
+														  size: 1,
 														  id: "previewLine"
 													  })
 		var line2 = $(sentence_container).straightline({
@@ -671,22 +773,37 @@ function Node() {
 														   p0y: other_bounds.top + other_bounds.height / 2 + 10,
 														   p1x: other_bounds.right - 5,
 														   p1y: other_bounds.top + other_bounds.height / 2 + 10,
+														   size: 1,
 														   id: "previewLine"
 													   })
 
-		$(preview_view).addClass("preview")
-		$(preview_view2).addClass("preview")
-		$(line).addClass("preview")
-		$(line2).addClass("preview")
+		$(preview_view).addClass("preview swap")
+		$(preview_view2).addClass("preview swap")
+		$(line).addClass("preview swap")
+		$(line2).addClass("preview swap")
 		if (is_sym) {
-			this.preview_view = [preview_view, preview_view2, line, line2]
 			return [preview_view, preview_view2, line, line2]
 		} else {
-			this.preview_view = [preview_view, line, line2]
 			return [preview_view, line, line2]
 		}
-
 	}
+
+	this.offView = function (fromdiv) {
+
+		if (fromdiv == 'offPreview') {
+			//console.log("offView from preview div")
+			//self.out_of_preview_view = true
+		} else if (fromdiv == 'offView') {
+			//console.log('off view from node menu container')
+			//self.out_of_main_view = true
+		}
+
+		if (self.out_of_main_view && self.out_of_preview_view) {
+			//console.log("removing preview!!")
+			//self.unpreview_action()
+		}
+	}
+
 	this.get_view = function () {
 		if (this.view == null) {
 			this.view = document.createElement('div')
@@ -697,81 +814,117 @@ function Node() {
 			var menu_container = document.createElement('div')
 			$(menu_container).addClass('node_menu_container')
 			$(this.view).append($(menu_container))
-			var translation_selector = document.createElement('div')
+			/*var translation_selector = document.createElement('div')
 			$(translation_selector).addClass('translation_selector')
 			$(menu_container).append($(translation_selector))
 			$(translation_selector).on('click', function () {
 				self.take_action({action: 'translate', direction: 'de'})
+			})*/
+			$(menu_container).bind('mouseenter', function (e) {
+
+				self.preview_action('de')
 			})
+			$(menu_container).bind('click', function (e) {
+
+				console.log("clicked node menu container")
+			})
+			/*$(translation_selector).on('mouseleave', function () {
+				self.unpreview_action()
+			})*/
+
 			/*if (!this.to_de) {
 				$(translation_selector).hide()
 			}*/
-			var split_reorder_selector = document.createElement('div')
+			/*var split_reorder_selector = document.createElement('div')
 			$(split_reorder_selector).addClass('split_reorder_selector')
-			$(menu_container).append($(split_reorder_selector))
-			$(split_reorder_selector).on('click', function () {
+			$(menu_container).append($(split_reorder_selector))*/
+			/*$(split_reorder_selector).on('click', function () {
 				self.take_action({action: 'split reorder', direction: 'de'})
-			})
+			})*/
 
-			var external_reorder_selector = document.createElement('div')
+			/*var external_reorder_selector = document.createElement('div')
 			$(external_reorder_selector).addClass('external_reorder_selector')
 			$(external_reorder_selector).addClass('tode')
 			$(menu_container).append($(external_reorder_selector))
 			$(external_reorder_selector).on('click', function () {
 				self.take_action({action: 'external reorder', direction: 'de'})
-			})
-			$(external_reorder_selector).on('mouseover', function () {
+			})*/
+			/*$(menu_container).on('mouseover', function () {
 				self.preview_action({action: 'external reorder', direction: 'de'})
-			})
+			})*/
 
-			$(external_reorder_selector).on('mouseout', function () {
+			/*$(external_reorder_selector).on('mouseleave', function () {
 				self.unpreview_action()
-			})
+			})*/
 
-			this.view.translation_selector_to_de = translation_selector
+			/*this.view.translation_selector_to_de = translation_selector
 			this.view.split_reorder_selector_to_de = split_reorder_selector
-			this.view.external_reorder_selector_to_de = external_reorder_selector
+			this.view.external_reorder_selector_to_de = external_reorder_selector*/
 			var s = document.createElement('span')
 			s.innerHTML = this.s
-			this.view.span = s
-			$(s).addClass(this.lang == 'en' ? 'spanen' : 'spande')
+			this.view.textSpan = s
+			$(s).addClass("textspan")
+			$(s).addClass(this.lang)
 			$(this.view).append($(s))
 			var bottom_menu_container = document.createElement('div')
 			$(bottom_menu_container).addClass('node_menu_container')
 			$(this.view).append($(bottom_menu_container))
-			translation_selector = document.createElement('div')
+			/*translation_selector = document.createElement('div')
 			$(translation_selector).addClass('translation_selector')
-			$(bottom_menu_container).append($(translation_selector))
-			$(translation_selector).on('click', function () {
-				self.take_action({action: 'translate', direction: 'en'})
+			$(bottom_menu_container).append($(translation_selector))*/
+			$(bottom_menu_container).bind('mouseenter', function (e) {
+				//self.preview_action({action: 'external reorder', direction: 'en'})
+				//self.preview_action({action: 'translate', direction: 'en'})
+
+				self.preview_action('en')
 			})
+
+			$(bottom_menu_container).bind('click', function (e) {
+
+				console.log("clicked node menu container")
+			})
+			$(bottom_menu_container).bind('mouseleave', function (e) {
+
+				self.offView('offView')
+			})
+			/*$(translation_selector).on('click', function () {
+				self.take_action({action: 'translate', direction: 'en'})
+			})*/
+			/*$(translation_selector).on('mouseover', function () {
+				self.preview_action({action: 'translate', direction: 'en'})
+			})*/
+			/*$(translation_selector).on('mouseleave', function () {
+				self.unpreview_action()
+			})*/
+
 			/*if (!this.to_en) {
 				$(translation_selector).hide()
 			}*/
-			split_reorder_selector = document.createElement('div')
+			/*split_reorder_selector = document.createElement('div')
 			$(split_reorder_selector).addClass('split_reorder_selector')
-			$(bottom_menu_container).append($(split_reorder_selector))
-			$(split_reorder_selector).on('click', function () {
+			$(bottom_menu_container).append($(split_reorder_selector))*/
+			/*$(split_reorder_selector).on('click', function () {
 				self.take_action({action: 'split reorder', direction: 'en'})
-			})
+			})*/
 
-			external_reorder_selector = document.createElement('div')
+			/*external_reorder_selector = document.createElement('div')
 			$(external_reorder_selector).addClass('external_reorder_selector')
 			$(external_reorder_selector).addClass('toen')
 			$(bottom_menu_container).append($(external_reorder_selector))
 			$(external_reorder_selector).on('click', function () {
 				self.take_action({action: 'external reorder', direction: 'en'})
-			})
-			$(external_reorder_selector).on('mouseover', function () {
+			})*/
+			/*$(external_reorder_selector).on('mouseover', function () {
 				self.preview_action({action: 'external reorder', direction: 'en'})
-			})
-			$(external_reorder_selector).on('mouseout', function () {
+			})*/
+			/*$(external_reorder_selector).on('mouseleave', function () {
 				self.unpreview_action()
-			})
+			})*/
 
-			this.view.translation_selector_to_en = translation_selector
+			/*this.view.translation_selector_to_en = translation_selector
 			this.view.split_reorder_selector_to_en = split_reorder_selector
-			this.view.external_reorder_selector_to_en = external_reorder_selector
+			this.view.external_reorder_selector_to_en = external_reorder_selector*/
+
 			return this.view
 		} else {
 			return this.view
@@ -846,7 +999,8 @@ function Graph() {
 		var max_height = 0
 		var min_top = Number.POSITIVE_INFINITY
 		_.each(my_vn, function (mvn) {
-			var pos = mvn.get_view_position()
+			//var pos = mvn.get_view_position()
+			var pos = mvn.get_view_text_position()
 			min_left = min_left < pos.left ? min_left : pos.left
 			max_right = max_right > pos.left + pos.width ? max_right : pos.left + pos.width
 			min_top = min_top < pos.top ? min_top : pos.top
@@ -951,6 +1105,20 @@ function Sentence() {
 	this.container = null
 	this.initial_order_by = null
 
+	this.remove_all_previews = function (exception) {
+		_.each(self.visible_nodes, function (vn) {
+			if (exception != null) {
+				if (exception.s != vn.s) {
+					console.log('removing ' + vn.s + ' exception is ' + exception.s)
+					vn.unpreview_action()
+				}
+			} else {
+				console.log('removing ' + vn.s + " NULL is exception")
+				vn.unpreview_action()
+			}
+		})
+	}
+
 	this.get_graph_by_id = function (gid) {
 		for (var i = 0; i < this.graphs.length; i++) {
 			var g = this.graphs[i]
@@ -959,6 +1127,7 @@ function Sentence() {
 			}
 		}
 	}
+
 	this.initialize = function (mainview) {
 		self.container = self.get_container()
 		mainview.append($(self.get_container()))
@@ -1045,6 +1214,7 @@ function Sentence() {
 		////console.log("config:" + config + " alignment:" + alignment_score)
 		return score
 	}
+
 	this.remove_cosecutive_duplicate = function (list) {
 		var new_list = []
 		var prev = null
@@ -1056,6 +1226,7 @@ function Sentence() {
 		}
 		return new_list
 	}
+
 	this.score_configuration_alignment_unq = function (config, nodes_to_insert, g_order, nodes_to_ignore) {
 		var visible_nodes_copy = []
 		for (var v = 0; v < self.visible_nodes.length; v++) {
@@ -1220,6 +1391,9 @@ function Sentence() {
 		if (this.container == null) {
 			this.container = document.createElement('div')
 			$(this.container).addClass('container')
+			$(this.container).bind('mouseleave', function () {
+				$(self.remove_all_previews(null))
+			})
 			return this.container
 		} else {
 			return this.container
@@ -1348,6 +1522,21 @@ function async(your_function, arg, callback) {
 	}, 0);
 }
 
+function get_bounding_of_nodes(list_of_nodes) {
+	var min_left = Number.POSITIVE_INFINITY
+	var max_right = 0
+	var max_height = 0
+	var min_top = Number.POSITIVE_INFINITY
+	_.each(list_of_nodes, function (mvn) {
+		var pos = mvn.get_view_text_position() //  mvn.get_view_position()
+		min_left = min_left < pos.left ? min_left : pos.left
+		max_right = max_right > pos.left + pos.width ? max_right : pos.left + pos.width
+		min_top = min_top < pos.top ? min_top : pos.top
+		max_height = max_height > pos.height ? max_height : pos.height
+	})
+	return {top: min_top, left: min_left, right: max_right, height: max_height}
+}
+
 function precomputations(i) {
 	var s = sentences[i]
 	s.set_initial_view()
@@ -1392,6 +1581,7 @@ function setup(mview, uname, socketObj) {
 	if (socket != null) {
 		//get json_sentences from server
 		socket.emit('requestJsonSentences', 'please')
+		console.log("requested sentences from server...")
 		socket.on('JsonSentences', receivedJsonSentence);
 	} else {
 		json_sentences = json_str_arr
