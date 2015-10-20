@@ -10,11 +10,13 @@
                 b_height: 100,
                 b_width: 200,
                 lineWidth: 2,
-                strokeStyle: 'grey'
+                strokeStyle: 'grey',
+				text: 'sometext'
             }, options);
 
         var canvas = document.createElement('canvas')
         canvas.id = options.id
+
         var padding = 0;
         var x_min = settings.px - padding
         var x_max = settings.px + settings.b_width + padding
@@ -22,15 +24,17 @@
         var y_min = settings.py - padding
         var y_max = settings.py + settings.b_height + padding
 
-
+		var ctx = canvas.getContext('2d')
         canvas.style.position = 'absolute'
         canvas.style.padding = '0px'
         canvas.style.top = y_min + 'px'
         canvas.style.left = x_min + 'px'
         canvas.width = x_max - x_min
         canvas.height = y_max - y_min
-        //canvas.style.border = settings.strokeStyle + " " + settings.lineWidth + "px solid"
-        canvas.style.background = settings.strokeStyle
+        canvas.style.border = settings.strokeStyle + " " + settings.lineWidth + "px solid"
+		ctx.textAlign = "center"
+		ctx.fillText(settings.text, (x_max - x_min)/2, (y_max - y_min)/2);
+        /*canvas.style.background = settings.strokeStyle*/
 
         /*var ctx = canvas.getContext('2d')
         ctx.strokeStyle = settings.strokeStyle

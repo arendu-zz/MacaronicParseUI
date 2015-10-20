@@ -2,20 +2,20 @@
 
 }
 
-div {
-    padding: 0.5em;
-}
-
 .subItem {
     display: flex;
 
 }
 
-.spanen {
+span {
+    cursor: default;
+}
+
+.textspan.en {
     font-style: normal;
 }
 
-.spande {
+.textspan.de {
     font-style: italic;
 }
 
@@ -29,21 +29,19 @@ div {
     /*display: inline-block;*/
     display: flex;
     width: -webkit-fit-content;
-    border: 2px solid transparent;
+    border-right: 2px solid transparent;
+    border-left: 2px solid transparent;
+    /*border: 2px solid grey;*/
     justify-content: space-around;
     flex-direction: column;
-
-    height: 40px;
-
+    height: 70px;
     /*transition: height 0.25s;*/
     /*padding: 0px;*/
     /*height: -webkit-fit-content;*/
     /*flex-basis: 200px;*/
     /*-webkit-flex-grow: 2;*/
-
     /*flex-grow: 1;*/
     /*flex-shrink: 0;*/
-
 }
 
 .item:first-child {
@@ -59,37 +57,128 @@ div {
 }
 
 .item:hover > .node_menu_container {
-    opacity: 1;
+    /*opacity: 1;*/
+
 }
 
 .container:hover {
     /*background: gray;*/
 }
 
-.preview {
-    pointer-events: none;
-: #028090;
-}
-
 .node_menu_container {
     display: flex;
-    background: transparent;
-    height: 5px;
-    padding: 0;
+    height: 20px;
+    padding: 0px;
     flex-direction: row;
     justify-content: space-around;
-    opacity: 1;
-   /* transition: opacity 0.25s linear;*/
+    /*border: 1px solid green;*/
+
+    /* transition: opacity 0.25s linear;*/
 }
 
 /*.node_menu_container:hover {
     opacity: 1;
 }*/
 
-.translation_selector {
+.translation.btn {
+    height: 100%;
+    flex-grow: 1;
     border: 1px solid #9BC65C;
-    background: white;
-    height: 4px;
+    background: transparent;
+
+}
+
+.btn {
+
+}
+
+.translation.btn:hover {
+    background: #9BC65C;
+}
+
+.split.btn {
+    height: 100%;
+    flex-grow: 1;
+    border: 1px solid #BD587C;
+    background: transparent;
+}
+
+.split.btn:hover {
+    background: #BD587C;
+}
+
+.swap.btn {
+    height: 100%;
+    flex-grow: 1;
+    border: 1px solid #028090;
+    background: transparent;
+}
+
+.swap.btn:hover {
+    background: #028090;
+}
+
+.previewMenu {
+    display: flex;
+    flex-direction: row;
+    align-content: center;
+    justify-content: center;
+    width: 100%;
+    background: transparent;
+    padding: 0px;
+    margin: 0px;
+    height: 5px;
+}
+
+.previewDiv {
+    display: flex;
+    padding: 0px;
+    position: absolute;
+    z-index: 100000;
+    flex-direction: row;
+    align-items: center;
+    left: 50%;
+    -webkit-transform: translate(-50%, 0);
+}
+
+.preview.translation {
+    padding-left: 2px;
+    padding-right: 2px;
+    opacity: 0.2;
+    font-size: large;
+
+}
+
+.preview.translation.en {
+    font-style: normal;
+}
+
+.preview.translation.de {
+    font-style: italic;
+}
+
+.preview.swap {
+    opacity: 0.2;
+    pointer-events: none;
+}
+
+.previewDiv.en {
+    display: flex;
+    flex-direction: column-reverse;
+    justify-content: flex-end;
+}
+
+.previewDiv.de {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+}
+
+.translation_selector {
+    opacity: 0;
+    border: 1px solid #9BC65C;
+    background: transparent;
+    height: 100%;
     flex-grow: 1;
     padding: 0px;
 
@@ -100,9 +189,10 @@ div {
 }
 
 .external_reorder_selector {
+    opacity: 0;
     background: transparent;
     border: 1px solid #028090;
-    height: 4px;
+    height: 100%;
     /*width: 3px;*/
     flex-grow: 1;
     padding: 0px;
@@ -116,7 +206,7 @@ div {
 .split_reorder_selector {
     background: transparent;
     border: 1px solid #BD587C;
-    height: 4px;
+    height: 100%;
     /*width: 3px;*/
     flex-grow: 1;
     padding: 0px;
@@ -127,12 +217,16 @@ div {
     background: #BD587C;
 }
 
+.previewTranslateContainer {
+    min-height: 10px;
+}
+
 .container {
     background: transparent;
-    /*display: -moz-box;
+    display: -moz-box;
     display: -ms-box;
     display: -webkit-box;
-    display: -webkit-flex;*/
+    display: -webkit-flex;
     display: flex;
     /*height: 200px;*/
     flex-direction: row;
@@ -145,6 +239,12 @@ div {
     /*----- flex-start | flex-end | center | space-between | space-around | stretch*/
     flex-wrap: wrap;
     /*----- nowrap | wrap | wrap-reverse*/
+    padding-top: 0px;
+    padding-bottom: 0px;
+}
+
+.straight_line {
+    background: #028090;
 }
 
 /*--- ORDER ---*/

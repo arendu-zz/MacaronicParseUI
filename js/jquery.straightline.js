@@ -6,7 +6,8 @@
 									p1x: 70,
 									p1y: 10,
 									size: 5,
-									lineWidth: 1,
+									padding: 0,
+									lineWidth: 0,
 									strokeStyle: '#028090'
 								}, options);
 
@@ -31,18 +32,18 @@
 		canvas.width = x_max - x_min;
 		canvas.height = y_max - y_min;
 
-		var ctx = canvas.getContext('2d');
-
+		/*var ctx = canvas.getContext('2d');
+		ctx.translate(0.5, 0.5);
 		// Styling
 		ctx.strokeStyle = settings.strokeStyle;
-		ctx.lineWidth = settings.lineWidth;
-		ctx.lineJoin = 'round';
-		ctx.lineCap = 'round';
+		ctx.lineWidth = 5;
+		//ctx.lineJoin = 'round';
+		//ctx.lineCap = 'round';
 
 		ctx.beginPath();
 		ctx.moveTo(p0x, p0y);
 		ctx.lineTo(p1x, p1y);
-		ctx.stroke();
+		ctx.stroke();*/
 
 		return $(canvas).addClass('straight_line');
 	}
