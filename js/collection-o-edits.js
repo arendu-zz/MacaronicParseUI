@@ -324,21 +324,120 @@ function Node() {
 			btns.push(sd)
 
 		}
-		if (self.graph.splits) {
-			var sd = document.createElement('div')
-			$(sd).addClass("split btn")
-			$(sd).on('mouseenter', function () {
-				$(".preview.split").css('opacity', '1.0')
+		if (self.graph.splits && self["split_reorder_" + direction]) {
+			console.log("this graphs splits")
+			var split_possible = false
+			var gvn = _.filter(self.graph.nodes, function (node) {
+				return node.visible
 			})
-			$(sd).on('mouseleave', function () {
-				$(".preview.split").css('opacity', '0.2')
+			var target_order = self.graph['split_order_by_' + direction]
+			var split_nodes = gvn
+			split_nodes = _.sortBy(split_nodes, function (sn) {
+				return parseInt($(sn.get_view()).css('order'))
 			})
-			$(sd).on('click', function () {
-				console.log("i have been clicked split btn")
-				self.take_action({action: 'split reorder', direction: direction})
+
+			var separator_nodes = _.map(target_order, function (t_id) {
+				if (t_id != self.graph.id) {
+					var s_graph = self.graph.sentence.get_graph_by_id(t_id)
+					var sns = s_graph.get_visible_nodes()
+					sns = _.sortBy(sns, function (sn) {
+						return parseInt($(sn.get_view()).css('order'))
+					})
+					return sns
+				} else {
+					return ['INSERT HERE']
+				}
+
 			})
-			btns.push(sd)
-			//$(pv_menu).append($(sd))
+			separator_nodes = _.flatten(separator_nodes)
+			var new_ordering_nodes = []
+			var insertions = _.reduce(separator_nodes, function (memo, sn) {
+				if (sn == 'INSERT HERE') {return memo + 1} else {return memo}
+			}, 0)
+			if (insertions == 1) {
+				split_possible = true
+				new_ordering_nodes = _.map(separator_nodes, function (sn) {
+					if (sn == 'INSERT HERE') {
+						return split_nodes
+					} else {
+						return sn
+					}
+				})
+
+			} else if (insertions == split_nodes.length) {
+				split_possible = true
+				var split_ptr = 0
+				new_ordering_nodes = _.map(separator_nodes, function (sn) {
+					if (sn == 'INSERT HERE') {
+						var split_n = split_nodes[split_ptr]
+						split_ptr++
+						return split_n
+					} else {
+						return sn
+					}
+				})
+
+			}
+			//Todo: will fail if more than 2 nodes are involved in a split!!
+			var modified_nodes = {}
+			new_ordering_nodes = _.flatten(new_ordering_nodes)
+			var new_ordering_positions = _.map(new_ordering_nodes, function (nn) {
+				return parseInt($(nn.get_view()).css('order'))
+			})
+			var st = _.min(new_ordering_positions)
+			var new_pos = 0 + st
+			_.each(new_ordering_nodes, function (nn) {
+				var nnp = new_pos
+				if (_.contains(split_nodes, nn)) {
+					//self.graph.sentence.remove_nodes([nn])
+					var nnpc = parseInt($(nn.get_view()).css('order'))
+					console.log("adding back " + nn.s + " in position " + nnp + " current position" + nnpc)
+					//self.graph.sentence.add_nodes([nn], [nnp], param)
+					if (nnp == nnpc) {
+						still_node = nn
+						modified_nodes['still'] = nn
+					} else {
+						modified_nodes['moving'] = nn
+						modified_nodes['moving_to'] = self.graph.sentence.get_node_by_order(nnp)
+						console.log('moving to reference' + modified_nodes.moving_to.s)
+						modified_nodes['is_left'] = nnpc > nnp
+					}
+				} else {
+					console.log(nn.s + " not in split, its position " + nnp)
+				}
+				new_pos += 1
+			})
+
+			if (split_possible) {
+				var moving_bounds = modified_nodes.moving.get_view_text_position()
+				moving_bounds['right'] = moving_bounds.left + moving_bounds.width
+				var bounds = modified_nodes.still.get_view_text_position()
+				bounds['right'] = bounds.left + bounds.width
+				var moving_to_bounds = modified_nodes.moving_to.get_view_text_position()
+				moving_to_bounds['right'] = moving_to_bounds.left + moving_to_bounds.width
+				var arrows = self.get_split_preview_view(bounds, moving_bounds, moving_to_bounds, modified_nodes.is_left)
+				var container = self.graph.sentence.get_container()
+				_.each(arrows, function (arrow) {
+					$(container).append(arrow)
+					self.preview_views.push(arrow)
+				})
+				//currently split and should be unsplit
+				console.log("currently split and should be unsplit ")
+				var sd = document.createElement('div')
+				$(sd).addClass("split btn")
+				$(sd).on('mouseenter', function () {
+					$(".preview.split").css('opacity', '1.0')
+				})
+				$(sd).on('mouseleave', function () {
+					$(".preview.split").css('opacity', '0.2')
+				})
+				$(sd).on('click', function () {
+					console.log("i have been clicked split btn")
+					self.take_action({action: 'split reorder', direction: direction})
+				})
+				btns.push(sd)
+			}
+
 		}
 
 		var modified_nodes = null
@@ -348,7 +447,9 @@ function Node() {
 			modified_nodes = self.graph.translate_from(self, 'en')
 		}
 		if (modified_nodes != null) {
+
 			var bounds = get_bounding_of_nodes(modified_nodes.remove)
+
 			if (Math.abs(bounds.left - bounds.right) > Math.abs(pv_bounds.left - pv_bounds.right)) {
 				pv_bounds = bounds
 			}
@@ -362,12 +463,28 @@ function Node() {
 			var sd = document.createElement('div')
 			$(sd).on('mouseenter', function () {
 				$('.preview.translation').css('opacity', '1.0')
+				_.each(modified_nodes.remove, function (rm) {
+					$(rm.get_view().textSpan).addClass("affected")
+					console.log("adding affected class")
+				})
 			})
 			$(sd).on('mouseleave', function () {
 				$('.preview.translation').css('opacity', '0.2')
+				_.each(modified_nodes.remove, function (rm) {
+					$(rm.get_view().textSpan).removeClass("affected")
+					console.log("removing affected class")
+				})
 			})
 			$(sd).on('click', function () {
 				console.log("i have been clicked translation btn")
+				_.each(modified_nodes.remove, function (rm) {
+					$(rm.get_view().textSpan).removeClass("affected")
+					console.log("removing affected class")
+				})
+				_.each(modified_nodes.add, function (rm) {
+					$(rm.get_view().textSpan).removeClass("affected")
+					console.log("removing affected class")
+				})
 				self.take_action({action: 'translate', direction: direction})
 			})
 			$(sd).addClass("translation btn")
@@ -719,6 +836,58 @@ function Node() {
 		$(preview_view).addClass("preview")
 		$(line).addClass("preview")
 		return [preview_view, line]
+
+	}
+
+	this.get_split_preview_view = function (still_bounds, moving_bounds, moving_to_bounds, left) {
+		var gap = Math.abs(moving_to_bounds.left - moving_bounds.left)
+		var bounds_mid = (moving_bounds.left + moving_bounds.right) / 2
+		var other_bounds_mid = moving_to_bounds.left
+		if (left) {
+			other_bounds_mid = moving_to_bounds.left
+		} else {
+			other_bounds_mid = moving_to_bounds.right
+		}
+
+		var mid_x = bounds_mid < other_bounds_mid ? bounds_mid + gap / 2 : other_bounds_mid + gap / 2
+		var mid_y = still_bounds.top + (still_bounds.height / 2)
+
+		var sentence_container = this.graph.sentence.get_container()
+
+		var preview_view = $(sentence_container).curvedArrow({
+																 p0x: bounds_mid,
+																 p0y: still_bounds.top + still_bounds.height / 2 - 10,
+																 p1x: mid_x,
+																 p1y: mid_y - still_bounds.height - 20,
+																 p2x: other_bounds_mid,
+																 p2y: moving_bounds.top + moving_bounds.height / 2 - 10,
+																 id: "previewOverlayArrow",
+																 strokeStyle: '#BD587C'
+															 })
+
+		var line = $(sentence_container).straightline({
+														  p0x: still_bounds.left + 5,
+														  p0y: still_bounds.top + still_bounds.height / 2 + 10,
+														  p1x: still_bounds.right - 5,
+														  p1y: still_bounds.top + still_bounds.height / 2 + 10,
+														  size: 1,
+														  id: "previewLine",
+														  strokeStyle: '#BD587C'
+													  })
+		var line2 = $(sentence_container).straightline({
+														   p0x: moving_bounds.left + 5,
+														   p0y: moving_bounds.top + moving_bounds.height / 2 + 10,
+														   p1x: moving_bounds.right - 5,
+														   p1y: moving_bounds.top + moving_bounds.height / 2 + 10,
+														   size: 1,
+														   id: "previewLine",
+														   strokeStyle: '#BD587C'
+													   })
+		$(preview_view).addClass("preview split")
+		$(line).addClass("preview split")
+		$(line2).addClass("preview split")
+
+		return [preview_view, line, line2]
 
 	}
 
@@ -1109,11 +1278,11 @@ function Sentence() {
 		_.each(self.visible_nodes, function (vn) {
 			if (exception != null) {
 				if (exception.s != vn.s) {
-					console.log('removing ' + vn.s + ' exception is ' + exception.s)
+					//console.log('removing ' + vn.s + ' exception is ' + exception.s)
 					vn.unpreview_action()
 				}
 			} else {
-				console.log('removing ' + vn.s + " NULL is exception")
+				//console.log('removing ' + vn.s + " NULL is exception")
 				vn.unpreview_action()
 			}
 		})
@@ -1432,6 +1601,15 @@ function Sentence() {
 				////console.log("no movement")
 			}
 		}
+	}
+	this.get_node_by_order = function (order) {
+		var found_node = null
+		_.each(self.visible_nodes, function (vn) {
+			if (order == parseInt($(vn.get_view()).css('order'))) {
+				found_node = vn
+			}
+		})
+		return found_node
 	}
 }
 Edge.parse = function (input) {

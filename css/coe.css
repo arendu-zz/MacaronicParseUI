@@ -157,6 +157,11 @@ span {
     font-style: italic;
 }
 
+.preview.split {
+    opacity: 0.2;
+    pointer-events: none;
+}
+
 .preview.swap {
     opacity: 0.2;
     pointer-events: none;
@@ -219,6 +224,10 @@ span {
 
 .previewTranslateContainer {
     min-height: 10px;
+}
+
+.affected {
+    opacity: 0.2;
 }
 
 .container {

@@ -10,7 +10,7 @@
 									p3x: 150,
 									p3y: 300,
 									size: 5,
-									lineWidth: 1,
+									lineWidth: 2,
 									strokeStyle: '#028090'
 								}, options);
 

@@ -27,6 +27,7 @@
 		var p1y = settings.p1y - y_min;
 
 		canvas.style.position = 'absolute';
+		canvas.style.background = settings.strokeStyle
 		canvas.style.top = y_min + 'px';
 		canvas.style.left = x_min + 'px';
 		canvas.width = x_max - x_min;
