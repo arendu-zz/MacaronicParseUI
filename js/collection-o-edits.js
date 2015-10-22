@@ -918,18 +918,20 @@ function Node() {
 																 p1y: mid_y - bounds.height - 20,
 																 p2x: other_bounds_mid,
 																 p2y: other_bounds.top + other_bounds.height / 2 - 10,
+																 doubleSided: is_sym,
 																 id: "previewOverlayArrow"
 															 })
 
-		var preview_view2 = $(sentence_container).curvedArrow({
+		/*var preview_view2 = $(sentence_container).curvedArrow({
 																  p2x: bounds_mid,
 																  p2y: bounds.top + bounds.height / 2 + 10,
 																  p1x: mid_x,
 																  p1y: mid_y + bounds.height + 20,
 																  p0x: other_bounds_mid,
 																  p0y: other_bounds.top + other_bounds.height / 2 + 10,
+																  doubleSided: is_sym,
 																  id: "previewOverlayArrow"
-															  })
+															  })*/
 		var line = $(sentence_container).straightline({
 														  p0x: bounds.left + 5,
 														  p0y: bounds.top + bounds.height / 2 + 10,
@@ -948,11 +950,11 @@ function Node() {
 													   })
 
 		$(preview_view).addClass("preview swap")
-		$(preview_view2).addClass("preview swap")
+		//$(preview_view2).addClass("preview swap")
 		$(line).addClass("preview swap")
 		$(line2).addClass("preview swap")
 		if (is_sym) {
-			return [preview_view, preview_view2, line, line2]
+			return [preview_view, line, line2]
 		} else {
 			return [preview_view, line, line2]
 		}

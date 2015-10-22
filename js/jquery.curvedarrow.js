@@ -10,6 +10,7 @@
 									p3x: 150,
 									p3y: 300,
 									size: 5,
+									doubleSided: false,
 									lineWidth: 2,
 									strokeStyle: '#028090'
 								}, options);
@@ -53,7 +54,15 @@
 		ctx.moveTo(p0x, p0y);
 		ctx.quadraticCurveTo(p1x, p1y, p2x, p2y);
 		ctx.stroke();
+		drawArrowHead(ctx, p1x, p1y, p2x, p2y, settings.size)
+		if (settings.doubleSided) {
+			drawArrowHead(ctx, p1x, p1y, p0x, p0y, settings.size)
+		}
 
+		return $(canvas).addClass('curved_arrow');
+	}
+
+	function drawArrowHead(ctx, p1x, p1y, p2x, p2y, size) {
 		// Arrow head
 		var angle = Math.atan2(p2y - p1y, p2x - p1x);
 		ctx.translate(p2x, p2y);
@@ -61,20 +70,18 @@
 		// Right side
 		ctx.rotate(angle + 1);
 		ctx.beginPath();
-		ctx.moveTo(0, settings.size);
+		ctx.moveTo(0, size);
 		ctx.lineTo(0, 0);
 		ctx.stroke();
 
 		// Left side
 		ctx.rotate(-2);
-		ctx.lineTo(0, -settings.size);
+		ctx.lineTo(0, -size);
 		ctx.stroke();
 
 		// Restore context
 		ctx.rotate(1 - angle);
 		ctx.translate(-p2x, -p2y);
-
-		return $(canvas).addClass('curved_arrow');
 	}
 
 	function quadraticCurveMinMax(p0, p1, p2) {
