@@ -9,6 +9,7 @@ var username = null
 var socket = null
 var json_sentences = []
 var mainview = null
+var global_preview_views = []
 
 gotoPrevPage = function () {
 	console.log("go to prev page")
@@ -206,10 +207,10 @@ function Node() {
 	}
 
 	this.unpreview_action = function () {
-		_.each(self.preview_views, function (pv) {
+		_.each(global_preview_views, function (pv) {
 			$(pv).remove()
 		})
-		self.preview_views = []
+		global_preview_views = []
 	}
 	this.onPreview = function (fromview) {
 		if (fromview == 'onPreview') {
@@ -285,26 +286,26 @@ function Node() {
 			if (self_1 && !self_2) {
 				arrows = self.get_swap_preview_view(bounds, other_bounds, swap_obj.head == 0)
 				if (Math.abs(bounds.left - bounds.right) > Math.abs(pv_bounds.left - pv_bounds.right)) {
-					pv_bounds = bounds
+					//pv_bounds = bounds
 				}
 
 			} else if (self_2 && !self_1) {
 				arrows = self.get_swap_preview_view(other_bounds, bounds, swap_obj.head == 0)
 
 				if (Math.abs(other_bounds.left - other_bounds.right) > Math.abs(pv_bounds.left - pv_bounds.right)) {
-					pv_bounds = other_bounds
+					//pv_bounds = other_bounds
 				}
 			} else {
 				arrows = self.get_swap_preview_view(bounds, other_bounds, swap_obj.head == 0)
 				if (Math.abs(bounds.left - bounds.right) > Math.abs(pv_bounds.left - pv_bounds.right)) {
-					pv_bounds = bounds
+					//pv_bounds = bounds
 				}
 			}
 
 			var container = self.graph.sentence.get_container()
 			_.each(arrows, function (arrow) {
 				$(container).append(arrow)
-				self.preview_views.push(arrow)
+				global_preview_views.push(arrow)
 			})
 			var sd = document.createElement('div')
 			$(sd).on('mouseenter', function () {
@@ -419,7 +420,7 @@ function Node() {
 				var container = self.graph.sentence.get_container()
 				_.each(arrows, function (arrow) {
 					$(container).append(arrow)
-					self.preview_views.push(arrow)
+					global_preview_views.push(arrow)
 				})
 				//currently split and should be unsplit
 				console.log("currently split and should be unsplit ")
@@ -496,7 +497,7 @@ function Node() {
 			_.each(btns, function (btn) {
 				$(pv_menu).append($(btn))
 			})
-			self.preview_views.push(pv)
+			global_preview_views.push(pv)
 			var container = self.graph.sentence.get_container()
 			$(container).append($(pv))
 			var shift = direction == 'en' ? +pv_bounds.height / 2 + 7 : -pv_bounds.height / 2 - 15
@@ -508,7 +509,7 @@ function Node() {
 						 "min-width": Math.abs(pv_bounds.left - pv_bounds.right)
 					 });
 		} else {
-			self.preview_views = []
+			global_preview_views = []
 		}
 
 	}
@@ -989,11 +990,11 @@ function Node() {
 			$(translation_selector).on('click', function () {
 				self.take_action({action: 'translate', direction: 'de'})
 			})*/
-			$(menu_container).bind('mouseenter', function (e) {
+			$(menu_container).on('mouseenter', function (e) {
 
 				self.preview_action('de')
 			})
-			$(menu_container).bind('click', function (e) {
+			$(menu_container).on('click', function (e) {
 
 				console.log("clicked node menu container")
 			})
@@ -1041,18 +1042,23 @@ function Node() {
 			/*translation_selector = document.createElement('div')
 			$(translation_selector).addClass('translation_selector')
 			$(bottom_menu_container).append($(translation_selector))*/
-			$(bottom_menu_container).bind('mouseenter', function (e) {
+			$(bottom_menu_container).on('mouseenter', function (e) {
 				//self.preview_action({action: 'external reorder', direction: 'en'})
 				//self.preview_action({action: 'translate', direction: 'en'})
 
 				self.preview_action('en')
 			})
-
-			$(bottom_menu_container).bind('click', function (e) {
+			$(bottom_menu_container).on('mouseleave', function (e) {
+				//self.preview_action({action: 'external reorder', direction: 'en'})
+				//self.preview_action({action: 'translate', direction: 'en'})
+				//console.log("asking unpreview now")
+				//self.unpreview_action()
+			})
+			$(bottom_menu_container).on('click', function (e) {
 
 				console.log("clicked node menu container")
 			})
-			$(bottom_menu_container).bind('mouseleave', function (e) {
+			$(bottom_menu_container).on('mouseleave', function (e) {
 
 				self.offView('offView')
 			})
@@ -1560,7 +1566,7 @@ function Sentence() {
 		if (this.container == null) {
 			this.container = document.createElement('div')
 			$(this.container).addClass('container')
-			$(this.container).bind('mouseleave', function () {
+			$(this.container).on('mouseleave', function () {
 				$(self.remove_all_previews(null))
 			})
 			return this.container

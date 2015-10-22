@@ -71,7 +71,7 @@ span {
     padding: 0px;
     flex-direction: row;
     justify-content: space-around;
-    /*border: 1px solid green;*/
+    /* border: 1px solid green;*/
 
     /* transition: opacity 0.25s linear;*/
 }
@@ -125,6 +125,7 @@ span {
     justify-content: center;
     width: 100%;
     background: transparent;
+    pointer-events: all;
     padding: 0px;
     margin: 0px;
     height: 5px;
@@ -137,6 +138,7 @@ span {
     z-index: 100000;
     flex-direction: row;
     align-items: center;
+    pointer-events: none;
     left: 50%;
     -webkit-transform: translate(-50%, 0);
 }
@@ -224,6 +226,7 @@ span {
 
 .previewTranslateContainer {
     min-height: 10px;
+    pointer-events: none;
 }
 
 .affected {
