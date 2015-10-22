@@ -8,11 +8,12 @@ import json
 import sys
 import operator
 
-reload(sys)
+'''reload(sys)
 sys.setdefaultencoding('utf-8')
 sys.stdin = codecs.getreader('utf-8')(sys.stdin)
 sys.stdout = codecs.getwriter('utf-8')(sys.stdout)
 sys.stdout.encoding = 'utf-8'
+'''
 VIS_LANG = 'de'
 INPUT_LANG = 'de'
 
@@ -303,16 +304,22 @@ def make_edges(from_nodes, to_nodes):
 
 def make_edges_with_intermediate_nodes(from_nodes, to_nodes, intermediate, graph):
     edges = []
+    # import pdb
+
+    # if len(to_nodes) == 1 and len(from_nodes) > 1:
+    # pdb.set_trace()
     has_intermediate = False
     for f, t in product(from_nodes, to_nodes):
         int_tok = intermediate.get((f.s, t.s), None)
+        repeat = int_tok in [i.s for i in from_nodes]
         has_intermediate = (int_tok is not None and int_tok != 'NULL' and f.s != t.s) or has_intermediate
+        has_intermediate = has_intermediate and (not repeat)
 
     if has_intermediate:
         for f, t in product(from_nodes, to_nodes):
             int_tok = intermediate.get((f.s, t.s), None)
             if int_tok is None or int_tok == 'NULL' or f.s == t.s:
-                int_tok = f.s
+                int_tok = f.s  # why force this?
             else:
                 pass
             sys.stderr.write('int:' + int_tok + ' in:' + f.s + '-' + t.s + '\n')
@@ -466,7 +473,7 @@ if __name__ == '__main__':
     sent_idx = 0
     eps_word_alignment = 0
     coe_sentences = []
-    for input_line, output_line, input_parse in zip(input_mt, output_mt, input_parsed)[:100]:
+    for input_line, output_line, input_parse in zip(input_mt, output_mt, input_parsed)[:50]:
 
         sys.stderr.write('SENT' + str(sent_idx) + '\n')
         input_sent = input_line.strip().split()
