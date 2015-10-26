@@ -161,6 +161,7 @@ span {
     /*border: 1px solid lightgreen;*/
     left: 50%;
     -webkit-transform: translate(-50%, 0);
+    -moz-transform: translate(-50%, 0);
 }
 
 .preview.translation {
