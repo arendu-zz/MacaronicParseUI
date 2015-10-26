@@ -261,6 +261,7 @@ function Node() {
 			var pv_translate = document.createElement('div')
 			$(pv_translate).addClass("previewTranslateContainer")
 			$(pv_translate).addClass(direction)
+
 			$(pv).append($(pv_translate))
 			var pv_bounds = self.get_view_text_position()
 			pv_bounds['right'] = pv_bounds.left + pv_bounds.width
@@ -497,7 +498,7 @@ function Node() {
 				if (Math.abs(bounds.left - bounds.right) > Math.abs(pv_bounds.left - pv_bounds.right)) {
 					pv_bounds = bounds
 				}
-				var translation_items = self.get_translate_preview_view(modified_nodes.add, bounds)
+				var translation_items = self.get_translate_preview_view(modified_nodes.add, bounds, direction)
 
 				_.each(translation_items, function (wordSpan) {
 					$(pv_translate).append(wordSpan)
@@ -512,12 +513,12 @@ function Node() {
 					console.log("ok")
 
 					if (direction == 'en') {
-						$(".preview.translation.en").css('opacity', '1.0')
-						$(".preview.translation.de").css('opacity', '0.0')
+						$(".preview.translation.enPosition").css('opacity', '1.0')
+						$(".preview.translation.dePosition").css('opacity', '0.0')
 
 					} else {
-						$(".preview.translation.en").css('opacity', '0.0')
-						$(".preview.translation.de").css('opacity', '1.0')
+						$(".preview.translation.enPosition").css('opacity', '0.0')
+						$(".preview.translation.dePosition").css('opacity', '1.0')
 
 					}
 					_.each(modified_nodes.remove, function (rm) {
@@ -906,7 +907,7 @@ function Node() {
 		}
 	}
 
-	this.get_translate_preview_view = function (addNodes, bounds) {
+	this.get_translate_preview_view = function (addNodes, bounds, direction) {
 
 		var preview_elements = {main: [], additional: []}
 		/*var pv = document.createElement('div')
@@ -922,6 +923,7 @@ function Node() {
 			ps.innerHTML = an.s
 			$(ps).addClass("preview translation")
 			$(ps).addClass(an.lang)
+			$(ps).addClass(direction + "Position")
 			//pv.appendChild(ps)
 			preview_elements.main.push(ps)
 		})
