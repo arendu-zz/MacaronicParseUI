@@ -23,14 +23,17 @@ span {
     z-index: 100001;
 }
 
+.arrow {
+    pointer-events: visibleStroke;
+}
+
 .arrow.body {
-    pointer-events: all;
+
     opacity: 0.1;
 
 }
 
 .arrow.head {
-    pointer-events: all;
 
 }
 
@@ -125,8 +128,8 @@ span {
     padding: 0px;
     flex-direction: row;
     justify-content: space-around;
-    pointer-events: none;
-    /* border: 1px solid green;*/
+    pointer-events: all;
+    /*border: 1px solid green;*/
 
     /* transition: opacity 0.25s linear;*/
 }

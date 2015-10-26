@@ -510,8 +510,9 @@ function Node() {
 				//var sd = document.createElement('div')
 
 				$(pv_translate).on('mouseenter', function () {
-					console.log("ok")
-
+					_.each(document.getElementsByClassName("arrow"), function (arrow) {
+						arrow.classList.remove('highlighted')
+					})
 					if (direction == 'en') {
 						$(".preview.translation.enPosition").css('opacity', '1.0')
 						$(".preview.translation.dePosition").css('opacity', '0.0')
@@ -523,7 +524,7 @@ function Node() {
 					}
 					_.each(modified_nodes.remove, function (rm) {
 						$(rm.get_view().textSpan).addClass("affected")
-						console.log("adding affected class")
+
 					})
 
 				})
@@ -531,18 +532,18 @@ function Node() {
 					$('.preview.translation').css('opacity', '0.2')
 					_.each(modified_nodes.remove, function (rm) {
 						$(rm.get_view().textSpan).removeClass("affected")
-						console.log("removing affected class")
+
 					})
 				})
 				$(pv_translate).on('click', function () {
-					console.log("i have been clicked translation btn")
+
 					_.each(modified_nodes.remove, function (rm) {
 						$(rm.get_view().textSpan).removeClass("affected")
-						console.log("removing affected class")
+
 					})
 					_.each(modified_nodes.add, function (rm) {
 						$(rm.get_view().textSpan).removeClass("affected")
-						console.log("removing affected class")
+
 					})
 					self.take_action({action: 'translate', direction: direction})
 				})
@@ -595,6 +596,7 @@ function Node() {
 				})
 				arrows.path.on('mouseleave', function () {
 					//self.set_path_attr(arrows, 'arrow')
+					console.log("left arrows!!!")
 					arrows.path[0][0].classList.remove('highlighted')
 					arrows.path[0][0].classList.remove('highlighted')
 				})
@@ -867,7 +869,7 @@ function Node() {
 							}
 
 						})
-						console.log("ok")
+
 						var ih = _.findIndex(separator_node_positions, function (snp) {
 							return snp == 'INSERT HERE'
 						})
@@ -1152,12 +1154,12 @@ function Node() {
 			$(s).on('mouseenter', function (e) {
 				//self.preview_action({action: 'external reorder', direction: 'en'})
 				//self.preview_action({action: 'translate', direction: 'en'})
-				self.isMouseOver = true
-				setTimeout(self.delayed_preview, 10);
+				//self.isMouseOver = true
+				//setTimeout(self.delayed_preview, 10);
 				//self.preview_action()
 			})
 			$(s).on('mouseleave', function () {
-				self.isMouseOver = false
+				//self.isMouseOver = false
 			})
 			var bottom_menu_container = document.createElement('div')
 			$(bottom_menu_container).addClass('node_menu_container')
@@ -1165,26 +1167,15 @@ function Node() {
 			/*translation_selector = document.createElement('div')
 			$(translation_selector).addClass('translation_selector')
 			$(bottom_menu_container).append($(translation_selector))*/
-			$(bottom_menu_container).on('mouseenter', function (e) {
-				//self.preview_action({action: 'external reorder', direction: 'en'})
-				//self.preview_action({action: 'translate', direction: 'en'})
 
-				//self.preview_action('en')
-			})
-			$(bottom_menu_container).on('mouseleave', function (e) {
-				//self.preview_action({action: 'external reorder', direction: 'en'})
-				//self.preview_action({action: 'translate', direction: 'en'})
-				//console.log("asking unpreview now")
-				//self.unpreview_action()
-			})
-			$(bottom_menu_container).on('click', function (e) {
+			/*$(bottom_menu_container).on('click', function (e) {
 
 				console.log("clicked node menu container")
 			})
 			$(bottom_menu_container).on('mouseleave', function (e) {
 
 				self.offView('offView')
-			})
+			})*/
 			/*$(translation_selector).on('click', function () {
 				self.take_action({action: 'translate', direction: 'en'})
 			})*/
@@ -1222,7 +1213,15 @@ function Node() {
 			/*this.view.translation_selector_to_en = translation_selector
 			this.view.split_reorder_selector_to_en = split_reorder_selector
 			this.view.external_reorder_selector_to_en = external_reorder_selector*/
+			$(this.view).on('mouseover', function (e) {
+				console.log("over view!!!")
+				self.isMouseOver = true
+				setTimeout(self.delayed_preview, 10);
+			})
+			$(this.view).on('mouseleave', function (e) {
+				self.isMouseOver = false
 
+			})
 			return this.view
 		} else {
 			return this.view
@@ -1697,7 +1696,7 @@ function Sentence() {
 	}
 	this.initial_order = function () {
 		//assigns order of the visible nodes initially
-		console.log('ok')
+
 		for (var i in self.visible_nodes) {
 			var item = self.visible_nodes[i].get_view()
 			$(item).css('order', i)
