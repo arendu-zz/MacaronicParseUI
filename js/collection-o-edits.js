@@ -510,6 +510,7 @@ function Node() {
 
 				$(pv_translate).on('mouseenter', function () {
 					console.log("ok")
+
 					if (direction == 'en') {
 						$(".preview.translation.en").css('opacity', '1.0')
 						$(".preview.translation.de").css('opacity', '0.0')
