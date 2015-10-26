@@ -2,6 +2,10 @@
 
 }
 
+div {
+    box-sizing: border-box;
+}
+
 .subItem {
     display: flex;
 
@@ -9,6 +13,29 @@
 
 span {
     cursor: default;
+
+}
+
+.arrowContainer {
+    /*border: 1px solid green;*/
+    pointer-events: none;
+    background: transparent;
+    position: absolute;
+    z-index: 100001;
+}
+
+.arrow {
+    pointer-events: all;
+    stroke-opacity: 0.2;
+}
+
+.arrow.highlighted {
+    stroke-opacity: 1.0;
+}
+
+.textspan {
+    background: transparent;
+    /*border: 1px red solid;*/
 }
 
 .textspan.en {
@@ -71,6 +98,7 @@ span {
     padding: 0px;
     flex-direction: row;
     justify-content: space-around;
+    pointer-events: none;
     /* border: 1px solid green;*/
 
     /* transition: opacity 0.25s linear;*/
@@ -135,10 +163,10 @@ span {
     display: flex;
     padding: 0px;
     position: absolute;
-    z-index: 100000;
+    z-index: 999;
     flex-direction: row;
     align-items: center;
-    pointer-events: none;
+    /*border: 1px solid lightgreen;*/
     left: 50%;
     -webkit-transform: translate(-50%, 0);
 }
@@ -225,8 +253,9 @@ span {
 }
 
 .previewTranslateContainer {
-    min-height: 10px;
-    pointer-events: none;
+    min-height: 20px;
+    /*border: 1px solid grey;*/
+
 }
 
 .affected {
