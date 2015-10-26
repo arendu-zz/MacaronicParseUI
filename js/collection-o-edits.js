@@ -1153,7 +1153,7 @@ function Node() {
 				//self.preview_action({action: 'external reorder', direction: 'en'})
 				//self.preview_action({action: 'translate', direction: 'en'})
 				self.isMouseOver = true
-				setTimeout(self.delayed_preview, 500);
+				setTimeout(self.delayed_preview, 10);
 				//self.preview_action()
 			})
 			$(s).on('mouseleave', function () {
