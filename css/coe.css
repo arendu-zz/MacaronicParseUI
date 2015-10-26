@@ -39,11 +39,19 @@ span {
 }
 
 .textspan.en {
+
     font-style: normal;
+    color: #437533;
+
 }
 
 .textspan.de {
-    font-style: italic;
+    font-style: normal;
+
+}
+
+.textspan.de.enorder {
+    background-color: rgba(67, 117, 51, 0.2);
 }
 
 .item {
@@ -171,7 +179,12 @@ span {
     -webkit-transform: translate(-50%, 0);
 }
 
+.preivew.arrow {
+    transition: opacity 0.25s linear;
+}
+
 .preview.translation {
+    transition: opacity 0.25s linear;
     padding-left: 2px;
     padding-right: 2px;
     opacity: 0.2;
@@ -181,10 +194,11 @@ span {
 
 .preview.translation.en {
     font-style: normal;
+    color: #437533;
 }
 
 .preview.translation.de {
-    font-style: italic;
+    font-style: normal;
 }
 
 .preview.split {

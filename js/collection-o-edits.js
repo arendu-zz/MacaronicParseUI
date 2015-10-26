@@ -89,6 +89,7 @@ function Node() {
 	this.translate_de = false
 	this.out_of_main_view = true
 	this.out_of_preview_view = true
+	this.isMouseOver = false
 
 	this.get_view_position = function () {
 		var v = self.get_view()
@@ -110,6 +111,12 @@ function Node() {
 
 	this.update_view_reorder = function () {
 		var view = this.get_view()
+		console.log("s " + self.s + " id " + self.de_id + " current view id" + parseInt($(view).css('order')))
+		if (self.de_id != parseInt($(view).css('order'))) {
+			$(view.textSpan).addClass('enorder')
+		} else {
+			$(view.textSpan).removeClass('enorder')
+		}
 		var graph = self.graph
 		$(view.external_reorder_selector_to_de).hide()
 		$(view.external_reorder_selector_to_en).hide()
@@ -222,6 +229,13 @@ function Node() {
 		}
 	}
 
+	this.delayed_preview = function () {
+		if (self.isMouseOver) {
+			self.preview_action()
+		} else {
+			console.log("too late")
+		}
+	}
 	this.preview_action = function () {
 
 		self.graph.sentence.remove_all_previews(self)
@@ -552,6 +566,7 @@ function Node() {
 					 });
 
 		})
+
 		if (num_swaps.length == 0) {
 
 		} else if (num_swaps.length == 1) {
@@ -1065,6 +1080,7 @@ function Node() {
 			this.view.node = this
 			this.view.inDom = false
 			this.view.highlight_movement = false
+
 			$(this.view).addClass('item')
 			var menu_container = document.createElement('div')
 			$(menu_container).addClass('node_menu_container')
@@ -1120,8 +1136,12 @@ function Node() {
 			$(s).on('mouseenter', function (e) {
 				//self.preview_action({action: 'external reorder', direction: 'en'})
 				//self.preview_action({action: 'translate', direction: 'en'})
-
-				self.preview_action()
+				self.isMouseOver = true
+				setTimeout(self.delayed_preview, 500);
+				//self.preview_action()
+			})
+			$(s).on('mouseleave', function () {
+				self.isMouseOver = false
 			})
 			var bottom_menu_container = document.createElement('div')
 			$(bottom_menu_container).addClass('node_menu_container')

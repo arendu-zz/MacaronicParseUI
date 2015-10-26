@@ -114,10 +114,10 @@ drawLineAndArrow = function (parentDiv, x0, y0, x1, y1, x2, y2, x3, y3, lineWidt
 													 "markerWidth": 4,
 													 "markerHeight": 4,
 													 "orient": "auto"
-												 }).append("path").attr("d", "M0,-5L10,0L0,5").attr("class", "arrow").attr("stroke", color).attr('fill', 'none').attr("stroke-width", lineWidth);
+												 }).append("path").attr("d", "M0,-5L10,0L0,5").attr("class", "preview arrow").attr("stroke", color).attr('fill', 'none').attr("stroke-width", lineWidth);
 
 	var wtf_hack = "url(#" + marker_id + ")"
-	var lineGraph = svgcanvas.append("path").attr('class', 'arrow').attr("d", stillLineDataStr + lineFunction(lineData) + curveFunction(curveData)).attr("stroke", color).attr("stroke-width", lineWidth).attr('fill', 'none').attr("marker-end", wtf_hack);
+	var lineGraph = svgcanvas.append("path").attr('class', 'preview arrow').attr("d", stillLineDataStr + lineFunction(lineData) + curveFunction(curveData)).attr("stroke", color).attr("stroke-width", lineWidth).attr('fill', 'none').attr("marker-end", wtf_hack);
 	$(lineGraph).css({
 						 "color": "blue"
 					 })
