@@ -3,7 +3,7 @@
 }
 
 div {
-    box-sizing: border-box;
+
 }
 
 .subItem {
@@ -17,20 +17,30 @@ span {
 }
 
 .arrowContainer {
-    /*border: 1px solid green;*/
     pointer-events: none;
     background: transparent;
     position: absolute;
     z-index: 100001;
 }
 
-.arrow {
+.arrow.body {
     pointer-events: all;
-    stroke-opacity: 0.2;
+    opacity: 0.3;
+
 }
 
-.arrow.highlighted {
-    stroke-opacity: 1.0;
+.arrow.head {
+    pointer-events: all;
+
+}
+
+.arrow.head.highlighted {
+    opacity: 1.0;
+}
+
+.arrow.body.highlighted {
+    opacity: 1.0;
+
 }
 
 .textspan {
@@ -38,7 +48,7 @@ span {
     /*border: 1px red solid;*/
 }
 
-.textspan.en {
+.en.textspan {
 
     font-style: normal;
     color: #437533;
@@ -179,15 +189,10 @@ span {
     -webkit-transform: translate(-50%, 0);
 }
 
-.preivew.arrow {
-    transition: opacity 0.25s linear;
-}
-
 .preview.translation {
-    transition: opacity 0.25s linear;
+    opacity: 0.2;
     padding-left: 2px;
     padding-right: 2px;
-    opacity: 0.2;
     font-size: large;
 
 }
@@ -202,12 +207,12 @@ span {
 }
 
 .preview.split {
-    opacity: 0.2;
+
     pointer-events: none;
 }
 
 .preview.swap {
-    opacity: 0.2;
+
     pointer-events: none;
 }
 

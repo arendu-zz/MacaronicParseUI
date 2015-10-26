@@ -236,6 +236,7 @@ function Node() {
 			console.log("too late")
 		}
 	}
+
 	this.preview_action = function () {
 
 		self.graph.sentence.remove_all_previews(self)
@@ -302,21 +303,13 @@ function Node() {
 				//$(pathDiv).addClass(direction)
 				if (self_1 && !self_2) {
 					arrows = self.get_swap_preview_view(pathDiv, bounds, other_bounds, direction)
-					if (Math.abs(bounds.left - bounds.right) > Math.abs(pv_bounds.left - pv_bounds.right)) {
-						//pv_bounds = bounds
-					}
 
 				} else if (self_2 && !self_1) {
 					arrows = self.get_swap_preview_view(pathDiv, other_bounds, bounds, direction)
 
-					if (Math.abs(other_bounds.left - other_bounds.right) > Math.abs(pv_bounds.left - pv_bounds.right)) {
-						//pv_bounds = other_bounds
-					}
 				} else {
 					arrows = self.get_swap_preview_view(pathDiv, bounds, other_bounds, direction)
-					if (Math.abs(bounds.left - bounds.right) > Math.abs(pv_bounds.left - pv_bounds.right)) {
-						//pv_bounds = bounds
-					}
+
 				}
 
 				num_swaps.push(arrows)
@@ -508,12 +501,15 @@ function Node() {
 
 				_.each(translation_items, function (wordSpan) {
 					$(pv_translate).append(wordSpan)
+					/*$(wordSpan).css('opacity', '0.0')
+					$(wordSpan).animate({ opacity: "0.2" }, 500);*/
 
 				})
 
 				//var sd = document.createElement('div')
 
 				$(pv_translate).on('mouseenter', function () {
+					console.log("ok")
 					if (direction == 'en') {
 						$(".preview.translation.en").css('opacity', '1.0')
 						$(".preview.translation.de").css('opacity', '0.0')
@@ -556,6 +552,8 @@ function Node() {
 			global_preview_views.push(pv)
 			var container = self.graph.sentence.get_container()
 			$(container).append($(pv))
+			//$(pv).css('opacity', '0.0')
+			//$(pv).animate({ opacity: "1.0" }, 1000);
 			var shift = direction == 'en' ? +pv_bounds.height / 2 + 12 : -pv_bounds.height / 2 - 15
 			var bounds_mid = (pv_bounds.left + pv_bounds.right) / 2
 			var jspv = $(pv)
@@ -575,18 +573,28 @@ function Node() {
 				global_preview_views.push(arrows.parent)
 				var container = self.graph.sentence.get_container()
 				$(container).append(arrows.parent)
-				self.set_path_attr(arrows, 'arrow highlighted')
+
+				//arrows.path[0][0].classList.add('highlighted')
+				//arrows.marker[0][0].classList.add('highlighted')
 				$(self.get_view().textSpan).on('mouseenter', function () {
-					self.set_path_attr(arrows, 'arrow highlighted')
+					//self.set_path_attr(arrows, 'arrow highlighted')
+					arrows.path[0][0].classList.add('highlighted')
+					arrows.marker[0][0].classList.add('highlighted')
 				})
 				$(self.get_view().textSpan).on('mouseleave', function () {
-					self.set_path_attr(arrows, 'arrow')
+					//self.set_path_attr(arrows, 'arrow')
+					arrows.path[0][0].classList.remove('highlighted')
+					arrows.path[0][0].classList.remove('highlighted')
 				})
 				arrows.path.on('mouseenter', function () {
-					self.set_path_attr(arrows, 'arrow highlighted')
+					//self.set_path_attr(arrows, 'arrow highlighted')
+					arrows.path[0][0].classList.add('highlighted')
+					arrows.path[0][0].classList.add('highlighted')
 				})
 				arrows.path.on('mouseleave', function () {
-					self.set_path_attr(arrows, 'arrow')
+					//self.set_path_attr(arrows, 'arrow')
+					arrows.path[0][0].classList.remove('highlighted')
+					arrows.path[0][0].classList.remove('highlighted')
 				})
 				$(self.get_view().textSpan).off('click') //THIS IS IMPORTANT SINCE WE ARE ADDING LISTENERS REPEATEDLY
 				$(self.get_view().textSpan).on('click', function () {
@@ -600,16 +608,27 @@ function Node() {
 			})
 		} else {
 			console.log("multiple reorders")
+			$(self.get_view().textSpan).off('click')
+			//$(self.get_view().textSpan).off('mouseleave')
+			//$(self.get_view().textSpan).off('mouseenter')
 			_.each(num_swaps, function (arrows) {
 				global_preview_views.push(arrows.parent)
 				var container = self.graph.sentence.get_container()
 				$(container).append(arrows.parent)
+
+				arrows.path[0][0].classList.remove('highlighted')
+				arrows.marker[0][0].classList.remove('highlighted')
+				//setInterval(self.removeHighlight(arrows), 500)
+
 				arrows.path.on('mouseenter', function () {
-					self.set_path_attr(arrows, 'arrow highlighted')
-					console.log("wha whaaa!!")
+					//self.set_path_attr(arrows, 'arrow highlighted')
+					arrows.path[0][0].classList.add('highlighted')
+					arrows.path[0][0].classList.add('highlighted')
 				})
 				arrows.path.on('mouseleave', function () {
-					self.set_path_attr(arrows, 'arrow')
+					//self.set_path_attr(arrows, 'arrow')
+					arrows.path[0][0].classList.remove('highlighted')
+					arrows.path[0][0].classList.remove('highlighted')
 				})
 				arrows.path.on('click', function () {
 					console.log("its been clicked!!!")
@@ -620,13 +639,7 @@ function Node() {
 
 	}
 
-	this.set_path_attr = function (path, classStr) {
-		path.path.attr('class', classStr)
-		path.marker.attr('class', classStr)
-	}
-
 	this.take_action = function (param) {
-		console.log("WHYY WHYYY IS THIS BEING CALLED TWICE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
 		console.log('action triggered:' + param.action + ',' + param.direction)
 		self.graph.sentence.remove_all_previews(null)
 		var before = JSON.stringify(self.graph.sentence.getLogObjs())
@@ -953,8 +966,8 @@ function Node() {
 	}
 
 	this.get_split_preview_view = function (pathDiv, still_bounds, moving_bounds, moving_to_bounds, direction) {
-		console.log("ok here")
-		return drawSwap(pathDiv, moving_bounds, moving_to_bounds, still_bounds, 3.5, direction, '#BD587C');
+
+		return drawSwap('split', pathDiv, moving_bounds, moving_to_bounds, still_bounds, 3.5, direction, '#BD587C');
 		/*var gap = Math.abs(moving_to_bounds.left - moving_bounds.left)
 		var bounds_mid = (moving_bounds.left + moving_bounds.right) / 2
 		var other_bounds_mid = moving_to_bounds.left
@@ -1005,7 +1018,7 @@ function Node() {
 	}
 
 	this.get_swap_preview_view = function (pathDiv, bounds, other_bounds, direction) {
-		return drawSwap(pathDiv, bounds, other_bounds, null, 3.5, direction, '#028090');
+		return drawSwap('external', pathDiv, bounds, other_bounds, null, 3.5, direction, '#028090');
 		/*var gap = Math.abs(bounds.left - other_bounds.left)
 		var bounds_mid = (bounds.left + bounds.right) / 2
 		var other_bounds_mid = 0

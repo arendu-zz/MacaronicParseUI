@@ -42,10 +42,11 @@ drawArrow = function (parentDiv, x1, y1, x2, y2, x3, y3, lineWidth) {
 	return lineGraph
 }
 
-drawLineAndArrow = function (parentDiv, x0, y0, x1, y1, x2, y2, x3, y3, lineWidth, direction, color, stillLineStPt, stillLineEndPt) {
+drawLineAndArrow = function (type, parentDiv, x0, y0, x1, y1, x2, y2, x3, y3, lineWidth, direction, color, stillLineStPt, stillLineEndPt) {
+
 	var fill1 = {}
 	var fill2 = {}
-	var type = 'external'
+	var type = type
 	if (stillLineStPt == null || stillLineEndPt == null) {
 		fill1.x = x0
 		fill1.y = y0
@@ -56,7 +57,6 @@ drawLineAndArrow = function (parentDiv, x0, y0, x1, y1, x2, y2, x3, y3, lineWidt
 		fill1.y = stillLineStPt.y
 		fill2.x = stillLineEndPt.x
 		fill2.y = stillLineEndPt.y
-		type = 'split'
 	}
 	var x_min = _.min([x0, x1, x2, x3, fill1.x, fill2.x]) - lineWidth
 	var y_min = _.min([y0, y1, y2, y3, fill1.y, fill2.y]) - lineWidth
@@ -114,18 +114,27 @@ drawLineAndArrow = function (parentDiv, x0, y0, x1, y1, x2, y2, x3, y3, lineWidt
 													 "markerWidth": 4,
 													 "markerHeight": 4,
 													 "orient": "auto"
-												 }).append("path").attr("d", "M0,-5L10,0L0,5").attr("class", "preview arrow").attr("stroke", color).attr('fill', 'none').attr("stroke-width", lineWidth);
+												 }).append("path").attr("d", "M0,-5L10,0L0,5").attr("stroke", 'none').attr('fill', color).attr("stroke-width", lineWidth);
 
 	var wtf_hack = "url(#" + marker_id + ")"
-	var lineGraph = svgcanvas.append("path").attr('class', 'preview arrow').attr("d", stillLineDataStr + lineFunction(lineData) + curveFunction(curveData)).attr("stroke", color).attr("stroke-width", lineWidth).attr('fill', 'none').attr("marker-end", wtf_hack);
+	var lineGraph = svgcanvas.append("path").attr("d", stillLineDataStr + lineFunction(lineData) + curveFunction(curveData)).attr("stroke", color).attr("stroke-width", lineWidth).attr('fill', 'none').attr("marker-end", wtf_hack);
 	$(lineGraph).css({
 						 "color": "blue"
 					 })
 
+	lineGraph[0][0].classList.add("preview")
+	lineGraph[0][0].classList.add("arrow")
+	lineGraph[0][0].classList.add("body")
+	lineGraph[0][0].classList.add("highlighted")
+
+	marker[0][0].classList.add("preview")
+	marker[0][0].classList.add("arrow")
+	marker[0][0].classList.add("head")
+	marker[0][0].classList.add("highlighted")
 	return {type: type, parent: parentDiv, path: lineGraph, marker: marker, direction: direction}
 }
 
-drawSwap = function (parentDiv, bounds, other_bounds, still_bounds, lineWidth, direction, color) {
+drawSwap = function (type, parentDiv, bounds, other_bounds, still_bounds, lineWidth, direction, color) {
 	var lineStPt = {}
 	var lineEndPt = {}
 	var curveStPt = {}
@@ -143,17 +152,17 @@ drawSwap = function (parentDiv, bounds, other_bounds, still_bounds, lineWidth, d
 		lineStPt = {x: bounds.left, y: bounds.top + (direction == 'en' ? bounds.height : 0)}
 		lineEndPt = {x: bounds.right, y: bounds.top + (direction == 'en' ? bounds.height : 0)}
 		curveStPt = {x: lineEndPt.x, y: lineEndPt.y}
-		curveEndPt = {x: other_bounds.right, y: other_bounds.top + (direction == 'en' ? 0 : other_bounds.height)}
+		curveEndPt = {x: other_bounds.right + lineWidth, y: other_bounds.top + (direction == 'en' ? other_bounds.height + lineWidth : 0 )}
 		var mid_x = curveStPt.x + Math.abs(curveStPt.x - curveEndPt.x) / 2
-		curveMidPt = {x: mid_x, y: curveStPt.y + (direction == 'en' ? -40 : 40)}
+		curveMidPt = {x: mid_x, y: curveStPt.y + (direction == 'en' ? 40 : -40)}
 	} else {
 		lineStPt = {x: bounds.right, y: bounds.top + (direction == 'en' ? bounds.height : 0)}
 		lineEndPt = {x: bounds.left, y: bounds.top + (direction == 'en' ? bounds.height : 0)}
 		curveStPt = {x: lineEndPt.x, y: lineEndPt.y}
-		curveEndPt = {x: other_bounds.left, y: other_bounds.top + (direction == 'en' ? 0 : other_bounds.height)}
+		curveEndPt = {x: other_bounds.left - lineWidth, y: other_bounds.top + (direction == 'en' ? other_bounds.height + lineWidth : 0 )}
 		var mid_x = curveStPt.x - Math.abs(curveStPt.x - curveEndPt.x) / 2
-		curveMidPt = {x: mid_x, y: curveStPt.y + (direction == 'en' ? -40 : 40)}
+		curveMidPt = {x: mid_x, y: curveStPt.y + (direction == 'en' ? 40 : -40)}
 	}
 
-	return drawLineAndArrow(parentDiv, lineStPt.x, lineStPt.y, curveStPt.x, curveStPt.y, curveMidPt.x, curveMidPt.y, curveEndPt.x, curveEndPt.y, lineWidth, direction, color, stillLineStPt, stillLineEndPt)
+	return drawLineAndArrow(type, parentDiv, lineStPt.x, lineStPt.y, curveStPt.x, curveStPt.y, curveMidPt.x, curveMidPt.y, curveEndPt.x, curveEndPt.y, lineWidth, direction, color, stillLineStPt, stillLineEndPt)
 }
