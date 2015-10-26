@@ -967,7 +967,7 @@ function Node() {
 
 	this.get_split_preview_view = function (pathDiv, still_bounds, moving_bounds, moving_to_bounds, direction) {
 
-		return drawSwap('split', pathDiv, moving_bounds, moving_to_bounds, still_bounds, 3.5, direction, '#BD587C');
+		return drawSwap('split', pathDiv, moving_bounds, moving_to_bounds, still_bounds, 3.5, direction, direction == 'en' ? '#028090' : '#666666');
 		/*var gap = Math.abs(moving_to_bounds.left - moving_bounds.left)
 		var bounds_mid = (moving_bounds.left + moving_bounds.right) / 2
 		var other_bounds_mid = moving_to_bounds.left
@@ -1018,7 +1018,7 @@ function Node() {
 	}
 
 	this.get_swap_preview_view = function (pathDiv, bounds, other_bounds, direction) {
-		return drawSwap('external', pathDiv, bounds, other_bounds, null, 3.5, direction, '#028090');
+		return drawSwap('external', pathDiv, bounds, other_bounds, null, 3.5, direction, direction == 'en' ? '#028090' : '#666666');
 		/*var gap = Math.abs(bounds.left - other_bounds.left)
 		var bounds_mid = (bounds.left + bounds.right) / 2
 		var other_bounds_mid = 0

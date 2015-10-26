@@ -76,11 +76,11 @@ drawLineAndArrow = function (type, parentDiv, x0, y0, x1, y1, x2, y2, x3, y3, li
 		{ "x": x0 - x_min, "y": y0 - y_min + shift},
 		{ "x": x1 - x_min, "y": y1 - y_min + shift}
 	];
-	var gap = (x3 - x1) / 6
+	var gap = (x3 - x1) / 7
 	var curveData = [
 		{ "x": x1 - x_min, "y": y1 - y_min + shift},
 		{ "x": x1 + (gap) - x_min, "y": y2 - y_min + shift},
-		{ "x": x1 + (5 * gap) - x_min, "y": y2 - y_min + shift},
+		{ "x": x1 + (6 * gap) - x_min, "y": y2 - y_min + shift},
 		{ "x": x3 - x_min, "y": y3 - y_min + shift}
 	];
 
@@ -152,14 +152,14 @@ drawSwap = function (type, parentDiv, bounds, other_bounds, still_bounds, lineWi
 		lineStPt = {x: bounds.left, y: bounds.top + (direction == 'en' ? bounds.height : 0)}
 		lineEndPt = {x: bounds.right, y: bounds.top + (direction == 'en' ? bounds.height : 0)}
 		curveStPt = {x: lineEndPt.x, y: lineEndPt.y}
-		curveEndPt = {x: other_bounds.right + lineWidth, y: other_bounds.top + (direction == 'en' ? other_bounds.height + lineWidth : 0 )}
+		curveEndPt = {x: other_bounds.right , y: other_bounds.top + (direction == 'en' ? other_bounds.height + lineWidth : -lineWidth )}
 		var mid_x = curveStPt.x + Math.abs(curveStPt.x - curveEndPt.x) / 2
 		curveMidPt = {x: mid_x, y: curveStPt.y + (direction == 'en' ? 40 : -40)}
 	} else {
 		lineStPt = {x: bounds.right, y: bounds.top + (direction == 'en' ? bounds.height : 0)}
 		lineEndPt = {x: bounds.left, y: bounds.top + (direction == 'en' ? bounds.height : 0)}
 		curveStPt = {x: lineEndPt.x, y: lineEndPt.y}
-		curveEndPt = {x: other_bounds.left - lineWidth, y: other_bounds.top + (direction == 'en' ? other_bounds.height + lineWidth : 0 )}
+		curveEndPt = {x: other_bounds.left , y: other_bounds.top + (direction == 'en' ? other_bounds.height + lineWidth : -lineWidth )}
 		var mid_x = curveStPt.x - Math.abs(curveStPt.x - curveEndPt.x) / 2
 		curveMidPt = {x: mid_x, y: curveStPt.y + (direction == 'en' ? 40 : -40)}
 	}

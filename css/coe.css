@@ -51,17 +51,22 @@ span {
 .en.textspan {
 
     font-style: normal;
-    color: #437533;
+    color: #028090;
 
 }
 
 .textspan.de {
     font-style: normal;
+    color: #333333;
+
+}
+
+.textspan.en.deorder {
 
 }
 
 .textspan.de.enorder {
-    background-color: rgba(67, 117, 51, 0.2);
+    background-color: rgba(2, 128, 144, 0.1)
 }
 
 .item {
@@ -126,44 +131,6 @@ span {
     opacity: 1;
 }*/
 
-.translation.btn {
-    height: 100%;
-    flex-grow: 1;
-    border: 1px solid #9BC65C;
-    background: transparent;
-
-}
-
-.btn {
-
-}
-
-.translation.btn:hover {
-    background: #9BC65C;
-}
-
-.split.btn {
-    height: 100%;
-    flex-grow: 1;
-    border: 1px solid #BD587C;
-    background: transparent;
-}
-
-.split.btn:hover {
-    background: #BD587C;
-}
-
-.swap.btn {
-    height: 100%;
-    flex-grow: 1;
-    border: 1px solid #028090;
-    background: transparent;
-}
-
-.swap.btn:hover {
-    background: #028090;
-}
-
 .previewMenu {
     display: flex;
     flex-direction: row;
@@ -199,11 +166,12 @@ span {
 
 .preview.translation.en {
     font-style: normal;
-    color: #437533;
+    color: #028090;
 }
 
 .preview.translation.de {
     font-style: normal;
+    color: #333333;
 }
 
 .preview.split {
