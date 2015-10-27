@@ -498,16 +498,13 @@ function Node() {
 				if (Math.abs(bounds.left - bounds.right) > Math.abs(pv_bounds.left - pv_bounds.right)) {
 					pv_bounds = bounds
 				}
+
 				var translation_items = self.get_translate_preview_view(modified_nodes.add, bounds, direction)
 
 				_.each(translation_items, function (wordSpan) {
 					$(pv_translate).append(wordSpan)
-					/*$(wordSpan).css('opacity', '0.0')
-					$(wordSpan).animate({ opacity: "0.2" }, 500);*/
 
 				})
-
-				//var sd = document.createElement('div')
 
 				$(pv_translate).on('mouseenter', function () {
 					_.each(document.getElementsByClassName("arrow"), function (arrow) {
@@ -545,7 +542,10 @@ function Node() {
 						$(rm.get_view().textSpan).removeClass("affected")
 
 					})
-					self.take_action({action: 'translate', direction: direction})
+					if (!self.isTranslationSame(modified_nodes)) {
+						self.take_action({action: 'translate', direction: direction})
+					}
+
 				})
 				//$(sd).addClass("translation btn")
 				//btns.push(sd)
@@ -906,6 +906,22 @@ function Node() {
 		var sm = new SocketMessage(username, rule, before, after)
 		if (socket != null) {
 			socket.emit('logEvent', sm)
+		}
+	}
+
+	this.isTranslationSame = function (modifiedNodes) {
+		var addStr = []
+		var removeStr = []
+		_.each(modifiedNodes.add, function (an) {
+			addStr.push(an.s)
+		})
+		_.each(modifiedNodes.remove, function (rn) {
+			removeStr.push(rn.s)
+		})
+		if (addStr.join([separator = ',']) == removeStr.join([separator = ','])) {
+			return true
+		} else {
+			return false
 		}
 	}
 
