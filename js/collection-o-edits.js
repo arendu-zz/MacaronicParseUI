@@ -10,6 +10,7 @@ var socket = null
 var json_sentences = []
 var mainview = null
 var global_preview_views = []
+var global_preview_classes = []
 
 gotoPrevPage = function () {
 	console.log("go to prev page")
@@ -217,6 +218,10 @@ function Node() {
 		_.each(global_preview_views, function (pv) {
 			$(pv).remove()
 		})
+		_.each(global_preview_classes, function (pc) {
+			$(pc).removeClass('tmpAccept')
+		})
+		global_preview_classes = []
 		global_preview_views = []
 	}
 	this.onPreview = function (fromview) {
@@ -492,64 +497,71 @@ function Node() {
 				modified_nodes = self.graph.translate_from(self, 'en')
 			}
 			if (modified_nodes != null) {
+				if (self.isTranslationSame(modified_nodes)) {
+					_.each(modified_nodes.remove, function (tmp) {
+						$(tmp.get_view().textSpan).addClass('tmpAccept')
+						global_preview_classes.push(tmp.get_view().textSpan)
+					})
 
-				var bounds = get_bounding_of_nodes(modified_nodes.remove)
+				} else {
+					//do usual
+					var bounds = get_bounding_of_nodes(modified_nodes.remove)
 
-				if (Math.abs(bounds.left - bounds.right) > Math.abs(pv_bounds.left - pv_bounds.right)) {
-					pv_bounds = bounds
+					if (Math.abs(bounds.left - bounds.right) > Math.abs(pv_bounds.left - pv_bounds.right)) {
+						pv_bounds = bounds
+					}
+
+					var translation_items = self.get_translate_preview_view(modified_nodes.add, bounds, direction)
+
+					_.each(translation_items, function (wordSpan) {
+						$(pv_translate).append(wordSpan)
+
+					})
+
+					$(pv_translate).on('mouseenter', function () {
+						_.each(document.getElementsByClassName("arrow"), function (arrow) {
+							arrow.classList.remove('highlighted')
+						})
+						if (direction == 'en') {
+							$(".preview.translation.enPosition").css('opacity', '1.0')
+							$(".preview.translation.dePosition").css('opacity', '0.0')
+
+						} else {
+							$(".preview.translation.enPosition").css('opacity', '0.0')
+							$(".preview.translation.dePosition").css('opacity', '1.0')
+
+						}
+						_.each(modified_nodes.remove, function (rm) {
+							$(rm.get_view().textSpan).addClass("affected")
+
+						})
+
+					})
+					$(pv_translate).on('mouseleave', function () {
+						$('.preview.translation').css('opacity', '0.2')
+						_.each(modified_nodes.remove, function (rm) {
+							$(rm.get_view().textSpan).removeClass("affected")
+
+						})
+					})
+					$(pv_translate).on('click', function () {
+
+						_.each(modified_nodes.remove, function (rm) {
+							$(rm.get_view().textSpan).removeClass("affected")
+
+						})
+						_.each(modified_nodes.add, function (rm) {
+							$(rm.get_view().textSpan).removeClass("affected")
+
+						})
+						if (!self.isTranslationSame(modified_nodes)) {
+							self.take_action({action: 'translate', direction: direction})
+						}
+
+					})
+
 				}
 
-				var translation_items = self.get_translate_preview_view(modified_nodes.add, bounds, direction)
-
-				_.each(translation_items, function (wordSpan) {
-					$(pv_translate).append(wordSpan)
-
-				})
-
-				$(pv_translate).on('mouseenter', function () {
-					_.each(document.getElementsByClassName("arrow"), function (arrow) {
-						arrow.classList.remove('highlighted')
-					})
-					if (direction == 'en') {
-						$(".preview.translation.enPosition").css('opacity', '1.0')
-						$(".preview.translation.dePosition").css('opacity', '0.0')
-
-					} else {
-						$(".preview.translation.enPosition").css('opacity', '0.0')
-						$(".preview.translation.dePosition").css('opacity', '1.0')
-
-					}
-					_.each(modified_nodes.remove, function (rm) {
-						$(rm.get_view().textSpan).addClass("affected")
-
-					})
-
-				})
-				$(pv_translate).on('mouseleave', function () {
-					$('.preview.translation').css('opacity', '0.2')
-					_.each(modified_nodes.remove, function (rm) {
-						$(rm.get_view().textSpan).removeClass("affected")
-
-					})
-				})
-				$(pv_translate).on('click', function () {
-
-					_.each(modified_nodes.remove, function (rm) {
-						$(rm.get_view().textSpan).removeClass("affected")
-
-					})
-					_.each(modified_nodes.add, function (rm) {
-						$(rm.get_view().textSpan).removeClass("affected")
-
-					})
-					if (!self.isTranslationSame(modified_nodes)) {
-						self.take_action({action: 'translate', direction: direction})
-					}
-
-				})
-				//$(sd).addClass("translation btn")
-				//btns.push(sd)
-				//$(pv_menu).append($(sd))
 			}
 
 			global_preview_views.push(pv)
