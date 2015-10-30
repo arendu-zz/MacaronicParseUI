@@ -14,7 +14,7 @@ sys.stdin = codecs.getreader('utf-8')(sys.stdin)
 sys.stdout = codecs.getwriter('utf-8')(sys.stdout)
 sys.stdout.encoding = 'utf-8'
 '''
-VIS_LANG = 'de'
+VIS_LANG = 'en'
 INPUT_LANG = 'de'
 
 
@@ -384,32 +384,30 @@ def propagate_split_info(sent):
 def find_nearest_node_with_property(n, direction, graph):
     if direction == DE_LANG:
         de_n = Node(None, None, None, None, None, None)
-        while de_n.de_left is None or de_n.de_right is None or de_n.de_id is None:
+        while de_n.de_id is None:
             de_neighbors = graph.get_neighbor_nodes(n, DE_LANG)
             de_n = de_neighbors[0]
 
 
 def propagate(graph):
+    graph.set_visibility(VIS_LANG)
+    graph.cognate_visibility(VIS_LANG)
     for n in graph.nodes:
-        if n.de_id is None or n.de_left is None or n.de_right is None:
+        if n.de_id is None:
             de_n = n
-            while de_n.de_left is None or de_n.de_right is None or de_n.de_id is None:
+            while de_n.de_id is None:
                 de_neighbors = graph.get_neighbor_nodes(de_n, DE_LANG)
                 de_n = de_neighbors[0]
-            assert de_n.de_left is not None and de_n.de_right is not None and de_n.de_id is not None
+            assert de_n.de_id is not None
             n.de_id = de_n.de_id
-            n.de_right = [i for i in de_n.de_right]
-            n.de_left = [i for i in de_n.de_left]
 
-        if n.en_id is None or n.en_left is None or n.en_right is None:
+        if n.en_id is None:
             en_n = n
-            while en_n.en_left is None or en_n.en_right is None or en_n.en_id is None:
+            while en_n.en_id is None:
                 en_neighbors = graph.get_neighbor_nodes(en_n, EN_LANG)
                 en_n = en_neighbors[0]
-            assert en_n.en_id is not None and en_n.en_left is not None and en_n.en_right is not None
+            assert en_n.en_id is not None
             n.en_id = en_n.en_id
-            n.en_right = [i for i in en_n.en_right]
-            n.en_left = [i for i in en_n.en_left]
 
 
 def min_visible_word_position(graph, vis_lang):
@@ -473,7 +471,7 @@ if __name__ == '__main__':
     sent_idx = 0
     eps_word_alignment = 0
     coe_sentences = []
-    for input_line, output_line, input_parse in zip(input_mt, output_mt, input_parsed)[:50]:
+    for input_line, output_line, input_parse in zip(input_mt, output_mt, input_parsed)[40:45]:
 
         sys.stderr.write('SENT' + str(sent_idx) + '\n')
         input_sent = input_line.strip().split()
@@ -526,8 +524,7 @@ if __name__ == '__main__':
                     input_coverage[inp_span[0] + iu_idx] = 1
                     input_tok_group[inp_span[0] + iu_idx] = group_idx
                     n = Node(node_idx, input_sent[inp_span[0] + iu_idx], None, inp_span[0] + iu_idx, DE_LANG,
-                             VIS_LANG == DE_LANG,
-                             None, None, None, None, True, False, False)
+                             VIS_LANG == DE_LANG, True, False, False)
                     node_idx += 1
                     to_nodes.append(n)
 
@@ -536,8 +533,7 @@ if __name__ == '__main__':
                     assert out_phrase[ou_idx] == output_sent[out_span[0] + ou_idx]
                     output_tok_group[out_span[0] + ou_idx] = group_idx
                     n = Node(node_idx, output_sent[out_span[0] + ou_idx], out_span[0] + ou_idx, None, EN_LANG,
-                             VIS_LANG == EN_LANG,
-                             None, None, None, None, False, True, False)
+                             VIS_LANG == EN_LANG, False, True, False)
                     node_idx += 1
                     from_nodes.append(n)
 
@@ -566,7 +562,7 @@ if __name__ == '__main__':
             input_tok_group,
             output_tok_group)
         split_sets = get_split_sets(split_inp, split_out)
-        swap_rules = get_swap_rules(coe_sentence, input_tok_group, output_tok_group, input_parse, split_sets)
+        swap_rules = get_swap_rules(coe_sentence, input_tok_group, output_tok_group, input_parse, split_sets, VIS_LANG)
         for sr in swap_rules:
             sys.stderr.write('swaps-pets:' + str(sr) + '\n')
 
@@ -594,7 +590,7 @@ if __name__ == '__main__':
                         g.swap_toward_en.append(so.make_copy())
                     else:
                         g.swaps = True
-                        g.swaps_toward_de.append(so.make_copy())
+                        g.swap_toward_de.append(so.make_copy())
                 else:
                     # print 'not there', g.id
                     pass
@@ -639,21 +635,20 @@ if __name__ == '__main__':
             for n in g.nodes:
                 if n.lang == EN_LANG:
                     if n.s == output_sent[n.en_id]:
-                        n.en_left = [START] + output_tok_group[:n.en_id]
-                        n.en_left.reverse()
-                        n.en_right = output_tok_group[n.en_id + 1:] + [END]
+                        # n.en_left = [START] + output_tok_group[:n.en_id]
+                        # n.en_left.reverse()
+                        # n.en_right = output_tok_group[n.en_id + 1:] + [END]
+                        pass
                 if n.lang == DE_LANG:
                     if n.s == input_sent[n.de_id]:
-                        n.de_left = [START] + input_tok_group[:n.de_id]
-                        n.de_left.reverse()
-                        n.de_right = input_tok_group[n.de_id + 1:] + [END]
-
+                        # n.de_left = [START] + input_tok_group[:n.de_id]
+                        # n.de_left.reverse()
+                        # n.de_right = input_tok_group[n.de_id + 1:] + [END]
+                        pass
             propagate(g)
 
             for n in g.nodes:
                 assert n.en_id is not None and n.de_id is not None
-                assert n.en_left is not None and n.de_left is not None
-                assert n.en_right is not None and n.de_right is not None
         propagate_split_info(coe_sentence)
         # sys.stderr.write('done sent' + str(sent_idx) + '\n')
 
