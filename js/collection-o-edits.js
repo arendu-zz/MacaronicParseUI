@@ -6,6 +6,7 @@ var sentences = []
 var page = 0;
 var sentences_per_page = 10
 var username = null
+var user
 var socket = null
 var json_sentences = []
 var mainview = null
@@ -1882,6 +1883,10 @@ function receivedJsonSentence(msg) {
 	do_precomputations()
 }
 
+function receivedUserProgress(msg){
+	mainview.innerHTML = "got user progress..."
+}
+
 function ok_parse(st, end) {
 	end = sentences_per_page < json_sentences.length ? end : json_sentences.length
 	for (var i = st; i < end; i++) {
@@ -1901,37 +1906,24 @@ function ok_parse(st, end) {
 	}
 }
 
-function setup(mview, uname, socketObj) {
+function setup(mview, workerId, assignmentId, socketObj) {
 	mainview = mview
-	username = uname
+	username = workerId
 	socket = socketObj
-	if (socket != null) {
-		//get json_sentences from server
-		socket.emit('requestJsonSentences', 'please')
-		console.log("requested sentences from server...")
-		socket.on('JsonSentences', receivedJsonSentence);
-	} else {
-		json_sentences = json_str_arr
-		ok_parse(0, 10)
-		do_precomputations()
+	if (socket != null && username != null) {
 
-		/*var end = sentences_per_page < json_str_arr.length ? sentences_per_page : json_str_arr.length
-		var st = 0
-		for (var i = st; i < end; i++) {
-			var jo = JSON.parse(json_str_arr[i])
-			var s = Sentence.parse(jo)
-			s.initialize(mainview)
-			s.visible_nodes = _.sortBy(s.visible_nodes, function (vn) {
-				if (s.initial_order_by == 'en') {
-					return vn.en_id
-				} else {
-					return vn.de_id
-				}
-			})
-			s.assign_display_order_by_array_order()
-			s.update_visible_nodes()
-			sentences.push(s)
-		}*/
+		//get json_sentences from server
+		//first get user progress
+		socket.emit('userProgress', {workerId: workerId, assignmentId:assignmentId})
+		socket.on('userProgress', receivedUserProgress)
+		//socket.emit('requestJsonSentences', 'please')
+		//console.log("requested sentences from server...")
+		//socket.on('JsonSentences', receivedJsonSentence);
+	} else {
+		// first get users progress
+		//json_sentences = json_str_arr
+		//ok_parse(0, 10)
+		//do_precomputations()
 	}
 
 	console.log('user name is ' + username)
