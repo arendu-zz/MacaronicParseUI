@@ -1884,11 +1884,13 @@ function receivedJsonSentence(msg) {
 }
 
 function receivedUserProgress(msg) {
+	console.log("got user progress...")
 	var str = ""
 	_.each(msg, function (v, k) {
 		str += k + " : " + v + " "
 	})
-	mainview.innerHTML = str
+	console.log(str)
+
 }
 
 function ok_parse(st, end) {
