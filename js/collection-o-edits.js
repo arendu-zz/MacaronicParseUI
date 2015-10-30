@@ -1911,7 +1911,7 @@ function setup(mview, workerId, assignmentId, socketObj) {
 	username = workerId
 	socket = socketObj
 	if (socket != null && username != null) {
-
+		console.log("case 1")
 		//get json_sentences from server
 		//first get user progress
 		socket.emit('userProgress', {workerId: workerId, assignmentId:assignmentId})
@@ -1920,6 +1920,7 @@ function setup(mview, workerId, assignmentId, socketObj) {
 		//console.log("requested sentences from server...")
 		//socket.on('JsonSentences', receivedJsonSentence);
 	} else {
+		console.log("case 2")
 		// first get users progress
 		//json_sentences = json_str_arr
 		//ok_parse(0, 10)
