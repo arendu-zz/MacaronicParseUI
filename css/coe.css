@@ -16,6 +16,11 @@ span {
 
 }
 
+.blurry {
+    color: transparent;
+    text-shadow: 0 0 5px rbga(2, 128, 144, 0.5);
+}
+
 .arrowContainer {
     pointer-events: none;
     background: transparent;
@@ -57,7 +62,7 @@ span {
 
 .en.textspan {
 
-    font-style: normal;
+    font-style: italic;
     color: #028090;
 
 }
@@ -70,6 +75,7 @@ span {
 
 .textspan.de.tmpAccept {
     color: #028090;
+    font-style: italic;
 }
 
 .textspan.en.deorder {
@@ -177,13 +183,17 @@ span {
 }
 
 .preview.translation.en {
-    font-style: normal;
-    color: #028090;
+    font-style: italic;
+    /*color: #028090;*/
+    color: transparent;
+    text-shadow: 0px 0px 8px #028090;
+
 }
 
 .preview.translation.de {
     font-style: normal;
-    color: #333333;
+    text-shadow: 0px 0px 8px #333333;
+    color: transparent;
 }
 
 .preview.split {

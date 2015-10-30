@@ -133,10 +133,10 @@ def split(alignment, idx_a, idx_g):
     return splits
 
 
-def check_for_heads(dep_parse, coe_sentence, gidx1, gidx2):
-    g_phrase1 = [coe_sentence.get_graph_by_id(gid).get_visible_phrase_with_idx('de')
+def check_for_heads(dep_parse, coe_sentence, gidx1, gidx2, vis_lang):
+    g_phrase1 = [coe_sentence.get_graph_by_id(gid).get_visible_phrase_with_idx(vis_lang)
                  for gid in gidx1]
-    g_phrase2 = [coe_sentence.get_graph_by_id(gid).get_visible_phrase_with_idx('de')
+    g_phrase2 = [coe_sentence.get_graph_by_id(gid).get_visible_phrase_with_idx(vis_lang)
                  for gid in gidx2]
     g1_phrase = [val for sublist in g_phrase1 for val in sublist]
     g2_phrase = [val for sublist in g_phrase2 for val in sublist]
@@ -201,7 +201,7 @@ def get_split_sets(split_inp, split_out):
     return split_sets
 
 
-def get_swap_rules(coe_sentence, input_tok_group, output_tok_group, dep_parse, split_sets=[]):
+def get_swap_rules(coe_sentence, input_tok_group, output_tok_group, dep_parse,split_sets, vis_lang):
     rules = []
     # input_unique = [i[0] for i in groupby(input_tok_group)]
     # output_unique = [i[0] for i in groupby(output_tok_group)]
@@ -247,7 +247,7 @@ def get_swap_rules(coe_sentence, input_tok_group, output_tok_group, dep_parse, s
                     head = 0
                     if swaps:
                         # print s1, s_idx1, g_phrase1, 'swaps with', s2, s_idx2, g_phrase2
-                        legal, head = check_for_heads(dep_parse, coe_sentence, gidx1, gidx2)
+                        legal, head = check_for_heads(dep_parse, coe_sentence, gidx1, gidx2, vis_lang)
                     if legal:
                         sn_child = SplitNode(s1, s2, s_idx1, s_idx2, gidx1, gidx2, swaps, head)
                         sn.add_child(sn_child, 1)
@@ -261,7 +261,7 @@ def get_swap_rules(coe_sentence, input_tok_group, output_tok_group, dep_parse, s
                     head = 0
                     if swaps:
                         # print s1, s_idx1, g_phrase1, 'swaps with', s2, s_idx2, g_phrase2
-                        legal, head = check_for_heads(dep_parse, coe_sentence, gidx1, gidx2)
+                        legal, head = check_for_heads(dep_parse, coe_sentence, gidx1, gidx2, vis_lang)
                     if legal:
                         sn_child = SplitNode(s1, s2, s_idx1, s_idx2, gidx1, gidx2, swaps, head)
                         sn.add_child(sn_child, 2)

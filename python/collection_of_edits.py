@@ -1,5 +1,6 @@
 __author__ = 'arenduchintala'
 import json
+from editdistance import EditDistance
 
 EN_LANG = 'en'
 DE_LANG = 'de'
@@ -8,6 +9,8 @@ START = '*ST*'
 REORDER_SWAP_TYPE = 'swap reorder'
 REORDER_TRANSFER = 'transfer reorder'
 REORDER_SEPARATES = 'separation reorder'
+
+ed = EditDistance(None)
 
 
 class Edge(dict):
@@ -31,7 +34,7 @@ class Edge(dict):
 
 
 class Node(dict):
-    def __init__(self, id, s, en_id, de_id, lang, visible, en_left=[], en_right=[], de_left=[], de_right=[],
+    def __init__(self, id, s, en_id, de_id, lang, visible,
                  to_en=False, to_de=True, ir=False):
         dict.__init__(self)
         self.__dict__ = self
@@ -41,10 +44,7 @@ class Node(dict):
         self.de_id = de_id
         self.lang = lang
         self.visible = visible
-        self.en_left = en_left
-        self.en_right = en_right
-        self.de_left = de_left
-        self.de_right = de_right
+
         self.graph = None
         self.er_lang = "en"
         self.to_en = to_en
@@ -52,12 +52,11 @@ class Node(dict):
         self.ir = ir
 
     def makecopy(self):
-        n = Node(self.id, self.s, self.en_id, self.de_id, self.lang, self.visible, self.en_left, self.en_right,
-                 self.de_left, self.en_right, to_en=self.to_en, to_de=self.to_de)
+        n = Node(self.id, self.s, self.en_id, self.de_id, self.lang, self.visible, to_en=self.to_en, to_de=self.to_de)
         return n
 
     def __eq__(self, other):
-        return self.s == other.s and self.graph.id == other.graph.id and self.id == other.id
+        return self.s == other.s and self.id == other.id
 
     def __str__(self):
         return str(self.id) + ',' + self.s
@@ -66,7 +65,7 @@ class Node(dict):
     def from_dict(dict_):
         """ Recursively (re)construct TreeNode-based tree from dictionary. """
         n = Node(dict_['id'], dict_['s'], dict_['en_id'], dict_['de_id'], dict_['lang'], dict_['visible'],
-                 dict_['en_left'], dict_['en_right'], dict_['de_left'], dict_['de_right'], dict_['to_en'],
+                 dict_['to_en'],
                  dict_['to_de'], dict_['ir'])
         return n
 
@@ -162,10 +161,44 @@ class Graph(dict):
     def __str__(self):
         return str(self.id) + ',' + ','.join([str(i) for i in self.nodes])
 
-    def set_visibility(self):
+    def cognate_visibility(self, vis_lang):
+        # Assumes input language in de and output en
+        # if de is similar en it displays de
+        # if not it auto translates to en
+        self.set_visibility('de')
         visiblity_dict = {}
         for n in self.nodes:
-            neighbor = self.get_neighbor_nodes(n, 'en')
+            neighbor = self.get_neighbor_nodes(n, vis_lang)
+            if n.lang == 'de' and len(neighbor) == 1 and neighbor[0].lang == 'en':
+                edr = float(ed.editdistance(n.s, neighbor[0].s)[0])  # / max(len(n.s), len(neighbor[0].s))
+                if (edr > 0.5 and len(n.s) < 5) or (edr > 0.1 and len(n.s) >= 5):
+                    pass
+                else:
+                    if n.visible and len(neighbor) > 0:
+                        n.visible = False
+                        for ne in neighbor:
+                            lst = visiblity_dict.get(ne.id, set([]))
+                            lst.add(n.id)
+                            visiblity_dict[ne.id] = lst
+                            ne.visible = True
+
+        while len(visiblity_dict) > 0:
+            visiblity_dict = {}
+            for n in self.nodes:
+                neighbor = self.get_neighbor_nodes(n, vis_lang)
+                if n.visible and len(neighbor) > 0:
+                    n.visible = False
+                    for ne in neighbor:
+                        lst = visiblity_dict.get(ne.id, set([]))
+                        lst.add(n.id)
+                        visiblity_dict[ne.id] = lst
+                        ne.visible = True
+        return True
+
+    def set_visibility(self, vis_lang):
+        visiblity_dict = {}
+        for n in self.nodes:
+            neighbor = self.get_neighbor_nodes(n, vis_lang)
             if n.visible and len(neighbor) > 0:
                 n.visible = False
                 for ne in neighbor:
@@ -177,7 +210,7 @@ class Graph(dict):
         while len(visiblity_dict) > 0:
             visiblity_dict = {}
             for n in self.nodes:
-                neighbor = self.get_neighbor_nodes(n, 'en')
+                neighbor = self.get_neighbor_nodes(n, vis_lang)
                 if n.visible and len(neighbor) > 0:
                     n.visible = False
                     for ne in neighbor:
@@ -228,8 +261,6 @@ class Graph(dict):
                     propagate_dict[ne.id] = t
             for n_id, nl in propagate_dict.items():
                 n = self.get_node_by_id(n_id)
-                n.de_left = nl[0].de_left
-                n.de_right = nl[0].de_right
 
             propagate_list = []
             for n in self.nodes:
@@ -272,7 +303,7 @@ class Graph(dict):
             vns = [n.s + '-' + str(np + 1) if n.s != '@-@'else '@' + '-' + str(np + 1) for np, n in vns]
             return vns
         else:
-            vns = [(n.de_id, n) for n in self.nodes if n.visible]
+            vns = [(n.en_id, n) for n in self.nodes if n.visible]
             vns.sort()
             vns = [n.s + '-' + str(np + 1) if n.s != '@-@'else '@' + '-' + str(np + 1) for np, n in vns]
             return vns
@@ -311,21 +342,17 @@ def get_edges(n1, n2):
 
 def propagate(graph):
     for n in graph.nodes:
-        if n.de_id is None or n.de_left is None or n.de_right is None:
+        if n.de_id is None:
             de_neighbors = graph.get_neighbor_nodes(n, DE_LANG)
             de_n = de_neighbors[0]
-            assert de_n.de_left is not None and de_n.de_right is not None and de_n.de_id is not None
+            assert de_n.de_id is not None
             n.de_id = de_n.de_id
-            n.de_right = [i for i in de_n.de_right]
-            n.de_left = [i for i in de_n.de_left]
 
-        if n.en_id is None or n.en_left is None or n.en_right is None:
+        if n.en_id is None:
             en_neighbors = graph.get_neighbor_nodes(n, EN_LANG)
             en_n = en_neighbors[0]
-            assert en_n.en_id is not None and en_n.en_left is not None and en_n.en_right is not None
+            assert en_n.en_id is not None
             n.en_id = en_n.en_id
-            n.en_right = [i for i in en_n.en_right]
-            n.en_left = [i for i in en_n.en_left]
 
 
 if __name__ == '__main__':
@@ -507,24 +534,24 @@ if __name__ == '__main__':
 
     s3 = Sentence(3, "A B C D", "1 31 2 32 4", None)
     g0 = Graph(0)
-    n0 = Node(0, 'A', 0, 0, EN_LANG, True, [START], [1, 2, END], [START], [1, 2, 1, END], to_en=False, to_de=True)
-    n1 = Node(1, '1', 0, 0, DE_LANG, False, [START], [1, 2, END], [START], [1, 2, 1, END], to_en=True, to_de=False)
+    n0 = Node(0, 'A', 0, 0, EN_LANG, True, to_en=False, to_de=True)
+    n1 = Node(1, '1', 0, 0, DE_LANG, False, to_en=True, to_de=False)
     g0.nodes = [n0, n1]
     g0.edges = get_edges(n0, n1)
     propagate(g0)
     s3.graphs.append(g0)
 
     g1 = Graph(1)
-    n0 = Node(0, 'B', 1, 2, EN_LANG, True, [0, START], [2, END], [0, START], [2, END], to_de=True, to_en=False)
-    n1 = Node(1, '2', 1, 2, DE_LANG, False, [0, START], [2, END], [0, START], [END], to_de=False, to_en=True)
+    n0 = Node(0, 'B', 1, 2, EN_LANG, True, to_de=True, to_en=False)
+    n1 = Node(1, '2', 1, 2, DE_LANG, False, to_de=False, to_en=True)
     g1.nodes = [n0, n1]
     g1.edges = get_edges(n0, n1)
     propagate(g1)
     s3.graphs.append(g1)
 
     g3 = Graph(3)
-    n0 = Node(0, 'D', 3, 4, EN_LANG, True, [2, 1, 0, START], [END], [2, 1, 2, 0, START], [END], to_de=True, to_en=False)
-    n1 = Node(1, '4', 3, 4, DE_LANG, False, [2, 1, 0, START], [END], [2, 1, 2, 0, START], [END], to_de=False,
+    n0 = Node(0, 'D', 3, 4, EN_LANG, True, to_de=True, to_en=False)
+    n1 = Node(1, '4', 3, 4, DE_LANG, False, to_de=False,
               to_en=True)
     g3.nodes = [n0, n1]
     g3.edges = get_edges(n0, n1)
@@ -532,9 +559,9 @@ if __name__ == '__main__':
     s3.graphs.append(g3)
 
     g2 = Graph(2)
-    n0 = Node(0, 'C', 2, 2, EN_LANG, True, [1, 0, START], [3, END], [1, 0, START], [4, END], to_de=True, to_en=False)
-    n1 = Node(1, 'C1', 2, 1, DE_LANG, False, [1, 2, START], [END], [0, START], [1, 2, 3, END], to_de=False, to_en=True)
-    n2 = Node(2, 'C4', 2, 3, DE_LANG, False, [1, 2, START], [END], [1, 2, START], [1, END], to_de=False, to_en=True)
+    n0 = Node(0, 'C', 2, 2, EN_LANG, True, to_de=True, to_en=False)
+    n1 = Node(1, 'C1', 2, 1, DE_LANG, False, to_de=False, to_en=True)
+    n2 = Node(2, 'C4', 2, 3, DE_LANG, False, to_de=False, to_en=True)
     g2.nodes = [n0, n1, n2]
     g2.edges = get_edges(n0, n1) + get_edges(n0, n2)
     g2.splits = True
@@ -557,24 +584,24 @@ if __name__ == '__main__':
 
     s4 = Sentence(3, "A B C D", "1 31 2 32 4", None)
     g0 = Graph(0)
-    n0 = Node(0, 'A', 0, 0, EN_LANG, True, [START], [1, 2, END], [START], [1, 2, 1, END], to_en=False, to_de=True)
-    n1 = Node(1, '1', 0, 0, DE_LANG, False, [START], [1, 2, END], [START], [1, 2, 1, END], to_en=True, to_de=False)
+    n0 = Node(0, 'A', 0, 0, EN_LANG, True, to_en=False, to_de=True)
+    n1 = Node(1, '1', 0, 0, DE_LANG, False, to_en=True, to_de=False)
     g0.nodes = [n0, n1]
     g0.edges = get_edges(n0, n1)
     propagate(g0)
     s4.graphs.append(g0)
 
     g1 = Graph(1)
-    n0 = Node(0, 'B', 1, 2, EN_LANG, True, [0, START], [2, END], [0, START], [2, END], to_de=True, to_en=False)
-    n1 = Node(1, '2', 1, 2, DE_LANG, False, [0, START], [2, END], [0, START], [END], to_de=False, to_en=True)
+    n0 = Node(0, 'B', 1, 2, EN_LANG, True, to_de=True, to_en=False)
+    n1 = Node(1, '2', 1, 2, DE_LANG, False, to_de=False, to_en=True)
     g1.nodes = [n0, n1]
     g1.edges = get_edges(n0, n1)
     propagate(g1)
     s4.graphs.append(g1)
 
     g3 = Graph(3)
-    n0 = Node(0, 'D', 3, 4, EN_LANG, True, [2, 1, 0, START], [END], [2, 1, 2, 0, START], [END], to_de=True, to_en=False)
-    n1 = Node(1, '4', 3, 4, DE_LANG, False, [2, 1, 0, START], [END], [2, 1, 2, 0, START], [END], to_de=False,
+    n0 = Node(0, 'D', 3, 4, EN_LANG, True, to_de=True, to_en=False)
+    n1 = Node(1, '4', 3, 4, DE_LANG, False, to_de=False,
               to_en=True)
     g3.nodes = [n0, n1]
     g3.edges = get_edges(n0, n1)
@@ -582,9 +609,9 @@ if __name__ == '__main__':
     s4.graphs.append(g3)
 
     g2 = Graph(2)
-    n0 = Node(0, 'C', 2, 2, EN_LANG, True, [1, 0, START], [3, END], [1, 0, START], [4, END], to_de=True, to_en=False)
-    n1 = Node(1, 'C1', 2, 1, DE_LANG, False, [1, 2, START], [END], [0, START], [1, 2, 3, END], to_de=False, to_en=True)
-    n2 = Node(2, 'C4', 2, 3, DE_LANG, False, [1, 2, START], [END], [1, 2, START], [1, END], to_de=False, to_en=True)
+    n0 = Node(0, 'C', 2, 2, EN_LANG, True, to_de=True, to_en=False)
+    n1 = Node(1, 'C1', 2, 1, DE_LANG, False, to_de=False, to_en=True)
+    n2 = Node(2, 'C4', 2, 3, DE_LANG, False, to_de=False, to_en=True)
     g2.nodes = [n0, n1, n2]
     g2.edges = get_edges(n0, n1) + get_edges(n0, n2)
     g2.splits = True
