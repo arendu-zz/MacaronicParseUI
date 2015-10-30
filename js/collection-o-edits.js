@@ -1918,7 +1918,7 @@ function setup(mview, workerId, assignmentId, socketObj) {
 		console.log("case 1")
 		//get json_sentences from server
 		//first get user progress
-		socket.emit('userProgress', {workerId: workerId, assignmentId: assignmentId})
+		socket.emit('requestUserProgress', {workerId: workerId, assignmentId: assignmentId})
 		socket.on('userProgress', receivedUserProgress)
 		//socket.emit('requestJsonSentences', 'please')
 		//console.log("requested sentences from server...")
