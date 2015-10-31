@@ -7,6 +7,7 @@ var page = 0;
 var sentences_per_page = 10
 var username = null
 var points_earned = 0
+var progress = 0
 var socket = null
 var json_sentences = []
 var mainview = null
@@ -1725,8 +1726,13 @@ function Sentence() {
 		if (this.outer_container == null) {
 			this.outer_container = document.createElement('div')
 			$(this.outer_container).addClass('outerContainer')
+			var colum_container = document.createElement('div')
+			$(colum_container).addClass('colContainer')
 			var c = self.get_container()
-			$(this.outer_container).append($(c))
+			$(colum_container).append($(c))
+			var t = self.get_text_container()
+			$(colum_container).append($(t))
+			$(this.outer_container).append($(colum_container))
 			this.points_container = self.get_points_container()
 			$(this.outer_container).append($(this.points_container))
 			return this.outer_container
@@ -1746,6 +1752,31 @@ function Sentence() {
 			return this.points_container
 		} else {
 			return this.points_container
+		}
+	}
+	this.completed = function () {
+		console.log("ok now do some things....")
+		socket.emit('updatePointsEarned', {workerId: username, progress: progress + 1, displayname: username, points_earned: points_earned + parseInt(self.points_remaining)})
+
+	}
+	this.get_text_container = function () {
+		if (this.text_container == null) {
+			this.text_container = document.createElement('div')
+			$(this.text_container).addClass('textContainer')
+			var translation_input = document.createElement('textarea')
+			$(translation_input).addClass("translationInput")
+			var confirm_btn = document.createElement('Button')
+			confirm_btn.innerHTML = 'confirm'
+			$(confirm_btn).addClass("confirmBtn")
+			$(confirm_btn).on('click', function () {
+
+				self.completed()
+			})
+			$(this.text_container).append($(translation_input))
+			$(this.text_container).append($(confirm_btn))
+			return this.text_container
+		} else {
+			return this.text_container
 		}
 	}
 	this.get_container = function () {
@@ -1928,6 +1959,8 @@ function receivedJsonSentence(msg) {
 function receivedUserProgress(msg) {
 	console.log("got user progress...")
 	json_sentences = msg.data
+	points_earned = msg.points_earned
+	progress = msg.progress
 	ok_parse(0, 1)
 	do_precomputations()
 

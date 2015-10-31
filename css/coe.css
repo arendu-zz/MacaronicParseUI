@@ -7,6 +7,10 @@ div {
 }
 
 .subItem {
+    display: -moz-box;
+    display: -ms-box;
+    display: -webkit-box;
+    display: -webkit-flex;
     display: flex;
 
 }
@@ -33,9 +37,7 @@ span {
 }
 
 .arrow.body {
-
     opacity: 0.1;
-
 }
 
 .arrow.head {
@@ -94,6 +96,10 @@ span {
     margin: 0px;
     padding: 0px;
     /*display: inline-block;*/
+    display: -moz-box;
+    display: -ms-box;
+    display: -webkit-box;
+    display: -webkit-flex;
     display: flex;
     width: -webkit-fit-content;
     border-right: 2px solid transparent;
@@ -128,23 +134,55 @@ span {
 
 }
 
-.container:hover {
-    /* background: gray;*/
+.colContainer {
+    display: -moz-box;
+    display: -ms-box;
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: flex;
+    flex-grow: 1;
+    flex-direction: column;
+    /*border: 1px red solid; */
 
 }
 
-.container {
+.textContainer {
+    display: -moz-box;
+    display: -ms-box;
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: flex;
+    flex-direction: row;
+    align-content: center;
+    justify-content: flex-start;
+    padding-top: 10px;
+}
+
+.translationInput {
     flex-grow: 1;
+    min-width: 44px;
+    max-width: 500px;
+    height: 44px
+
+}
+
+.confirmBtn {
+    width: 70px;
+    height: 50px;
 }
 
 .pointsContainer {
+    display: -moz-box;
+    display: -ms-box;
+    display: -webkit-box;
+    display: -webkit-flex;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     width: 120px;
-    font-size: larger;
-    color: orange;
+    font-size: 50px;
+    color: grey;
 }
 
 .outerContainer {
@@ -153,6 +191,10 @@ span {
 }
 
 .node_menu_container {
+    display: -moz-box;
+    display: -ms-box;
+    display: -webkit-box;
+    display: -webkit-flex;
     display: flex;
     height: 20px;
     padding: 0px;
@@ -169,6 +211,10 @@ span {
 }*/
 
 .previewMenu {
+    display: -moz-box;
+    display: -ms-box;
+    display: -webkit-box;
+    display: -webkit-flex;
     display: flex;
     flex-direction: row;
     align-content: center;
@@ -182,6 +228,10 @@ span {
 }
 
 .previewDiv {
+    display: -moz-box;
+    display: -ms-box;
+    display: -webkit-box;
+    display: -webkit-flex;
     display: flex;
     padding: 0px;
     position: absolute;
@@ -227,6 +277,10 @@ span {
 }
 
 .previewDiv.en {
+    display: -moz-box;
+    display: -ms-box;
+    display: -webkit-box;
+    display: -webkit-flex;
     display: flex;
     flex-direction: column-reverse;
     justify-content: flex-end;
@@ -311,6 +365,10 @@ span {
     /*----- nowrap | wrap | wrap-reverse*/
     padding-top: 0px;
     padding-bottom: 0px;
+}
+
+.container:hover {
+    /*background: grey;*/
 }
 
 .straight_line {
