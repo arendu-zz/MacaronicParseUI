@@ -6,12 +6,15 @@ var sentences = []
 var page = 0;
 var sentences_per_page = 10
 var username = null
-var user
+var points_earned = 0
 var socket = null
 var json_sentences = []
 var mainview = null
 var global_preview_views = []
 var global_preview_classes = []
+var pointsViewModel = {
+	pointsRemaining: 100
+}
 
 gotoPrevPage = function () {
 	console.log("go to prev page")
@@ -919,6 +922,12 @@ function Node() {
 		var sm = new SocketMessage(username, rule, before, after)
 		if (socket != null) {
 			socket.emit('logEvent', sm)
+
+			if (self.graph.sentence.points_remaining > 0) {
+				self.graph.sentence.points_remaining -= 1
+				self.graph.sentence.update_points_container(self.graph.sentence.points_remaining)
+			}
+
 		}
 	}
 
@@ -1422,7 +1431,10 @@ function Sentence() {
 	this.graphs = []
 	this.visible_nodes = []
 	this.container = null
+	this.outer_container = null
+	this.points_container = null
 	this.initial_order_by = null
+	this.points_remaining = 100;
 
 	this.remove_all_previews = function (exception) {
 		_.each(self.visible_nodes, function (vn) {
@@ -1449,7 +1461,10 @@ function Sentence() {
 
 	this.initialize = function (mainview) {
 		self.container = self.get_container()
-		mainview.append($(self.get_container()))
+		self.outer_container = self.get_outside_container()
+		mainview.append($(self.get_outside_container()))
+		//mainview.append($(self.get_container()))
+
 		self.graphs = _.sortBy(self.graphs, function (graph) {
 			return graph.initial_order
 		})
@@ -1706,6 +1721,33 @@ function Sentence() {
 		self.assign_display_order_by_array_order()
 		self.update_visible_nodes()
 	}
+	this.get_outside_container = function () {
+		if (this.outer_container == null) {
+			this.outer_container = document.createElement('div')
+			$(this.outer_container).addClass('outerContainer')
+			var c = self.get_container()
+			$(this.outer_container).append($(c))
+			this.points_container = self.get_points_container()
+			$(this.outer_container).append($(this.points_container))
+			return this.outer_container
+		} else {
+			return this.outer_container
+		}
+	}
+	this.update_points_container = function (points) {
+		this.get_points_container().innerText = points
+	}
+	this.get_points_container = function () {
+		if (this.points_container == null) {
+			this.points_container = document.createElement('div')
+			$(this.points_container).attr('data-bind', 'text: pointsRemaining')
+			$(this.points_container).addClass('pointsContainer')
+			this.points_container.innerText = this.points_remaining
+			return this.points_container
+		} else {
+			return this.points_container
+		}
+	}
 	this.get_container = function () {
 		if (this.container == null) {
 			this.container = document.createElement('div')
@@ -1885,11 +1927,9 @@ function receivedJsonSentence(msg) {
 
 function receivedUserProgress(msg) {
 	console.log("got user progress...")
-	var str = ""
-	_.each(msg, function (v, k) {
-		str += k + " : " + v + " "
-	})
-	console.log(str)
+	json_sentences = msg.data
+	ok_parse(0, 1)
+	do_precomputations()
 
 }
 
