@@ -129,7 +129,27 @@ span {
 }
 
 .container:hover {
-    /*background: gray;*/
+    /* background: gray;*/
+
+}
+
+.container {
+    flex-grow: 1;
+}
+
+.pointsContainer {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 120px;
+    font-size: larger;
+    color: orange;
+}
+
+.outerContainer {
+    display: flex;
+    flex-direction: row;
 }
 
 .node_menu_container {
