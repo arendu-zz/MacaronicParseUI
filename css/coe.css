@@ -345,6 +345,11 @@ span {
     opacity: 0.2;
 }
 
+.pageContainer {
+    border: 1px solid red;
+
+}
+
 .container {
     background: transparent;
     display: -moz-box;
@@ -375,44 +380,8 @@ span {
     background: #028090;
 }
 
-/*--- ORDER ---*/
-
-#one {
-    order: 3;
+.bold {
+    font-weight: bold;
 }
-
-#two {
-    order: 2;
-}
-
-#three {
-    order: 1;
-}
-
-#four {
-    order: 4;
-}
-
-#five {
-    order: 5;
-}
-
-/*--- BASIS Grow & shrink ---*/
-
-#one {
-    /*flex-basis: 400px;*/
-    /*flex-shrink: 0;*/
-}
-
-#two {
-    /*flex-grow: 2;*/
-    /*flex-shrink: 2;*/
-}
-
-#five {
-    /*	flex-shrink: 1;
-        flex-grow: 3;*/
-}
-
 
 

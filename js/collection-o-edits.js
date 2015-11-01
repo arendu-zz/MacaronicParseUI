@@ -11,12 +11,24 @@ var progress = 0
 var socket = null
 var json_sentences = []
 var mainview = null
+var workerId_span = null
+var userType_span = null
+var pointsEarned_span = null
 var global_preview_views = []
 var global_preview_classes = []
 var pointsViewModel = {
 	pointsRemaining: 100
 }
 
+completedTask = function () {
+	console.log("ok now do some things....")
+	var total_new_points = 0
+	_.each(sentences, function (s) {
+		total_new_points += s.points_remaining
+	})
+	socket.emit('updatePointsEarned', {workerId: username, progress: progress + 1, displayname: username, points_earned: points_earned + parseInt(total_new_points)})
+
+}
 gotoPrevPage = function () {
 	console.log("go to prev page")
 	page -= 1
@@ -24,7 +36,7 @@ gotoPrevPage = function () {
 	var total = json_sentences.length
 	var end = st + sentences_per_page
 	if (page >= 0) {
-		$('#mainbody').empty()
+		$(mainview).empty()
 		sentences = []
 		ok_parse(st, end)
 		do_precomputations()
@@ -62,7 +74,7 @@ gotoNextPage = function () {
 
 	}
 
-	$('#mainbody').empty()
+	$(mainview).empty()
 	sentences = []
 	ok_parse(st, end)
 	do_precomputations()
@@ -1743,11 +1755,21 @@ function Sentence() {
 	this.update_points_container = function (points) {
 		this.get_points_container().innerText = points
 	}
+	this.get_node_count = function () {
+		var c = 0
+		_.each(self.graphs, function (g) {
+			_.each(g.nodes, function (n) {
+				c += 1
+			})
+		})
+		return c
+	}
 	this.get_points_container = function () {
 		if (this.points_container == null) {
 			this.points_container = document.createElement('div')
 			$(this.points_container).attr('data-bind', 'text: pointsRemaining')
 			$(this.points_container).addClass('pointsContainer')
+			self.points_remaining = self.get_node_count()
 			this.points_container.innerText = this.points_remaining
 			return this.points_container
 		} else {
@@ -1755,8 +1777,6 @@ function Sentence() {
 		}
 	}
 	this.completed = function () {
-		console.log("ok now do some things....")
-		socket.emit('updatePointsEarned', {workerId: username, progress: progress + 1, displayname: username, points_earned: points_earned + parseInt(self.points_remaining)})
 
 	}
 	this.get_text_container = function () {
@@ -1765,15 +1785,7 @@ function Sentence() {
 			$(this.text_container).addClass('textContainer')
 			var translation_input = document.createElement('textarea')
 			$(translation_input).addClass("translationInput")
-			var confirm_btn = document.createElement('Button')
-			confirm_btn.innerHTML = 'confirm'
-			$(confirm_btn).addClass("confirmBtn")
-			$(confirm_btn).on('click', function () {
-
-				self.completed()
-			})
 			$(this.text_container).append($(translation_input))
-			$(this.text_container).append($(confirm_btn))
 			return this.text_container
 		} else {
 			return this.text_container
@@ -1957,10 +1969,13 @@ function receivedJsonSentence(msg) {
 }
 
 function receivedUserProgress(msg) {
+	$(mainview).empty()
+	sentences = []
 	console.log("got user progress...")
 	json_sentences = msg.data
 	points_earned = msg.points_earned
 	progress = msg.progress
+	pointsEarned_span.text(points_earned);
 	ok_parse(0, 1)
 	do_precomputations()
 
@@ -1985,8 +2000,11 @@ function ok_parse(st, end) {
 	}
 }
 
-function setup(mview, workerId, assignmentId, socketObj) {
-	mainview = mview
+function setup(pageView, workerId, assignmentId, socketObj) {
+	mainview = $('#mainbody')
+	userType_span = $('#userType')
+	workerId_span = $('#workerId')
+	pointsEarned_span = $('#pointsEarned')
 	username = workerId
 	socket = socketObj
 	if (socket != null && username != null) {
