@@ -188,6 +188,8 @@ span {
 .outerContainer {
     display: flex;
     flex-direction: row;
+    padding: 5px;
+    border: 1px solid lightgrey;
 }
 
 .node_menu_container {
@@ -346,7 +348,7 @@ span {
 }
 
 .pageContainer {
-    border: 1px solid red;
+   /* border: 1px solid red;*/
 
 }
 
