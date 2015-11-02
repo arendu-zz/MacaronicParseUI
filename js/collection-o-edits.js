@@ -23,10 +23,13 @@ var pointsViewModel = {
 completedTask = function () {
 	console.log("ok now do some things....")
 	var total_new_points = 0
+	var listTLM = []
 	_.each(sentences, function (s) {
+		var tlm = new TranslationLogMessage(username, s.getLogObjs(), s.get_visible_string(), s.get_user_translation())
+		listTLM.push(tlm)
 		total_new_points += s.points_remaining
 	})
-	socket.emit('updatePointsEarned', {workerId: username, progress: progress + 1, displayname: username, points_earned: points_earned + parseInt(total_new_points)})
+	socket.emit('completedTask', {workerId: username, hitlog: listTLM, progress: progress + 1, displayname: username, points_earned: points_earned + parseInt(total_new_points)})
 
 }
 gotoPrevPage = function () {
@@ -676,6 +679,7 @@ function Node() {
 		console.log('action triggered:' + param.action + ',' + param.direction)
 		self.graph.sentence.remove_all_previews(null)
 		var before = JSON.stringify(self.graph.sentence.getLogObjs())
+		var visible_before = self.graph.sentence.get_visible_string()
 		var rule = param.action
 		if (param.action == 'split reorder') {
 
@@ -932,7 +936,8 @@ function Node() {
 			//console.log("Invalid action:  " + param.action)
 		}
 		var after = JSON.stringify(self.graph.sentence.getLogObjs())
-		var sm = new SocketMessage(username, rule, before, after)
+		var visible_after = self.graph.sentence.get_visible_string()
+		var sm = new ActivityLogMessage(username, rule, before, after, visible_before, visible_after)
 		if (socket != null) {
 			socket.emit('logEvent', sm)
 
@@ -1660,12 +1665,26 @@ function Sentence() {
 
 		}
 	}
+
 	this.getLogObjs = function () {
 		var logObjs = []
 		_.each(self.visible_nodes, function (vn) {
 			logObjs.push(vn.getLogObj())
 		})
 		return logObjs
+	}
+	this.get_visible_string = function () {
+		self.sort_visible_nodes_by_display_order()
+		var s = []
+		_.each(self.visible_nodes, function (vn) {
+			s.push(vn.s)
+		})
+		return s.join([separator = " "]);
+
+	}
+	this.get_user_translation = function () {
+		var o = self.get_text_container().text_area
+		return o.value
 	}
 	this.add_nodes = function (nodes, nodes_idx, param) {
 		self.sort_visible_nodes_by_display_order()
@@ -1744,6 +1763,8 @@ function Sentence() {
 			$(colum_container).append($(c))
 			var t = self.get_text_container()
 			$(colum_container).append($(t))
+			this.outer_container.text_container = t
+			this.outer_container.macaronic_container = c
 			$(this.outer_container).append($(colum_container))
 			this.points_container = self.get_points_container()
 			$(this.outer_container).append($(this.points_container))
@@ -1776,9 +1797,7 @@ function Sentence() {
 			return this.points_container
 		}
 	}
-	this.completed = function () {
 
-	}
 	this.get_text_container = function () {
 		if (this.text_container == null) {
 			this.text_container = document.createElement('div')
@@ -1786,6 +1805,7 @@ function Sentence() {
 			var translation_input = document.createElement('textarea')
 			$(translation_input).addClass("translationInput")
 			$(this.text_container).append($(translation_input))
+			this.text_container.text_area = translation_input
 			return this.text_container
 		} else {
 			return this.text_container
