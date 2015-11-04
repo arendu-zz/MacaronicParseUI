@@ -60,6 +60,9 @@ span {
 .textspan {
     background: transparent;
     /*border: 1px red solid;*/
+    -webkit-user-select: none; /* Chrome all / Safari all */
+    -moz-user-select: none; /* Firefox all */
+    -ms-user-select: none; /* IE 10+ */
 }
 
 .en.textspan {
@@ -348,7 +351,7 @@ span {
 }
 
 .pageContainer {
-   /* border: 1px solid red;*/
+    /* border: 1px solid red;*/
 
 }
 
