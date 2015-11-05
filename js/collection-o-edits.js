@@ -1877,7 +1877,7 @@ function receivedUserProgress(msg) {
 	json_sentences = msg.data
 	points_earned = msg.points_earned
 	progress = msg.progress
-	pointsEarned_span.text(points_earned);
+	pointsEarned_span.text(parseFloat(points_earned).toFixed(1));
 	ok_parse(0, 1)
 	do_precomputations()
 
