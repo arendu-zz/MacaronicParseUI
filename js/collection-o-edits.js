@@ -28,9 +28,9 @@ completedTask = function () {
 	_.each(sentences, function (s) {
 		var tlm = new TranslationLogMessage(username, s.getLogObjs(), s.get_visible_string(), s.get_user_translation())
 		listTLM.push(tlm)
-		total_new_points += s.points_remaining
+		total_new_points += s.points_remaining + s.points_bonus
 	})
-	socket.emit('completedTask', {workerId: username, hitlog: listTLM, progress: progress + 1, displayname: username, points_earned: points_earned + parseInt(total_new_points)})
+	socket.emit('completedTask', {workerId: username, hitlog: listTLM, progress: progress + 1, displayname: username, points_earned: points_earned + parseFloat(total_new_points)})
 
 }
 gotoPrevPage = function () {
