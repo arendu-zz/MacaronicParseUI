@@ -16,8 +16,9 @@ var userType_span = null
 var pointsEarned_span = null
 var global_preview_views = []
 var global_preview_classes = []
-var pointsViewModel = {
-	pointsRemaining: 100
+
+scaleIn = function (item) {
+	$(item).show("scale", {percent: 100}, 2000)
 }
 
 completedTask = function () {
@@ -132,7 +133,7 @@ function Node() {
 
 	this.update_view_reorder = function () {
 		var view = this.get_view()
-		console.log("s " + self.s + " id " + self.de_id + " current view id" + parseInt($(view).css('order')))
+		//console.log("s " + self.s + " id " + self.de_id + " current view id" + parseInt($(view).css('order')))
 		if (self.de_id != parseInt($(view).css('order'))) {
 			$(view.textSpan).addClass('enorder')
 		} else {
@@ -266,23 +267,13 @@ function Node() {
 
 		self.graph.sentence.remove_all_previews(self)
 		//console.log('* *  PREVIEW REORDER ' + direction + '* *')
-		var directions = ['en', 'de']
+		var directions = ['en'] //only show previews in en direction
 		var num_swaps = []
 		_.each(directions, function (direction) {
 			var pv = document.createElement('div')
 			$(pv).addClass("previewDiv")
 			$(pv).addClass(direction)
 
-			/*$(pv).on('mouseleave', function () {
-				//self.offView('offPreview')
-				self.unpreview_action()
-			})
-			$(pv).on('mouseenter', function () {
-				self.onPreview('onPreview')
-			})*/
-			/*var pv_menu = document.createElement('div')
-			$(pv_menu).addClass("previewMenu")
-			$(pv).append($(pv_menu))*/
 			var pv_translate = document.createElement('div')
 			$(pv_translate).addClass("previewTranslateContainer")
 			$(pv_translate).addClass(direction)
@@ -339,48 +330,6 @@ function Node() {
 				}
 
 				num_swaps.push(arrows)
-				/*global_preview_views.push(arrows.parent)
-				var container = self.graph.sentence.get_container()
-				$(container).append(arrows.parent)
-				arrows.path.on('mouseenter', function () {
-					arrows.path.attr('fill-opacity', '1.0').attr('stroke-opacity', '1.0')
-					arrows.marker.attr('fill-opacity', '1.0').attr('stroke-opacity', '1.0')
-					arrows.path.attr('class', 'arrow highlighted')
-					arrows.marker.attr('class', 'arrow highlighted')
-					console.log("wha whaaa!!")
-				})
-				arrows.path.on('mouseleave', function () {
-					arrows.path.attr('fill-opacity', '0.2').attr('stroke-opacity', '0.2')
-					arrows.marker.attr('fill-opacity', '0.2').attr('stroke-opacity', '0.2')
-					arrows.path.attr('class', 'arrow')
-					arrows.marker.attr('class', 'arrow')
-					console.log("dooo doooo whaaa!!")
-				})
-				arrows.path.on('click', function () {
-					console.log("its been clicked!!!")
-
-					self.take_action({action: 'external reorder', direction: direction})
-				})*/
-				/*_.each(arrows, function (arrow) {
-					$(container).append(arrow)
-					global_preview_views.push(arrow)
-				})*/
-				/*var sd = document.createElement('div')
-				$(sd).on('mouseenter', function () {
-					console.log("setting css of .preview.swap")
-					$('.preview.swap').css('opacity', '1.0')
-				})
-				$(sd).on('mouseleave', function () {
-					$('.preview.swap').css('opacity', '0.2')
-				})
-				$(sd).on('click', function () {
-					console.log("i have been clicked swap btn")
-					self.take_action({action: 'external reorder', direction: direction})
-
-				})*/
-				//$(sd).addClass("swap btn")
-				//$(pv_menu).append($(sd))
-				//btns.push(sd)
 
 			} else if (self.graph.splits && self["split_reorder_" + direction]) {
 				//console.log("this graphs splits")
@@ -476,36 +425,7 @@ function Node() {
 					var pathDiv = document.createElement('div')
 					var arrows = self.get_split_preview_view(pathDiv, bounds, moving_bounds, moving_to_bounds, direction)
 					num_swaps.push(arrows)
-					/*global_preview_views.push(arrows.parent)
-					var container = self.graph.sentence.get_container()
-					$(container).append(arrows.parent)
-					//currently split and should be unsplit
-					arrows.path.on('mouseenter', function () {
-						self.set_path_attr(arrows, 'arrow highlighted')
-						console.log("wha whaaa!!")
-					})
-					arrows.path.on('mouseleave', function () {
-						self.set_path_attr(arrows, 'arrow')
-						console.log("dooo doooo whaaa!!")
-					})
-					arrows.path.on('click', function () {
-						console.log("its been clicked!!!")
-						self.take_action({action: 'split reorder', direction: direction})
-					})*/
-					/*console.log("currently split and should be unsplit ")
-					var sd = document.createElement('div')
-					$(sd).addClass("split btn")
-					$(sd).on('mouseenter', function () {
-						$(".preview.split").css('opacity', '1.0')
-					})
-					$(sd).on('mouseleave', function () {
-						$(".preview.split").css('opacity', '0.2')
-					})
-					$(sd).on('click', function () {
-						console.log("i have been clicked split btn")
-						self.take_action({action: 'split reorder', direction: direction})
-					})
-					btns.push(sd)*/
+
 				}
 
 			}
@@ -517,7 +437,7 @@ function Node() {
 				modified_nodes = self.graph.translate_from(self, 'en')
 			}
 			if (modified_nodes != null) {
-				if (self.isTranslationSame(modified_nodes)) {
+				if (self.isTranslationSame(modified_nodes) && false) {
 					_.each(modified_nodes.remove, function (tmp) {
 						$(tmp.get_view().textSpan).addClass('tmpAccept')
 						global_preview_classes.push(tmp.get_view().textSpan)
@@ -574,7 +494,7 @@ function Node() {
 							$(rm.get_view().textSpan).removeClass("affected")
 
 						})
-						if (!self.isTranslationSame(modified_nodes)) {
+						if (!self.isTranslationSame(modified_nodes) || true) {
 							self.take_action({action: 'translate', direction: direction})
 						}
 
@@ -942,8 +862,9 @@ function Node() {
 			socket.emit('logEvent', sm)
 
 			if (self.graph.sentence.points_remaining > 0) {
-				self.graph.sentence.points_remaining -= 1
-				self.graph.sentence.update_points_container(self.graph.sentence.points_remaining)
+				var p = self.graph.sentence.points_remaining - ( 10.0 / self.graph.sentence.get_node_count('en'))
+				self.graph.sentence.points_remaining = Math.max(0, p)
+				self.graph.sentence.changePointsRemaining(parseFloat(self.graph.sentence.points_remaining).toFixed(1))
 			}
 
 		}
@@ -1159,6 +1080,7 @@ function Node() {
 			var menu_container = document.createElement('div')
 			$(menu_container).addClass('node_menu_container')
 			$(this.view).append($(menu_container))
+			$(menu_container)
 
 			$(menu_container).on('mouseenter', function (e) {
 
@@ -1168,38 +1090,7 @@ function Node() {
 
 				console.log("clicked node menu container")
 			})
-			/*$(translation_selector).on('mouseleave', function () {
-				self.unpreview_action()
-			})*/
 
-			/*if (!this.to_de) {
-				$(translation_selector).hide()
-			}*/
-			/*var split_reorder_selector = document.createElement('div')
-			$(split_reorder_selector).addClass('split_reorder_selector')
-			$(menu_container).append($(split_reorder_selector))*/
-			/*$(split_reorder_selector).on('click', function () {
-				self.take_action({action: 'split reorder', direction: 'de'})
-			})*/
-
-			/*var external_reorder_selector = document.createElement('div')
-			$(external_reorder_selector).addClass('external_reorder_selector')
-			$(external_reorder_selector).addClass('tode')
-			$(menu_container).append($(external_reorder_selector))
-			$(external_reorder_selector).on('click', function () {
-				self.take_action({action: 'external reorder', direction: 'de'})
-			})*/
-			/*$(menu_container).on('mouseover', function () {
-				self.preview_action({action: 'external reorder', direction: 'de'})
-			})*/
-
-			/*$(external_reorder_selector).on('mouseleave', function () {
-				self.unpreview_action()
-			})*/
-
-			/*this.view.translation_selector_to_de = translation_selector
-			this.view.split_reorder_selector_to_de = split_reorder_selector
-			this.view.external_reorder_selector_to_de = external_reorder_selector*/
 			var s = document.createElement('span')
 			s.innerHTML = this.s
 			this.view.textSpan = s
@@ -1220,57 +1111,7 @@ function Node() {
 			var bottom_menu_container = document.createElement('div')
 			$(bottom_menu_container).addClass('node_menu_container')
 			$(this.view).append($(bottom_menu_container))
-			/*translation_selector = document.createElement('div')
-			$(translation_selector).addClass('translation_selector')
-			$(bottom_menu_container).append($(translation_selector))*/
-
-			/*$(bottom_menu_container).on('click', function (e) {
-
-				console.log("clicked node menu container")
-			})
-			$(bottom_menu_container).on('mouseleave', function (e) {
-
-				self.offView('offView')
-			})*/
-			/*$(translation_selector).on('click', function () {
-				self.take_action({action: 'translate', direction: 'en'})
-			})*/
-			/*$(translation_selector).on('mouseover', function () {
-				self.preview_action({action: 'translate', direction: 'en'})
-			})*/
-			/*$(translation_selector).on('mouseleave', function () {
-				self.unpreview_action()
-			})*/
-
-			/*if (!this.to_en) {
-				$(translation_selector).hide()
-			}*/
-			/*split_reorder_selector = document.createElement('div')
-			$(split_reorder_selector).addClass('split_reorder_selector')
-			$(bottom_menu_container).append($(split_reorder_selector))*/
-			/*$(split_reorder_selector).on('click', function () {
-				self.take_action({action: 'split reorder', direction: 'en'})
-			})*/
-
-			/*external_reorder_selector = document.createElement('div')
-			$(external_reorder_selector).addClass('external_reorder_selector')
-			$(external_reorder_selector).addClass('toen')
-			$(bottom_menu_container).append($(external_reorder_selector))
-			$(external_reorder_selector).on('click', function () {
-				self.take_action({action: 'external reorder', direction: 'en'})
-			})*/
-			/*$(external_reorder_selector).on('mouseover', function () {
-				self.preview_action({action: 'external reorder', direction: 'en'})
-			})*/
-			/*$(external_reorder_selector).on('mouseleave', function () {
-				self.unpreview_action()
-			})*/
-
-			/*this.view.translation_selector_to_en = translation_selector
-			this.view.split_reorder_selector_to_en = split_reorder_selector
-			this.view.external_reorder_selector_to_en = external_reorder_selector*/
 			$(this.view).on('mouseover', function (e) {
-				console.log("over view!!!")
 				self.isMouseOver = true
 				setTimeout(self.delayed_preview, 10);
 			})
@@ -1452,7 +1293,8 @@ function Sentence() {
 	this.outer_container = null
 	this.points_container = null
 	this.initial_order_by = null
-	this.points_remaining = 100;
+	this.points_remaining = 10;
+	this.points_bonus = 0.0;
 
 	this.remove_all_previews = function (exception) {
 		_.each(self.visible_nodes, function (vn) {
@@ -1744,6 +1586,9 @@ function Sentence() {
 					var item = node.get_view()
 					item.inDom = false
 					$(item).detach()
+					//$(item).fadeOut(500, function () {
+					//	$(item).detach()
+					//})
 					return true
 				} else {
 					return false
@@ -1773,25 +1618,46 @@ function Sentence() {
 			return this.outer_container
 		}
 	}
-	this.update_points_container = function (points) {
-		this.get_points_container().innerText = points
-	}
-	this.get_node_count = function () {
+	this.get_node_count = function (lang) {
+
 		var c = 0
 		_.each(self.graphs, function (g) {
 			_.each(g.nodes, function (n) {
-				c += 1
+				if (typeof  lang === "undefined") {
+					c += 1
+				} else {
+					if (n.lang === lang) {
+						c += 1
+					}
+				}
 			})
 		})
 		return c
 	}
+
+	this.changePointsRemaining = function (newPoints) {
+		self.get_points_container().pr.innerHTML = newPoints
+	}
+
+	this.changePointsBonus = function (newPoints) {
+		self.get_points_container().pb.innerHTML = newPoints
+	}
+
 	this.get_points_container = function () {
 		if (this.points_container == null) {
 			this.points_container = document.createElement('div')
-			$(this.points_container).attr('data-bind', 'text: pointsRemaining')
 			$(this.points_container).addClass('pointsContainer')
-			self.points_remaining = self.get_node_count()
-			this.points_container.innerText = this.points_remaining
+			var pr = document.createElement('div')
+			$(pr).addClass('pointsRemaining')
+			var pb = document.createElement('div')
+			$(pb).addClass('pointsBonus')
+			$(this.points_container).append($(pr))
+			$(this.points_container).append($(pb))
+			this.points_container.pr = pr
+			this.points_container.pb = pb
+			self.points_remaining = 10
+			self.changePointsRemaining(self.points_remaining)
+			self.changePointsBonus(parseFloat(0.0).toFixed(1))
 			return this.points_container
 		} else {
 			return this.points_container
@@ -1806,6 +1672,11 @@ function Sentence() {
 			$(translation_input).addClass("translationInput")
 			$(this.text_container).append($(translation_input))
 			this.text_container.text_area = translation_input
+			$(this.text_container.text_area).keyup(function () {
+				var bleu = simple_bleu(self.text_container.text_area.value, self.de)
+				self.points_bonus = bleu * 10
+				self.changePointsBonus(parseFloat(bleu * 10).toFixed(1))
+			})
 			return this.text_container
 		} else {
 			return this.text_container
@@ -1830,7 +1701,6 @@ function Sentence() {
 	}
 	this.initial_order = function () {
 		//assigns order of the visible nodes initially
-
 		for (var i in self.visible_nodes) {
 			var item = self.visible_nodes[i].get_view()
 			$(item).css('order', i)
@@ -1840,17 +1710,29 @@ function Sentence() {
 	this.update_visible_nodes = function () {
 		for (var i in self.visible_nodes) {
 			var item = self.visible_nodes[i].get_view()
-			////console.log("order :" + $(item).css('order') + "  is the order of " + item.node.s)
 			if (item.inDom) {
 			} else {
-				$(self.get_container()).append($(item))
-				$(item.span).css("backgroundColor", "orange");
-				$(item.span).animate({ backgroundColor: "transparent" }, 400);
+				//$(self.get_container()).append($(item))
+				//$(item).css('transform', 'scale(0.5)');
+				//$(item).animate({ scale: '1.0'}, 500);
+				//$(item).appendTo($(self.get_container()))
+				//$(item).hide()
+				//$(item).show("scale", {percent: 100}, 2000)
+				$(item).hide().appendTo($(self.get_container())).fadeIn(1000)
+
+				//$(item).appendTo(self.get_container())
+
+				//$(self.get_container()).append($(item)).show("scale", {percent: 100}, 2000)
+				//$(item).attr("scale", {percent: 0})
+				//$(item).show("scale", {percent: 100}, 2000)
+				//$(item).animate({scale: 1}, 500)
+				//$(item.span).css("backgroundColor", "orange");
+				//$(item.span).animate({ backgroundColor: "transparent" }, 400);
 				item.inDom = true
 			}
 			if (item.highlight_movement) {
 				$(item.span).css("backgroundColor", "orange");
-				$(item.span).animate({ backgroundColor: "transparent" }, 400);
+				$(item.span).animate({ backgroundColor: "transparent" }, 500);
 				item.highlight_movement = false
 			} else {
 				////console.log("no movement")

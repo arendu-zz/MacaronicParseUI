@@ -95,7 +95,7 @@ span {
     background: transparent;
     text-align: center;
     align-items: stretch;
-    font-size: larger;
+
     margin: 0px;
     padding: 0px;
     /*display: inline-block;*/
@@ -118,6 +118,7 @@ span {
     /*-webkit-flex-grow: 2;*/
     /*flex-grow: 1;*/
     /*flex-shrink: 0;*/
+
 }
 
 .item:first-child {
@@ -184,8 +185,17 @@ span {
     justify-content: center;
     align-items: center;
     width: 120px;
-    font-size: 50px;
+
+}
+
+.pointsRemaining {
+    font-size: 25px;
     color: grey;
+}
+
+.pointsBonus {
+    font-size: 25px;
+    color: green;
 }
 
 .outerContainer {
@@ -253,7 +263,6 @@ span {
     opacity: 0.2;
     padding-left: 2px;
     padding-right: 2px;
-    font-size: large;
 
 }
 
