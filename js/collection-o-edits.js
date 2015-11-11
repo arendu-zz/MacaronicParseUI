@@ -494,7 +494,7 @@ function Node() {
 							$(rm.get_view().textSpan).removeClass("affected")
 
 						})
-						if (direction == 'en') {
+						if (direction == 'de' ||true) {
 							self.take_action({action: 'translate', direction: direction})
 						}
 
@@ -554,13 +554,13 @@ function Node() {
 				})
 				$(self.get_view().textSpan).off('click') //THIS IS IMPORTANT SINCE WE ARE ADDING LISTENERS REPEATEDLY
 				$(self.get_view().textSpan).on('click', function () {
-					if (arrows.direction == 'en') {
+					if (arrows.direction == 'en' || true) {
 						console.log("its been  from textSpan clicked!!!")
 						self.take_action({action: arrows.type + ' reorder', direction: arrows.direction})
 					}
 				})
 				arrows.path.on('click', function () {
-					if (arrows.direction == 'en') {
+					if (arrows.direction == 'en' || true) {
 						console.log("its been clicked!!!")
 						self.take_action({action: arrows.type + ' reorder', direction: arrows.direction})
 					}
@@ -1918,6 +1918,7 @@ function setup(pageView, workerId, assignmentId, socketObj) {
 		console.log("case 1")
 		//get json_sentences from server
 		//first get user progress
+		console.log("emitting user progress request, workerId:" + workerId + " assignmentId:" + assignmentId)
 		socket.emit('requestUserProgress', {workerId: workerId, assignmentId: assignmentId})
 		socket.on('userProgress', receivedUserProgress)
 		//socket.emit('requestJsonSentences', 'please')
