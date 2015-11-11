@@ -267,7 +267,7 @@ function Node() {
 
 		self.graph.sentence.remove_all_previews(self)
 		//console.log('* *  PREVIEW REORDER ' + direction + '* *')
-		var directions = ['en'] //only show previews in en direction
+		var directions = ['en', 'de'] //only show previews in en direction
 		var num_swaps = []
 		_.each(directions, function (direction) {
 			var pv = document.createElement('div')
@@ -464,10 +464,10 @@ function Node() {
 						})
 						if (direction == 'en') {
 							$(".preview.translation.enPosition").css('opacity', '1.0')
-							$(".preview.translation.dePosition").css('opacity', '0.0')
+							$(".preview.translation.dePosition").css('opacity', '0.2')
 
 						} else {
-							$(".preview.translation.enPosition").css('opacity', '0.0')
+							$(".preview.translation.enPosition").css('opacity', '0.2')
 							$(".preview.translation.dePosition").css('opacity', '1.0')
 
 						}
@@ -494,7 +494,7 @@ function Node() {
 							$(rm.get_view().textSpan).removeClass("affected")
 
 						})
-						if (!self.isTranslationSame(modified_nodes) || true) {
+						if (direction == 'en') {
 							self.take_action({action: 'translate', direction: direction})
 						}
 
@@ -554,12 +554,16 @@ function Node() {
 				})
 				$(self.get_view().textSpan).off('click') //THIS IS IMPORTANT SINCE WE ARE ADDING LISTENERS REPEATEDLY
 				$(self.get_view().textSpan).on('click', function () {
-					console.log("its been  from textSpan clicked!!!")
-					self.take_action({action: arrows.type + ' reorder', direction: arrows.direction})
+					if (arrows.direction == 'en') {
+						console.log("its been  from textSpan clicked!!!")
+						self.take_action({action: arrows.type + ' reorder', direction: arrows.direction})
+					}
 				})
 				arrows.path.on('click', function () {
-					console.log("its been clicked!!!")
-					self.take_action({action: arrows.type + ' reorder', direction: arrows.direction})
+					if (arrows.direction == 'en') {
+						console.log("its been clicked!!!")
+						self.take_action({action: arrows.type + ' reorder', direction: arrows.direction})
+					}
 				})
 			})
 		} else {
@@ -587,12 +591,13 @@ function Node() {
 					arrows.path[0][0].classList.remove('highlighted')
 				})
 				arrows.path.on('click', function () {
-					console.log("its been clicked!!!")
-					self.take_action({action: arrows.type + ' reorder', direction: arrows.direction})
+					if (arrows.direction == 'en') {
+						console.log("its been clicked!!!")
+						self.take_action({action: arrows.type + ' reorder', direction: arrows.direction})
+					}
 				})
 			})
 		}
-
 	}
 
 	this.take_action = function (param) {
