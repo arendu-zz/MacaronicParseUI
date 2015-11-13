@@ -131,6 +131,11 @@ drawLineAndArrow = function (type, parentDiv, x0, y0, x1, y1, x2, y2, x3, y3, li
 	marker[0][0].classList.add("arrow")
 	marker[0][0].classList.add("head")
 	marker[0][0].classList.add("highlighted")
+	console.log('direction in get draw arrow:' + direction)
+	if (direction === 'de') {
+		marker[0][0].classList.remove("highlighted")
+		lineGraph[0][0].classList.remove("highlighted")
+	}
 	return {type: type, parent: parentDiv, path: lineGraph, marker: marker, direction: direction}
 }
 
@@ -152,14 +157,14 @@ drawSwap = function (type, parentDiv, bounds, other_bounds, still_bounds, lineWi
 		lineStPt = {x: bounds.left, y: bounds.top + (direction == 'en' ? bounds.height : 0)}
 		lineEndPt = {x: bounds.right, y: bounds.top + (direction == 'en' ? bounds.height : 0)}
 		curveStPt = {x: lineEndPt.x, y: lineEndPt.y}
-		curveEndPt = {x: other_bounds.right , y: other_bounds.top + (direction == 'en' ? other_bounds.height + lineWidth : -lineWidth )}
+		curveEndPt = {x: other_bounds.right, y: other_bounds.top + (direction == 'en' ? other_bounds.height + lineWidth : -lineWidth )}
 		var mid_x = curveStPt.x + Math.abs(curveStPt.x - curveEndPt.x) / 2
 		curveMidPt = {x: mid_x, y: curveStPt.y + (direction == 'en' ? 40 : -40)}
 	} else {
 		lineStPt = {x: bounds.right, y: bounds.top + (direction == 'en' ? bounds.height : 0)}
 		lineEndPt = {x: bounds.left, y: bounds.top + (direction == 'en' ? bounds.height : 0)}
 		curveStPt = {x: lineEndPt.x, y: lineEndPt.y}
-		curveEndPt = {x: other_bounds.left , y: other_bounds.top + (direction == 'en' ? other_bounds.height + lineWidth : -lineWidth )}
+		curveEndPt = {x: other_bounds.left, y: other_bounds.top + (direction == 'en' ? other_bounds.height + lineWidth : -lineWidth )}
 		var mid_x = curveStPt.x - Math.abs(curveStPt.x - curveEndPt.x) / 2
 		curveMidPt = {x: mid_x, y: curveStPt.y + (direction == 'en' ? 40 : -40)}
 	}

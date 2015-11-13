@@ -257,14 +257,45 @@ function Node() {
 
 	this.delayed_preview = function () {
 		if (self.isMouseOver) {
+
 			self.preview_action()
 		} else {
 			console.log("too late")
 		}
 	}
 
-	this.preview_action = function () {
+	this.default_action = function () {
+		console.log(self.graph.sentence.possibleActions.length + " possible actions...")
+		_.each(self.graph.sentence.possibleActions, function (p) {
+			console.log('p:', p)
+		})
+		if (self.graph.sentence.possibleActions.length == 1) {
+			var pa = self.graph.sentence.possibleActions[0]
+			pa.node.take_action({action: pa.action, direction: pa.direction})
+		} else {
+			var default_direction = _.filter(self.graph.sentence.possibleActions, function (p) {
+				return p.direction == 'en';
+			})
+			if (default_direction.length == 1) {
+				var pa = default_direction[0]
+				pa.node.take_action({action: pa.action, direction: pa.direction})
+			} else {
 
+				var default_direction_action = _.filter(default_direction, function (p) {
+					return p.action.endsWith('reorder')
+				})
+				if (default_direction_action.length > 0) {
+					console.log('direction_action filter', default_direction_action.length)
+					var pa = default_direction_action[0]
+					pa.node.take_action({action: pa.action, direction: pa.direction})
+				}
+
+			}
+		}
+	}
+	this.preview_action = function () {
+		console.log("in preview clearing possible actions")
+		self.graph.sentence.possibleActions = []
 		self.graph.sentence.remove_all_previews(self)
 		//console.log('* *  PREVIEW REORDER ' + direction + '* *')
 		var directions = ['en', 'de'] //only show previews in en direction
@@ -458,6 +489,8 @@ function Node() {
 
 					})
 
+					self.graph.sentence.possibleActions.push({node: self, action: 'translate', direction: direction})
+
 					$(pv_translate).on('mouseenter', function () {
 						_.each(document.getElementsByClassName("arrow"), function (arrow) {
 							arrow.classList.remove('highlighted')
@@ -494,8 +527,9 @@ function Node() {
 							$(rm.get_view().textSpan).removeClass("affected")
 
 						})
-						if (direction == 'de' ||true) {
+						if (direction == 'de' || true) {
 							self.take_action({action: 'translate', direction: direction})
+
 						}
 
 					})
@@ -552,25 +586,26 @@ function Node() {
 					arrows.path[0][0].classList.remove('highlighted')
 					arrows.path[0][0].classList.remove('highlighted')
 				})
-				$(self.get_view().textSpan).off('click') //THIS IS IMPORTANT SINCE WE ARE ADDING LISTENERS REPEATEDLY
-				$(self.get_view().textSpan).on('click', function () {
-					if (arrows.direction == 'en' || true) {
-						console.log("its been  from textSpan clicked!!!")
-						self.take_action({action: arrows.type + ' reorder', direction: arrows.direction})
-					}
-				})
+				self.graph.sentence.possibleActions.push({ node: self, action: arrows.type + ' reorder', direction: arrows.direction})
+				//$(self.get_view().textSpan).off('click') //THIS IS IMPORTANT SINCE WE ARE ADDING LISTENERS REPEATEDLY
+				//$(self.get_view().textSpan).on('click', function () {
+				//	if (arrows.direction == 'en' || true) {
+				//		console.log("its been  from textSpan clicked!!!")
+				//self.take_action({action: arrows.type + ' reorder', direction: arrows.direction})
+
+				//	}
+				//})
 				arrows.path.on('click', function () {
 					if (arrows.direction == 'en' || true) {
 						console.log("its been clicked!!!")
 						self.take_action({action: arrows.type + ' reorder', direction: arrows.direction})
+
 					}
 				})
 			})
 		} else {
 			console.log("multiple reorders")
 			$(self.get_view().textSpan).off('click')
-			//$(self.get_view().textSpan).off('mouseleave')
-			//$(self.get_view().textSpan).off('mouseenter')
 			_.each(num_swaps, function (arrows) {
 				global_preview_views.push(arrows.parent)
 				var container = self.graph.sentence.get_container()
@@ -590,10 +625,12 @@ function Node() {
 					arrows.path[0][0].classList.remove('highlighted')
 					arrows.path[0][0].classList.remove('highlighted')
 				})
+				self.graph.sentence.possibleActions.push({ node: self, action: arrows.type + ' reorder', direction: arrows.direction})
 				arrows.path.on('click', function () {
 					if (arrows.direction == 'en') {
 						console.log("its been clicked!!!")
 						self.take_action({action: arrows.type + ' reorder', direction: arrows.direction})
+
 					}
 				})
 			})
@@ -953,109 +990,11 @@ function Node() {
 	}
 
 	this.get_split_preview_view = function (pathDiv, still_bounds, moving_bounds, moving_to_bounds, direction) {
-
 		return drawSwap('split', pathDiv, moving_bounds, moving_to_bounds, still_bounds, 3.5, direction, direction == 'en' ? '#028090' : '#666666');
-		/*var gap = Math.abs(moving_to_bounds.left - moving_bounds.left)
-		var bounds_mid = (moving_bounds.left + moving_bounds.right) / 2
-		var other_bounds_mid = moving_to_bounds.left
-		if (left) {
-			other_bounds_mid = moving_to_bounds.left
-		} else {
-			other_bounds_mid = moving_to_bounds.right
-		}
-
-		var mid_x = bounds_mid < other_bounds_mid ? bounds_mid + gap / 2 : other_bounds_mid + gap / 2
-		var mid_y = still_bounds.top + (still_bounds.height / 2)
-
-		var sentence_container = this.graph.sentence.get_container()
-
-		var preview_view = $(sentence_container).curvedArrow({
-																 p0x: bounds_mid,
-																 p0y: still_bounds.top + still_bounds.height / 2 - 10,
-																 p1x: mid_x,
-																 p1y: mid_y - still_bounds.height - 20,
-																 p2x: other_bounds_mid,
-																 p2y: moving_bounds.top + moving_bounds.height / 2 - 10,
-																 id: "previewOverlayArrow",
-																 strokeStyle: '#BD587C'
-															 })
-
-		var line = $(sentence_container).straightline({
-														  p0x: still_bounds.left + 5,
-														  p0y: still_bounds.top + still_bounds.height / 2 + 10,
-														  p1x: still_bounds.right - 5,
-														  p1y: still_bounds.top + still_bounds.height / 2 + 10,
-														  size: 1,
-														  id: "previewLine",
-														  strokeStyle: '#BD587C'
-													  })
-		var line2 = $(sentence_container).straightline({
-														   p0x: moving_bounds.left + 5,
-														   p0y: moving_bounds.top + moving_bounds.height / 2 + 10,
-														   p1x: moving_bounds.right - 5,
-														   p1y: moving_bounds.top + moving_bounds.height / 2 + 10,
-														   size: 1,
-														   id: "previewLine",
-														   strokeStyle: '#BD587C'
-													   })
-		$(preview_view).addClass("preview split")
-		$(line).addClass("preview split")
-		$(line2).addClass("preview split")
-		return [preview_view, line, line2]*/
 	}
 
 	this.get_swap_preview_view = function (pathDiv, bounds, other_bounds, direction) {
 		return drawSwap('external', pathDiv, bounds, other_bounds, null, 3.5, direction, direction == 'en' ? '#028090' : '#666666');
-		/*var gap = Math.abs(bounds.left - other_bounds.left)
-		var bounds_mid = (bounds.left + bounds.right) / 2
-		var other_bounds_mid = 0
-
-		if (other_bounds.left > bounds.left) {
-			other_bounds_mid = other_bounds.right
-			bounds_mid = bounds.right
-		}
-		if (other_bounds.left < bounds.left) {
-			other_bounds_mid = other_bounds.left
-			bounds_mid = bounds.left
-		}
-
-		var mid_x = bounds_mid < other_bounds_mid ? bounds_mid + gap / 2 : other_bounds_mid + gap / 2
-		var shift = 0
-		var shift_y = 0
-		if (direction == 'en') {
-			shift = -20
-			shift_y = bounds.top
-		} else {
-			shift = 20
-			shift_y = bounds.top + bounds.height
-		}
-
-		var sentence_container = this.graph.sentence.get_container()
-		var preview_view = $(sentence_container).curvedArrow({
-																 p0x: bounds_mid,
-																 p0y: shift_y,
-																 p1x: mid_x,
-																 p1y: shift_y + shift,
-																 p2x: other_bounds_mid,
-																 p2y: shift_y,
-																 doubleSided: false,
-																 id: "previewOverlayArrow"
-															 })
-
-		var linebox = $(sentence_container).MyBox({
-													  px: bounds.left,
-													  py: bounds.top,
-													  b_width: Math.abs(bounds.left - bounds.right),
-													  b_height: bounds.height,
-													  size: 1,
-													  text: '',
-													  direction: direction,
-													  id: "previewBox"
-												  })
-
-		$(preview_view).addClass("preview swap")
-		$(linebox).addClass("preview swap")
-		return [preview_view, linebox]*/
 	}
 
 	this.offView = function (fromdiv) {
@@ -1116,9 +1055,15 @@ function Node() {
 			var bottom_menu_container = document.createElement('div')
 			$(bottom_menu_container).addClass('node_menu_container')
 			$(this.view).append($(bottom_menu_container))
+			$(this.view.textSpan).on('click', function (e) {
+				console.log("take default action...")
+				self.default_action()
+
+			})
 			$(this.view).on('mouseover', function (e) {
 				self.isMouseOver = true
-				setTimeout(self.delayed_preview, 10);
+				self.preview_action()
+				//setTimeout(self.delayed_preview, 10);
 			})
 			$(this.view).on('mouseleave', function (e) {
 				self.isMouseOver = false
