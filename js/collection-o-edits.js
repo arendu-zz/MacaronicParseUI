@@ -605,20 +605,22 @@ function Node() {
 			})
 		} else {
 			console.log("multiple reorders")
-			$(self.get_view().textSpan).off('click')
+			//$(self.get_view().textSpan).off('click')
 			_.each(num_swaps, function (arrows) {
 				global_preview_views.push(arrows.parent)
 				var container = self.graph.sentence.get_container()
 				$(container).append(arrows.parent)
 
-				arrows.path[0][0].classList.remove('highlighted')
-				arrows.marker[0][0].classList.remove('highlighted')
-				//setInterval(self.removeHighlight(arrows), 500)
-
 				arrows.path.on('mouseenter', function () {
 					//self.set_path_attr(arrows, 'arrow highlighted')
 					arrows.path[0][0].classList.add('highlighted')
 					arrows.path[0][0].classList.add('highlighted')
+					_.each(num_swaps, function (other_arrows) {
+						if (!_.isEqual(other_arrows, arrows)) {
+							other_arrows.path[0][0].classList.remove('highlighted')
+							other_arrows.path[0][0].classList.remove('highlighted')
+						}
+					})
 				})
 				arrows.path.on('mouseleave', function () {
 					//self.set_path_attr(arrows, 'arrow')
@@ -627,7 +629,7 @@ function Node() {
 				})
 				self.graph.sentence.possibleActions.push({ node: self, action: arrows.type + ' reorder', direction: arrows.direction})
 				arrows.path.on('click', function () {
-					if (arrows.direction == 'en') {
+					if (arrows.direction == 'en' || true) {
 						console.log("its been clicked!!!")
 						self.take_action({action: arrows.type + ' reorder', direction: arrows.direction})
 
