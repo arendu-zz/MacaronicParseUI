@@ -1932,29 +1932,35 @@ function ok_parse(st, end) {
 	}
 }
 
-function setup(pageView, workerId, assignmentId, socketObj) {
+function setup(pageView, workerId, assignmentId, socketObj, isPreview) {
 	mainview = $('#mainbody')
 	userType_span = $('#userType')
 	workerId_span = $('#workerId')
 	pointsEarned_span = $('#pointsEarned')
 	username = workerId
 	socket = socketObj
-	if (socket != null && username != null) {
-		console.log("case 1")
-		//get json_sentences from server
-		//first get user progress
-		console.log("emitting user progress request, workerId:" + workerId + " assignmentId:" + assignmentId)
-		socket.emit('requestUserProgress', {workerId: workerId, assignmentId: assignmentId})
-		socket.on('userProgress', receivedUserProgress)
-		//socket.emit('requestJsonSentences', 'please')
-		//console.log("requested sentences from server...")
-		//socket.on('JsonSentences', receivedJsonSentence);
+	if (isPreview) {
+		$(mainview).empty()
+		sentences = []
+		console.log("preview mode ui")
+		json_sentences = json_str_arr
+		points_earned = 0
+		progress = 0
+		pointsEarned_span.text(parseFloat(points_earned).toFixed(1));
+		ok_parse(0, 1)
+		do_precomputations()
 	} else {
-		console.log("case 2")
-		// first get users progress
-		//json_sentences = json_str_arr
-		//ok_parse(0, 10)
-		//do_precomputations()
+		if (socket != null && username != null) {
+			console.log("case 1")
+			//get json_sentences from server
+			//first get user progress
+			console.log("emitting user progress request, workerId:" + workerId + " assignmentId:" + assignmentId)
+			socket.emit('requestUserProgress', {workerId: workerId, assignmentId: assignmentId})
+			socket.on('userProgress', receivedUserProgress)
+			//socket.emit('requestJsonSentences', 'please')
+			//console.log("requested sentences from server...")
+			//socket.on('JsonSentences', receivedJsonSentence);
+		}
 	}
 
 	console.log('user name is ' + username)
