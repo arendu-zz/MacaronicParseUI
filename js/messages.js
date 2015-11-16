@@ -9,6 +9,22 @@ function ActivityLogMessage(user, rule_type, rule, before, after, visible_before
 	this.visible_after = visible_after
 }
 
+var equalLogs = function (log1, log2) {
+	console.log("comparing:", log1, "and:", log2)
+	if (log2 == null) {
+		return false
+	} else {
+		for (var key in log1) {
+			if (log1[key] != log2[key]) {
+				console.log("logs are different")
+				return false
+			}
+		}
+	}
+	console.log("logs are same")
+	return true
+}
+
 function TranslationLogMessage(user, state, visible_state, translation) {
 	this.workerId = user
 	this.state = state

@@ -16,6 +16,7 @@ var userType_span = null
 var pointsEarned_span = null
 var global_preview_views = []
 var global_preview_classes = []
+var previous_log_event = null
 
 scaleIn = function (item) {
 	$(item).show("scale", {percent: 100}, 2000)
@@ -369,7 +370,13 @@ function Node() {
 				var rule = JSON.stringify({selected: bounds_str.join(' '), swaps: other_bounds_str.join(' ')})
 				var sm = new ActivityLogMessage(username, rule_type, rule, null, null, null, null)
 				if (socket != null) {
-					socket.emit('logEvent', sm)
+					if (!equalLogs(sm, previous_log_event)) {
+						console.log("logging  event...")
+						socket.emit('logEvent', sm)
+						previous_log_event = sm
+					} else {
+						console.log("ignoring same event...")
+					}
 				}
 
 				num_swaps.push(arrows)
@@ -468,6 +475,7 @@ function Node() {
 					var pathDiv = document.createElement('div')
 					var arrows = self.get_split_preview_view(pathDiv, bounds, moving_bounds, moving_to_bounds, direction)
 					num_swaps.push(arrows)
+					//TODO log preview of split!
 
 				}
 
@@ -497,10 +505,18 @@ function Node() {
 					var translation_items = self.get_translate_preview_view(modified_nodes.add, bounds, direction)
 					var rule_type = JSON.stringify({type: "preview", action: "translate", direction: direction})
 					var rule = JSON.stringify({add: modified_nodes.addStr, remove: modified_nodes.removeStr})
+
 					var sm = new ActivityLogMessage(username, rule_type, rule, null, null, null, null)
 					if (socket != null) {
-						socket.emit('logEvent', sm)
+						if (!equalLogs(sm, previous_log_event)) {
+							console.log("logging  event...")
+							socket.emit('logEvent', sm)
+							previous_log_event = sm
+						} else {
+							console.log("ignoring same event...")
+						}
 					}
+
 					_.each(translation_items, function (wordSpan) {
 						$(pv_translate).append(wordSpan)
 
@@ -1298,6 +1314,7 @@ function Sentence() {
 	this.points_bonus = 0.0;
 
 	this.remove_all_previews = function (exception) {
+
 		_.each(self.visible_nodes, function (vn) {
 			if (exception != null) {
 				if (exception.s != vn.s) {
@@ -1309,6 +1326,18 @@ function Sentence() {
 				vn.unpreview_action()
 			}
 		})
+
+		//var rule_type = JSON.stringify({type: "remove preview", action: null, direction: null})
+		//var sm = new ActivityLogMessage(username, rule_type, null, null, null, null, null)
+		//if (socket != null) {
+		//	if (!equalLogs(sm, previous_log_event)) {
+		//console.log("logging  event...")
+		//socket.emit('logEvent', sm)
+		//		previous_log_event = sm
+		//	} else {
+		//		console.log("ignoring same event...")
+		//	}
+		//}
 	}
 
 	this.get_graph_by_id = function (gid) {
