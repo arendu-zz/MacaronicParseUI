@@ -297,6 +297,7 @@ function Node() {
 		console.log("in preview clearing possible actions")
 		self.graph.sentence.possibleActions = []
 		self.graph.sentence.remove_all_previews(self)
+
 		//console.log('* *  PREVIEW REORDER ' + direction + '* *')
 		var directions = ['en', 'de'] //only show previews in en direction
 		var num_swaps = []
@@ -318,10 +319,12 @@ function Node() {
 				var self_2 = false
 				var swap_obj = self.graph.get_swap(direction)
 				var bounds = {'height': 0, 'left': Number.POSITIVE_INFINITY, 'right': Number.NEGATIVE_INFINITY, 'top': 0 }
+				var bounds_str = []
 				_.each(swap_obj.graphs, function (gid) {
 					var g = self.graph.sentence.get_graph_by_id(gid)
 					self_1 = self_1 || gid == self.graph.id
 					var b = g.get_bounding_of_visible_nodes()
+					bounds_str.push(g.get_visible_string())
 					if (b.left < bounds.left) {
 						bounds.left = b.left
 					}
@@ -332,10 +335,12 @@ function Node() {
 					bounds.height = b.height
 				})
 				var other_bounds = {'height': 0, 'left': Number.POSITIVE_INFINITY, 'right': Number.NEGATIVE_INFINITY, 'top': 0 }
+				var other_bounds_str = []
 				_.each(swap_obj.other_graphs, function (gid) {
 					var g = self.graph.sentence.get_graph_by_id(gid)
 					self_2 = self_2 || gid == self.graph.id
 					var b = g.get_bounding_of_visible_nodes()
+					other_bounds_str.push(g.get_visible_string())
 					if (b.left < other_bounds.left) {
 						other_bounds.left = b.left
 					}
@@ -349,6 +354,7 @@ function Node() {
 				var pathDiv = document.createElement('div')
 
 				//$(pathDiv).addClass(direction)
+
 				if (self_1 && !self_2) {
 					arrows = self.get_swap_preview_view(pathDiv, bounds, other_bounds, direction)
 
@@ -358,6 +364,12 @@ function Node() {
 				} else {
 					arrows = self.get_swap_preview_view(pathDiv, bounds, other_bounds, direction)
 
+				}
+				var rule_type = JSON.stringify({type: "preview", action: "swap", direction: direction})
+				var rule = JSON.stringify({selected: bounds_str.join(' '), swaps: other_bounds_str.join(' ')})
+				var sm = new ActivityLogMessage(username, rule_type, rule, null, null, null, null)
+				if (socket != null) {
+					socket.emit('logEvent', sm)
 				}
 
 				num_swaps.push(arrows)
@@ -483,7 +495,12 @@ function Node() {
 					}
 
 					var translation_items = self.get_translate_preview_view(modified_nodes.add, bounds, direction)
-
+					var rule_type = JSON.stringify({type: "preview", action: "translate", direction: direction})
+					var rule = JSON.stringify({add: modified_nodes.addStr, remove: modified_nodes.removeStr})
+					var sm = new ActivityLogMessage(username, rule_type, rule, null, null, null, null)
+					if (socket != null) {
+						socket.emit('logEvent', sm)
+					}
 					_.each(translation_items, function (wordSpan) {
 						$(pv_translate).append(wordSpan)
 
@@ -644,7 +661,8 @@ function Node() {
 		self.graph.sentence.remove_all_previews(null)
 		var before = JSON.stringify(self.graph.sentence.getLogObjs())
 		var visible_before = self.graph.sentence.get_visible_string()
-		var rule = param.action
+		var rule_type = JSON.stringify({type: "action", action: param.action, direction: param.direction})
+		var rule = null
 		if (param.action == 'split reorder') {
 
 			var gvn = _.filter(self.graph.nodes, function (node) {
@@ -706,6 +724,12 @@ function Node() {
 				})
 				var st = _.min(new_ordering_positions)
 				var new_pos = 0 + st
+
+				var split_nodes_str = _.map(split_nodes, function (sn) {
+					return sn.s
+				})
+				rule = JSON.stringify({splitNodes: split_nodes_str.join(',')})
+
 				_.each(new_ordering_nodes, function (nn) {
 					var nnp = new_pos
 					if (_.contains(split_nodes, nn)) {
@@ -736,11 +760,15 @@ function Node() {
 				_.each(swap_obj.graphs, function (g_id) {
 					vn_group1 = vn_group1.concat(self.graph.sentence.get_graph_by_id(g_id).get_visible_nodes())
 				})
+
 				vn_group1 = _.sortBy(vn_group1, function (vn) {
 					return parseInt($(vn.get_view()).css('order'))
 				})
 				var vn_group1_positions = _.map(vn_group1, function (vn) {
 					return parseInt($(vn.get_view()).css('order'))
+				})
+				var vn_group1_str = _.map(vn_group1, function (vn) {
+					return vn.s
 				})
 				var vn_group2 = []
 				_.each(swap_obj.other_graphs, function (g_id) {
@@ -752,6 +780,9 @@ function Node() {
 				var vn_group2_positions = _.map(vn_group2, function (vn) {
 					return parseInt($(vn.get_view()).css('order'))
 				})
+				var vn_group2_str = _.map(vn_group2, function (vn) {
+					return vn.s
+				})
 				var gvn = []
 				var gvn_positions = []
 				var swaps_with_nodes = []
@@ -761,11 +792,13 @@ function Node() {
 					gvn_positions = vn_group1_positions
 					swaps_with_nodes = vn_group2
 					swaps_with_positions = vn_group2_positions
+					rule = JSON.stringify({selected: vn_group1_str.join(' '), swaps: vn_group2_str.join(' ') })
 				} else {
 					gvn = vn_group2
 					gvn_positions = vn_group2_positions
 					swaps_with_nodes = vn_group1
 					swaps_with_positions = vn_group1_positions
+					rule = JSON.stringify({selected: vn_group2_str.join(' '), swaps: vn_group1_str.join(' ') })
 				}
 
 				self.graph.sentence.remove_nodes(gvn)
@@ -818,6 +851,7 @@ function Node() {
 			}
 			//If the translation action has changed the visible nodes, result will be true
 			if (modified_nodes != null) {
+				rule = JSON.stringify({added: modified_nodes.addStr, removed: modified_nodes.removeStr})
 				var remove_positions = []
 				for (var mnr = 0; mnr < modified_nodes.remove.length; mnr++) {
 					remove_positions.push(parseInt($(modified_nodes.remove[mnr].get_view()).css('order')))
@@ -831,6 +865,7 @@ function Node() {
 					_.each(gvn, function (i) {
 						i.update_view_reorder()
 					})
+
 				} else if (modified_nodes.add.length > 1 && modified_nodes.remove.length == 1) {
 					//if many adds and 1 remove all adds placed in same position as remove
 					var pos = remove_positions[0]
@@ -901,16 +936,14 @@ function Node() {
 		}
 		var after = JSON.stringify(self.graph.sentence.getLogObjs())
 		var visible_after = self.graph.sentence.get_visible_string()
-		var sm = new ActivityLogMessage(username, rule, before, after, visible_before, visible_after)
+		var sm = new ActivityLogMessage(username, rule_type, rule, before, after, visible_before, visible_after)
 		if (socket != null) {
 			socket.emit('logEvent', sm)
-
-			if (self.graph.sentence.points_remaining > 0) {
-				var p = self.graph.sentence.points_remaining - ( 10.0 / self.graph.sentence.get_node_count('en'))
-				self.graph.sentence.points_remaining = Math.max(0, p)
-				self.graph.sentence.changePointsRemaining(parseFloat(self.graph.sentence.points_remaining).toFixed(1))
-			}
-
+		}
+		if (self.graph.sentence.points_remaining > 0) {
+			var p = self.graph.sentence.points_remaining - ( 10.0 / self.graph.sentence.get_node_count('en'))
+			self.graph.sentence.points_remaining = Math.max(0, p)
+			self.graph.sentence.changePointsRemaining(parseFloat(self.graph.sentence.points_remaining).toFixed(1))
 		}
 	}
 
@@ -1064,8 +1097,8 @@ function Node() {
 			})
 			$(this.view).on('mouseover', function (e) {
 				self.isMouseOver = true
-				self.preview_action()
-				//setTimeout(self.delayed_preview, 10);
+				//self.preview_action()
+				setTimeout(self.delayed_preview, 100);
 			})
 			$(this.view).on('mouseleave', function (e) {
 				self.isMouseOver = false
@@ -1153,6 +1186,12 @@ function Graph() {
 			}
 		}
 	}
+	this.get_visible_string = function () {
+		var vs = _.map(self.get_visible_nodes(), function (n) {
+			return n.s
+		})
+		return vs.join(' ')
+	}
 	this.get_visible_nodes = function () {
 		var result = []
 		for (var i in this.nodes) {
@@ -1213,7 +1252,17 @@ function Graph() {
 			//console.log('added ' + neighbors.length + ' nodes to visible_nodes')
 			var result = {}
 			result.add = neighbors
+			var add_str_list = []
+			_.each(neighbors, function (n) {
+				add_str_list.push(n.s)
+			})
+			result.addStr = add_str_list.join(' ')
 			result.remove = nodes_to_remove
+			var remove_str_list = []
+			_.each(nodes_to_remove, function (n) {
+				remove_str_list.push(n.s)
+			})
+			result.removeStr = remove_str_list.join(' ')
 			return result
 		} else {
 			//console.log('can not translate in the given direction, nothing to remove or add')

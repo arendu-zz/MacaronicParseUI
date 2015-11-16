@@ -1,6 +1,7 @@
-function ActivityLogMessage(user, rule, before, after, visible_before, visible_after) {
+function ActivityLogMessage(user, rule_type, rule, before, after, visible_before, visible_after) {
 	this.workerId = user
 	this.displayname = user
+	this.rule_type = rule_type
 	this.rule = rule
 	this.state_before = before
 	this.state_after = after
