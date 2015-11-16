@@ -1910,7 +1910,12 @@ function receivedUserProgress(msg) {
 	pointsEarned_span.text(parseFloat(points_earned).toFixed(1));
 	ok_parse(0, 1)
 	do_precomputations()
+}
 
+function thankyouPage(msg) {
+	$(mainview).empty
+	$('#isPreview').innerText = 'You have completed all the hits. Thank you!';
+	$('#confirmInput').prop('disabled', true)
 }
 
 function ok_parse(st, end) {
@@ -1957,6 +1962,7 @@ function setup(pageView, workerId, assignmentId, socketObj, isPreview) {
 			console.log("emitting user progress request, workerId:" + workerId + " assignmentId:" + assignmentId)
 			socket.emit('requestUserProgress', {workerId: workerId, assignmentId: assignmentId})
 			socket.on('userProgress', receivedUserProgress)
+			socket.on('thankyou', thankyouPage)
 			//socket.emit('requestJsonSentences', 'please')
 			//console.log("requested sentences from server...")
 			//socket.on('JsonSentences', receivedJsonSentence);
