@@ -1915,7 +1915,7 @@ function receivedUserProgress(msg) {
 function thankyouPage(msg) {
 	console.log("display thank you received...")
 	$(mainview).empty()
-	$(mainview).innerHTML = "You have completed all hits... Thank you!"
+	$(mainview).append("<b> All hits completed... Thank you!</b>")
 	$('#confirmInput').prop('disabled', true)
 }
 
