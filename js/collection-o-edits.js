@@ -22,6 +22,17 @@ scaleIn = function (item) {
 	$(item).show("scale", {percent: 100}, 2000)
 }
 
+enable_submit = function () {
+	var points = _.map(sentences, function (s) {
+		return parseFloat(s.points_bonus).toFixed(1)
+	})
+	var product = _.reduce(points, function (memo, num) {
+		console.log('product ', num, memo)
+		return memo && num > 0.0;
+	}, true);
+	console.log('submit?', product)
+	$('#confirmInput').prop('disabled', !product)
+}
 completedTask = function () {
 	console.log("ok now do some things....")
 	var total_new_points = 0
@@ -31,7 +42,7 @@ completedTask = function () {
 		listTLM.push(tlm)
 		total_new_points += s.points_remaining + s.points_bonus
 	})
-	socket.emit('completedTask', {workerId: username, hitlog: listTLM, progress: progress + 1, displayname: username, points_earned: points_earned + parseFloat(total_new_points)})
+	socket.emit('completedTask', {workerId: username, hitlog: listTLM, progress: progress + 1, points_earned: points_earned + parseFloat(total_new_points)})
 
 }
 gotoPrevPage = function () {
@@ -1681,6 +1692,7 @@ function Sentence() {
 
 	this.changePointsBonus = function (newPoints) {
 		self.get_points_container().pb.innerHTML = newPoints
+		enable_submit()
 	}
 
 	this.get_points_container = function () {
@@ -1925,8 +1937,11 @@ function receivedUserProgress(msg) {
 function thankyouPage(msg) {
 	console.log("display thank you received...")
 	$(mainview).empty()
-	$(mainview).append("<b> All hits completed... Thank you!</b>")
+	$(mainview).append("<p><b> All hits completed... Thank you!</b></p>Your comepletion confirmation code is: <b>" + msg.confirmation + "</b>")
+	points_earned = msg.points_earned
+	pointsEarned_span.text(parseFloat(points_earned).toFixed(1));
 	$('#confirmInput').prop('disabled', true)
+	$('#confirmInput').remove()
 }
 
 function ok_parse(st, end) {
@@ -1948,11 +1963,12 @@ function ok_parse(st, end) {
 	}
 }
 
-function setup(pageView, workerId, assignmentId, socketObj, isPreview) {
+function setup(pageView, workerId, socketObj, isPreview) {
 	mainview = $('#mainbody')
-	userType_span = $('#userType')
+	userType_span = "learner"
 	workerId_span = $('#workerId')
 	pointsEarned_span = $('#pointsEarned')
+	$('#confirmInput').prop('disabled', true)
 	username = workerId
 	socket = socketObj
 	if (isPreview) {
@@ -1970,8 +1986,8 @@ function setup(pageView, workerId, assignmentId, socketObj, isPreview) {
 			console.log("case 1")
 			//get json_sentences from server
 			//first get user progress
-			console.log("emitting user progress request, workerId:" + workerId + " assignmentId:" + assignmentId)
-			socket.emit('requestUserProgress', {workerId: workerId, assignmentId: assignmentId})
+			console.log("emitting user progress request, workerId:" + workerId)
+			socket.emit('requestUserProgress', {workerId: workerId})
 			socket.on('userProgress', receivedUserProgress)
 			socket.on('thankyou', thankyouPage)
 			//socket.emit('requestJsonSentences', 'please')
