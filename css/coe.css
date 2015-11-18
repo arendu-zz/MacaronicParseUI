@@ -193,6 +193,11 @@ span {
     color: grey;
 }
 
+.pointsRemaining.stop {
+    font-size: 25px;
+    color: red;
+}
+
 .pointsBonus {
     font-size: 25px;
     color: green;
