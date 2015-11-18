@@ -22,6 +22,21 @@ scaleIn = function (item) {
 	$(item).show("scale", {percent: 100}, 2000)
 }
 
+logEventWrapper = function (socket, sm) {
+	if (sm.username === "GUEST") {
+		console.log("ignore guest logs...")
+	} else {
+		if (!equalLogs(sm, previous_log_event)) {
+			console.log("logging  event...")
+			socket.emit('logEvent', sm)
+			previous_log_event = sm
+		} else {
+			console.log("ignoring same event...")
+		}
+	}
+
+}
+
 enable_submit = function () {
 	var points = _.map(sentences, function (s) {
 		return parseFloat(s.points_bonus).toFixed(1)
@@ -381,13 +396,7 @@ function Node() {
 				var rule = JSON.stringify({selected: bounds_str.join(' '), swaps: other_bounds_str.join(' ')})
 				var sm = new ActivityLogMessage(username, rule_type, rule, null, null, null, null)
 				if (socket != null) {
-					if (!equalLogs(sm, previous_log_event)) {
-						console.log("logging  event...")
-						socket.emit('logEvent', sm)
-						previous_log_event = sm
-					} else {
-						console.log("ignoring same event...")
-					}
+					logEventWrapper(socket, sm)
 				}
 
 				num_swaps.push(arrows)
@@ -519,13 +528,7 @@ function Node() {
 
 					var sm = new ActivityLogMessage(username, rule_type, rule, null, null, null, null)
 					if (socket != null) {
-						if (!equalLogs(sm, previous_log_event)) {
-							console.log("logging  event...")
-							socket.emit('logEvent', sm)
-							previous_log_event = sm
-						} else {
-							console.log("ignoring same event...")
-						}
+						logEventWrapper(socket, sm)
 					}
 
 					_.each(translation_items, function (wordSpan) {
@@ -966,7 +969,7 @@ function Node() {
 			var visible_after = self.graph.sentence.get_visible_string()
 			var sm = new ActivityLogMessage(username, rule_type, rule, before, after, visible_before, visible_after)
 			if (socket != null) {
-				socket.emit('logEvent', sm)
+				logEventWrapper(socket, sm)
 			}
 			if (self.graph.sentence.points_remaining > 0) {
 				self.graph.sentence.points_remaining -= 1
@@ -1937,10 +1940,16 @@ function receivedUserProgress(msg) {
 function thankyouPage(msg) {
 	console.log("display thank you received...")
 	$(mainview).empty()
-	$(mainview).append("<p><b> All hits completed... Thank you!</b></p>Your comepletion confirmation code is: <b>" + msg.confirmation + "</b>")
-	points_earned = msg.points_earned
-	pointsEarned_span.text(parseFloat(points_earned).toFixed(1));
-	$('#confirmInput').prop('disabled', true)
+	if (msg.username === "GUEST") {
+		$(mainview).append("<p><b> Preview Completed</b></p><p>please logout and log back in as a registered user</p>")
+		$('#confirmInput').prop('disabled', true)
+	} else {
+		$(mainview).append("<p><b> All hits completed... Thank you!</b></p>Your comepletion confirmation code is: <b>" + msg.confirmation + "</b>")
+		points_earned = msg.points_earned
+		pointsEarned_span.text(parseFloat(points_earned).toFixed(1));
+		$('#confirmInput').prop('disabled', true)
+	}
+
 	$('#confirmInput').remove()
 }
 
