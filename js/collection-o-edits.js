@@ -684,300 +684,296 @@ function Node() {
 	}
 
 	this.take_action = function (param) {
-		if (!self.graph.sentence.stopClues) {
-			console.log('action triggered:' + param.action + ',' + param.direction)
-			self.graph.sentence.remove_all_previews(null)
-			var before = JSON.stringify(self.graph.sentence.getLogObjs())
-			var visible_before = self.graph.sentence.get_visible_string()
-			var rule_type = JSON.stringify({type: "action", action: param.action, direction: param.direction})
-			var rule = null
-			if (param.action == 'split reorder') {
 
-				var gvn = _.filter(self.graph.nodes, function (node) {
-					return node.visible
+		console.log('action triggered:' + param.action + ',' + param.direction)
+		self.graph.sentence.remove_all_previews(null)
+		var before = JSON.stringify(self.graph.sentence.getLogObjs())
+		var visible_before = self.graph.sentence.get_visible_string()
+		var rule_type = JSON.stringify({type: "action", action: param.action, direction: param.direction})
+		var rule = null
+		if (param.action == 'split reorder') {
+
+			var gvn = _.filter(self.graph.nodes, function (node) {
+				return node.visible
+			})
+			if (this.graph.splits) {
+				console.log("this graphs splits")
+
+				var target_order = self.graph['split_order_by_' + param.direction]
+				var split_nodes = gvn
+				split_nodes = _.sortBy(split_nodes, function (sn) {
+					return parseInt($(sn.get_view()).css('order'))
 				})
-				if (this.graph.splits) {
-					console.log("this graphs splits")
 
-					var target_order = self.graph['split_order_by_' + param.direction]
-					var split_nodes = gvn
-					split_nodes = _.sortBy(split_nodes, function (sn) {
-						return parseInt($(sn.get_view()).css('order'))
-					})
-
-					var separator_nodes = _.map(target_order, function (t_id) {
-						if (t_id != self.graph.id) {
-							var s_graph = self.graph.sentence.get_graph_by_id(t_id)
-							var sns = s_graph.get_visible_nodes()
-							sns = _.sortBy(sns, function (sn) {
-								return parseInt($(sn.get_view()).css('order'))
-							})
-							return sns
-						} else {
-							return ['INSERT HERE']
-						}
-
-					})
-					separator_nodes = _.flatten(separator_nodes)
-					var new_ordering_nodes = []
-					var insertions = _.reduce(separator_nodes, function (memo, sn) {
-						if (sn == 'INSERT HERE') {return memo + 1} else {return memo}
-					}, 0)
-					if (insertions == 1) {
-						//currently split and should be unsplit
-						new_ordering_nodes = _.map(separator_nodes, function (sn) {
-							if (sn == 'INSERT HERE') {
-								return split_nodes
-							} else {
-								return sn
-							}
+				var separator_nodes = _.map(target_order, function (t_id) {
+					if (t_id != self.graph.id) {
+						var s_graph = self.graph.sentence.get_graph_by_id(t_id)
+						var sns = s_graph.get_visible_nodes()
+						sns = _.sortBy(sns, function (sn) {
+							return parseInt($(sn.get_view()).css('order'))
 						})
-					} else if (insertions == split_nodes.length) {
-						//currently not split and should be split
-						var split_ptr = 0
-						new_ordering_nodes = _.map(separator_nodes, function (sn) {
-							if (sn == 'INSERT HERE') {
-								var split_n = split_nodes[split_ptr]
-								split_ptr++
-								return split_n
-							} else {
-								return sn
-							}
-						})
+						return sns
+					} else {
+						return ['INSERT HERE']
 					}
 
-					new_ordering_nodes = _.flatten(new_ordering_nodes)
-					var new_ordering_positions = _.map(new_ordering_nodes, function (nn) {
-						return parseInt($(nn.get_view()).css('order'))
-					})
-					var st = _.min(new_ordering_positions)
-					var new_pos = 0 + st
-
-					var split_nodes_str = _.map(split_nodes, function (sn) {
-						return sn.s
-					})
-					rule = JSON.stringify({splitNodes: split_nodes_str.join(',')})
-
-					_.each(new_ordering_nodes, function (nn) {
-						var nnp = new_pos
-						if (_.contains(split_nodes, nn)) {
-							self.graph.sentence.remove_nodes([nn])
-							console.log("adding back " + nn.s + " in position " + nnp)
-							self.graph.sentence.add_nodes([nn], [nnp], param)
+				})
+				separator_nodes = _.flatten(separator_nodes)
+				var new_ordering_nodes = []
+				var insertions = _.reduce(separator_nodes, function (memo, sn) {
+					if (sn == 'INSERT HERE') {return memo + 1} else {return memo}
+				}, 0)
+				if (insertions == 1) {
+					//currently split and should be unsplit
+					new_ordering_nodes = _.map(separator_nodes, function (sn) {
+						if (sn == 'INSERT HERE') {
+							return split_nodes
 						} else {
-							console.log(nn.s + " not in split, its position " + nnp)
+							return sn
 						}
-						new_pos += 1
 					})
-					self.graph.split_to = param.direction == 'en' ? 'de' : 'en'
-					_.each(split_nodes, function (i) {
+				} else if (insertions == split_nodes.length) {
+					//currently not split and should be split
+					var split_ptr = 0
+					new_ordering_nodes = _.map(separator_nodes, function (sn) {
+						if (sn == 'INSERT HERE') {
+							var split_n = split_nodes[split_ptr]
+							split_ptr++
+							return split_n
+						} else {
+							return sn
+						}
+					})
+				}
+
+				new_ordering_nodes = _.flatten(new_ordering_nodes)
+				var new_ordering_positions = _.map(new_ordering_nodes, function (nn) {
+					return parseInt($(nn.get_view()).css('order'))
+				})
+				var st = _.min(new_ordering_positions)
+				var new_pos = 0 + st
+
+				var split_nodes_str = _.map(split_nodes, function (sn) {
+					return sn.s
+				})
+				rule = JSON.stringify({splitNodes: split_nodes_str.join(',')})
+
+				_.each(new_ordering_nodes, function (nn) {
+					var nnp = new_pos
+					if (_.contains(split_nodes, nn)) {
+						self.graph.sentence.remove_nodes([nn])
+						console.log("adding back " + nn.s + " in position " + nnp)
+						self.graph.sentence.add_nodes([nn], [nnp], param)
+					} else {
+						console.log(nn.s + " not in split, its position " + nnp)
+					}
+					new_pos += 1
+				})
+				self.graph.split_to = param.direction == 'en' ? 'de' : 'en'
+				_.each(split_nodes, function (i) {
+					i.update_view_reorder()
+				})
+
+			}
+		} else if (param.action == 'external reorder') {
+			var gvn = _.filter(self.graph.nodes, function (node) {
+				return node.visible
+			})
+
+			if (this.graph.swaps) {
+				console.log("this graphs swaps")
+				var swap_obj = self.graph.get_swap(param.direction)
+				assert(swap_obj != null, 'swap object is null!!')
+				var vn_group1 = []
+				_.each(swap_obj.graphs, function (g_id) {
+					vn_group1 = vn_group1.concat(self.graph.sentence.get_graph_by_id(g_id).get_visible_nodes())
+				})
+
+				vn_group1 = _.sortBy(vn_group1, function (vn) {
+					return parseInt($(vn.get_view()).css('order'))
+				})
+				var vn_group1_positions = _.map(vn_group1, function (vn) {
+					return parseInt($(vn.get_view()).css('order'))
+				})
+				var vn_group1_str = _.map(vn_group1, function (vn) {
+					return vn.s
+				})
+				var vn_group2 = []
+				_.each(swap_obj.other_graphs, function (g_id) {
+					vn_group2 = vn_group2.concat(self.graph.sentence.get_graph_by_id(g_id).get_visible_nodes())
+				})
+				vn_group2 = _.sortBy(vn_group2, function (vn) {
+					return parseInt($(vn.get_view()).css('order'))
+				})
+				var vn_group2_positions = _.map(vn_group2, function (vn) {
+					return parseInt($(vn.get_view()).css('order'))
+				})
+				var vn_group2_str = _.map(vn_group2, function (vn) {
+					return vn.s
+				})
+				var gvn = []
+				var gvn_positions = []
+				var swaps_with_nodes = []
+				var swaps_with_positions = []
+				if (_.contains(swap_obj.graphs, self.graph.id)) {
+					gvn = vn_group1
+					gvn_positions = vn_group1_positions
+					swaps_with_nodes = vn_group2
+					swaps_with_positions = vn_group2_positions
+					rule = JSON.stringify({selected: vn_group1_str.join(' '), swaps: vn_group2_str.join(' ') })
+				} else {
+					gvn = vn_group2
+					gvn_positions = vn_group2_positions
+					swaps_with_nodes = vn_group1
+					swaps_with_positions = vn_group1_positions
+					rule = JSON.stringify({selected: vn_group2_str.join(' '), swaps: vn_group1_str.join(' ') })
+				}
+
+				self.graph.sentence.remove_nodes(gvn)
+				var new_positions = _.range(gvn.length)
+				if (_.min(swaps_with_positions) < _.min(gvn_positions)) {
+					var st = _.min(swaps_with_positions)
+					new_positions = _.map(new_positions, function (i) {
+						return i + st
+					})
+				} else {
+					swaps_with_positions = _.map(swaps_with_positions, function (i) {
+						return i - gvn.length
+					})
+					var st = _.max(swaps_with_positions) + 1
+					new_positions = _.map(new_positions, function (i) {
+						return i + st
+					})
+				}
+
+				self.graph.sentence.add_nodes(gvn, new_positions, param)
+				self.graph.sentence.update_external_reorder_options(gvn, param)
+				self.graph.sentence.update_external_reorder_options(swaps_with_nodes, param)
+				_.each(swap_obj.graphs.concat(swap_obj.other_graphs), function (g_id) {
+					var g = self.graph.sentence.get_graph_by_id(g_id)
+					//console.log("swapping s_obj in gid" + g.id)
+					var swap_flip = _.find(g['swap_toward_' + param.direction], function (so) {
+						return so.equals(swap_obj)
+					})
+					assert(swap_flip != null, 'swap flip is null!!')
+					var other_direction = param.direction == 'en' ? 'de' : 'en'
+					g['swap_toward_' + param.direction] = _.without(g['swap_toward_' + param.direction], swap_flip)
+					g['swap_toward_' + other_direction].push(swap_flip)
+
+				})
+
+				_.each(gvn, function (i) {
+					i.update_view_reorder()
+				})
+				_.each(swaps_with_nodes, function (i) {
+					i.update_view_reorder()
+				})
+
+			}
+		} else if (param.action == 'translate') {
+			var modified_nodes = null
+			if (param.direction == 'de') {
+				modified_nodes = self.graph.translate_from(self, 'de')
+			} else {
+				modified_nodes = self.graph.translate_from(self, 'en')
+			}
+			//If the translation action has changed the visible nodes, result will be true
+			if (modified_nodes != null) {
+				rule = JSON.stringify({added: modified_nodes.addStr, removed: modified_nodes.removeStr})
+				var remove_positions = []
+				for (var mnr = 0; mnr < modified_nodes.remove.length; mnr++) {
+					remove_positions.push(parseInt($(modified_nodes.remove[mnr].get_view()).css('order')))
+				}
+				gvn = self.graph.sentence.sort_within_graph(modified_nodes.add, self.graph.internal_reorder_by)
+				self.graph.sentence.remove_nodes(modified_nodes.remove)
+				if (modified_nodes.add.length == 1 && modified_nodes.remove.length == 1) {
+					//simple case
+					self.graph.sentence.add_nodes(gvn, remove_positions, param)
+					self.graph.sentence.update_external_reorder_options(gvn, param)
+					_.each(gvn, function (i) {
 						i.update_view_reorder()
 					})
 
-				}
-			} else if (param.action == 'external reorder') {
-				var gvn = _.filter(self.graph.nodes, function (node) {
-					return node.visible
-				})
-
-				if (this.graph.swaps) {
-					console.log("this graphs swaps")
-					var swap_obj = self.graph.get_swap(param.direction)
-					assert(swap_obj != null, 'swap object is null!!')
-					var vn_group1 = []
-					_.each(swap_obj.graphs, function (g_id) {
-						vn_group1 = vn_group1.concat(self.graph.sentence.get_graph_by_id(g_id).get_visible_nodes())
+				} else if (modified_nodes.add.length > 1 && modified_nodes.remove.length == 1) {
+					//if many adds and 1 remove all adds placed in same position as remove
+					var pos = remove_positions[0]
+					var insert_idx = _.map(modified_nodes.add, function () {
+						pos += 1
+						return pos - 1
 					})
 
-					vn_group1 = _.sortBy(vn_group1, function (vn) {
-						return parseInt($(vn.get_view()).css('order'))
-					})
-					var vn_group1_positions = _.map(vn_group1, function (vn) {
-						return parseInt($(vn.get_view()).css('order'))
-					})
-					var vn_group1_str = _.map(vn_group1, function (vn) {
-						return vn.s
-					})
-					var vn_group2 = []
-					_.each(swap_obj.other_graphs, function (g_id) {
-						vn_group2 = vn_group2.concat(self.graph.sentence.get_graph_by_id(g_id).get_visible_nodes())
-					})
-					vn_group2 = _.sortBy(vn_group2, function (vn) {
-						return parseInt($(vn.get_view()).css('order'))
-					})
-					var vn_group2_positions = _.map(vn_group2, function (vn) {
-						return parseInt($(vn.get_view()).css('order'))
-					})
-					var vn_group2_str = _.map(vn_group2, function (vn) {
-						return vn.s
-					})
-					var gvn = []
-					var gvn_positions = []
-					var swaps_with_nodes = []
-					var swaps_with_positions = []
-					if (_.contains(swap_obj.graphs, self.graph.id)) {
-						gvn = vn_group1
-						gvn_positions = vn_group1_positions
-						swaps_with_nodes = vn_group2
-						swaps_with_positions = vn_group2_positions
-						rule = JSON.stringify({selected: vn_group1_str.join(' '), swaps: vn_group2_str.join(' ') })
-					} else {
-						gvn = vn_group2
-						gvn_positions = vn_group2_positions
-						swaps_with_nodes = vn_group1
-						swaps_with_positions = vn_group1_positions
-						rule = JSON.stringify({selected: vn_group2_str.join(' '), swaps: vn_group1_str.join(' ') })
-					}
-
-					self.graph.sentence.remove_nodes(gvn)
-					var new_positions = _.range(gvn.length)
-					if (_.min(swaps_with_positions) < _.min(gvn_positions)) {
-						var st = _.min(swaps_with_positions)
-						new_positions = _.map(new_positions, function (i) {
-							return i + st
-						})
-					} else {
-						swaps_with_positions = _.map(swaps_with_positions, function (i) {
-							return i - gvn.length
-						})
-						var st = _.max(swaps_with_positions) + 1
-						new_positions = _.map(new_positions, function (i) {
-							return i + st
-						})
-					}
-
-					self.graph.sentence.add_nodes(gvn, new_positions, param)
+					self.graph.sentence.add_nodes(gvn, insert_idx, param)
 					self.graph.sentence.update_external_reorder_options(gvn, param)
-					self.graph.sentence.update_external_reorder_options(swaps_with_nodes, param)
-					_.each(swap_obj.graphs.concat(swap_obj.other_graphs), function (g_id) {
-						var g = self.graph.sentence.get_graph_by_id(g_id)
-						//console.log("swapping s_obj in gid" + g.id)
-						var swap_flip = _.find(g['swap_toward_' + param.direction], function (so) {
-							return so.equals(swap_obj)
-						})
-						assert(swap_flip != null, 'swap flip is null!!')
-						var other_direction = param.direction == 'en' ? 'de' : 'en'
-						g['swap_toward_' + param.direction] = _.without(g['swap_toward_' + param.direction], swap_flip)
-						g['swap_toward_' + other_direction].push(swap_flip)
-
-					})
 
 					_.each(gvn, function (i) {
 						i.update_view_reorder()
 					})
-					_.each(swaps_with_nodes, function (i) {
-						i.update_view_reorder()
-					})
+				} else if (modified_nodes.add.length == 1 && modified_nodes.remove.length > 1) {
 
-				}
-			} else if (param.action == 'translate') {
-				var modified_nodes = null
-				if (param.direction == 'de') {
-					modified_nodes = self.graph.translate_from(self, 'de')
-				} else {
-					modified_nodes = self.graph.translate_from(self, 'en')
-				}
-				//If the translation action has changed the visible nodes, result will be true
-				if (modified_nodes != null) {
-					rule = JSON.stringify({added: modified_nodes.addStr, removed: modified_nodes.removeStr})
-					var remove_positions = []
-					for (var mnr = 0; mnr < modified_nodes.remove.length; mnr++) {
-						remove_positions.push(parseInt($(modified_nodes.remove[mnr].get_view()).css('order')))
-					}
-					gvn = self.graph.sentence.sort_within_graph(modified_nodes.add, self.graph.internal_reorder_by)
-					self.graph.sentence.remove_nodes(modified_nodes.remove)
-					if (modified_nodes.add.length == 1 && modified_nodes.remove.length == 1) {
-						//simple case
-						self.graph.sentence.add_nodes(gvn, remove_positions, param)
-						self.graph.sentence.update_external_reorder_options(gvn, param)
-						_.each(gvn, function (i) {
-							i.update_view_reorder()
-						})
-
-					} else if (modified_nodes.add.length > 1 && modified_nodes.remove.length == 1) {
-						//if many adds and 1 remove all adds placed in same position as remove
-						var pos = remove_positions[0]
-						var insert_idx = _.map(modified_nodes.add, function () {
-							pos += 1
-							return pos - 1
-						})
-
-						self.graph.sentence.add_nodes(gvn, insert_idx, param)
-						self.graph.sentence.update_external_reorder_options(gvn, param)
-
-						_.each(gvn, function (i) {
-							i.update_view_reorder()
-						})
-					} else if (modified_nodes.add.length == 1 && modified_nodes.remove.length > 1) {
-
-						var insert_idx = null
-						if (self.graph.splits) {
-							var target_order = self.graph['split_order_by_' + param.direction]
-							var separator_nodes = _.map(target_order, function (t_id) {
-								if (t_id == self.graph.id) {
-									return ['INSERT HERE']
-								} else {
-									return self.graph.sentence.get_graph_by_id(t_id).get_visible_nodes()
-								}
-							})
-							separator_nodes = _.flatten(separator_nodes)
-							var separator_node_positions = _.map(separator_nodes, function (sn) {
-								if (sn == 'INSERT HERE') {
-									return 'INSERT HERE'
-								} else {
-									return parseInt($(sn.get_view()).css('order'))
-								}
-
-							})
-
-							var ih = _.findIndex(separator_node_positions, function (snp) {
-								return snp == 'INSERT HERE'
-							})
-							if (ih == 0) {
-								insert_idx = _.min(separator_node_positions)
+					var insert_idx = null
+					if (self.graph.splits) {
+						var target_order = self.graph['split_order_by_' + param.direction]
+						var separator_nodes = _.map(target_order, function (t_id) {
+							if (t_id == self.graph.id) {
+								return ['INSERT HERE']
 							} else {
-								insert_idx = separator_node_positions[ih - 1] + 1
+								return self.graph.sentence.get_graph_by_id(t_id).get_visible_nodes()
 							}
-							self.graph.split_to = param.direction == 'en' ? 'de' : 'en'
+						})
+						separator_nodes = _.flatten(separator_nodes)
+						var separator_node_positions = _.map(separator_nodes, function (sn) {
+							if (sn == 'INSERT HERE') {
+								return 'INSERT HERE'
+							} else {
+								return parseInt($(sn.get_view()).css('order'))
+							}
 
-							self.graph.sentence.add_nodes(modified_nodes.add, [insert_idx], param)
-							self.graph.sentence.update_external_reorder_options(modified_nodes.add, param)
-							_.each(modified_nodes.add, function (i) {
-								i.update_view_reorder()
-							})
+						})
 
+						var ih = _.findIndex(separator_node_positions, function (snp) {
+							return snp == 'INSERT HERE'
+						})
+						if (ih == 0) {
+							insert_idx = _.min(separator_node_positions)
 						} else {
-							assert(is_contiguous(remove_positions))
-							insert_idx = [_.min(remove_positions)]
-							self.graph.sentence.add_nodes(modified_nodes.add, insert_idx, param)
-							self.graph.sentence.update_external_reorder_options(modified_nodes.add, param)
-							_.each(modified_nodes.add, function (i) {
-								i.update_view_reorder()
-							})
+							insert_idx = separator_node_positions[ih - 1] + 1
 						}
+						self.graph.split_to = param.direction == 'en' ? 'de' : 'en'
+
+						self.graph.sentence.add_nodes(modified_nodes.add, [insert_idx], param)
+						self.graph.sentence.update_external_reorder_options(modified_nodes.add, param)
+						_.each(modified_nodes.add, function (i) {
+							i.update_view_reorder()
+						})
+
 					} else {
-						assert(0 > 1, 'translations from many to many is not possible anymore!!!')
+						assert(is_contiguous(remove_positions))
+						insert_idx = [_.min(remove_positions)]
+						self.graph.sentence.add_nodes(modified_nodes.add, insert_idx, param)
+						self.graph.sentence.update_external_reorder_options(modified_nodes.add, param)
+						_.each(modified_nodes.add, function (i) {
+							i.update_view_reorder()
+						})
 					}
+				} else {
+					assert(0 > 1, 'translations from many to many is not possible anymore!!!')
 				}
-			} else {
-				//console.log("Invalid action:  " + param.action)
-			}
-			var after = JSON.stringify(self.graph.sentence.getLogObjs())
-			var visible_after = self.graph.sentence.get_visible_string()
-			var sm = new ActivityLogMessage(username, rule_type, rule, before, after, visible_before, visible_after)
-			if (socket != null) {
-				socket.emit('logEvent', sm)
-			}
-			if (self.graph.sentence.points_remaining > 0) {
-				self.graph.sentence.points_remaining -= 1
-				self.graph.sentence.changePointsRemaining(self.graph.sentence.points_remaining)
-			} else {
-				console.log("prevent all clues!!")
-				self.graph.sentence.stopClues = true
 			}
 		} else {
-			console.log("no more clues!!!!")
+			//console.log("Invalid action:  " + param.action)
 		}
+		var after = JSON.stringify(self.graph.sentence.getLogObjs())
+		var visible_after = self.graph.sentence.get_visible_string()
+		var sm = new ActivityLogMessage(username, rule_type, rule, before, after, visible_before, visible_after)
+		if (socket != null) {
+			socket.emit('logEvent', sm)
+		}
+		if (self.graph.sentence.points_remaining > 0) {
+			var p = self.graph.sentence.points_remaining - ( 10.0 / self.graph.sentence.get_node_count('en'))
+			self.graph.sentence.points_remaining = Math.max(0, p)
+			self.graph.sentence.changePointsRemaining(parseFloat(self.graph.sentence.points_remaining).toFixed(1))
+		}
+
 	}
 
 	this.isTranslationSame = function (modifiedNodes) {
@@ -1329,7 +1325,6 @@ function Sentence() {
 	this.initial_order_by = null
 	this.points_remaining = 10;
 	this.points_bonus = 0.0;
-	this.stopClues = false
 
 	this.remove_all_previews = function (exception) {
 
@@ -1707,7 +1702,7 @@ function Sentence() {
 			$(this.points_container).append($(pb))
 			this.points_container.pr = pr
 			this.points_container.pb = pb
-			self.points_remaining = parseInt(self.get_node_count('en') / 2)
+			self.points_remaining = 10
 			self.changePointsRemaining(self.points_remaining)
 			self.changePointsBonus(parseFloat(0.0).toFixed(1))
 			return this.points_container
