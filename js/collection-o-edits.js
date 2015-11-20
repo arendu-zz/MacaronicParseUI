@@ -49,16 +49,16 @@ enable_submit = function () {
 	console.log('submit?', product)
 	$('#confirmInput').prop('disabled', !product)
 }
+
+logTranslation = function (s) {
+	var tlm = new TranslationLogMessage(username, ui_version, parseInt(s.id), JSON.stringify(s.getLogObjs()), s.get_visible_string(), s.get_user_translation())
+	socket.emit('logTranslation', tlm)
+}
+
 completedTask = function () {
 	console.log("ok now do some things....")
 	var total_new_points = 0
-	var listTLM = []
-	_.each(sentences, function (s) {
-		var tlm = new TranslationLogMessage(username, ui_version, JSON.stringify(s.getLogObjs()), s.get_visible_string(), s.get_user_translation())
-		listTLM.push(tlm)
-		total_new_points += s.points_remaining + s.points_bonus
-	})
-	var ctm = new CompletedTaskMessage(username, ui_version, listTLM, progress + 1, points_earned + parseFloat(total_new_points))
+	var ctm = new CompletedTaskMessage(username, ui_version, progress + 1, points_earned + parseFloat(total_new_points))
 	socket.emit('completedTask', ctm)
 
 }
@@ -1741,6 +1741,10 @@ function Sentence() {
 				var bleu = simple_bleu(self.text_container.text_area.value, self.de)
 				self.points_bonus = bleu * 10
 				self.changePointsBonus(parseFloat(bleu * 10).toFixed(1))
+			})
+			$(this.text_container.text_area).focusout(function () {
+				console.log("time to log tlm....")
+				logTranslation(self)
 			})
 			return this.text_container
 		} else {
