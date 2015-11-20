@@ -8,7 +8,7 @@ var sentences_per_page = 10
 var username = null
 var points_earned = 0
 var progress = 0
-var version = 0
+var ui_version = 0
 var socket = null
 var json_sentences = []
 var mainview = null
@@ -54,7 +54,7 @@ completedTask = function () {
 	var total_new_points = 0
 	var listTLM = []
 	_.each(sentences, function (s) {
-		var tlm = new TranslationLogMessage(username, s.getLogObjs(), s.get_visible_string(), s.get_user_translation())
+		var tlm = new TranslationLogMessage(username,ui_version, s.getLogObjs(), s.get_visible_string(), s.get_user_translation())
 		listTLM.push(tlm)
 		total_new_points += s.points_remaining + s.points_bonus
 	})
@@ -395,7 +395,7 @@ function Node() {
 				}
 				var rule_type = JSON.stringify({type: "preview", action: "swap", direction: direction})
 				var rule = JSON.stringify({selected: bounds_str.join(' '), swaps: other_bounds_str.join(' ')})
-				var sm = new ActivityLogMessage(username, rule_type, rule, null, null, null, null)
+				var sm = new ActivityLogMessage(username,ui_version, rule_type, rule, null, null, null, null)
 				if (socket != null) {
 					logEventWrapper(socket, sm)
 				}
@@ -527,7 +527,7 @@ function Node() {
 					var rule_type = JSON.stringify({type: "preview", action: "translate", direction: direction})
 					var rule = JSON.stringify({add: modified_nodes.addStr, remove: modified_nodes.removeStr})
 
-					var sm = new ActivityLogMessage(username, rule_type, rule, null, null, null, null)
+					var sm = new ActivityLogMessage(username,ui_version,  rule_type, rule, null, null, null, null)
 					if (socket != null) {
 						logEventWrapper(socket, sm)
 					}
@@ -688,7 +688,7 @@ function Node() {
 	}
 
 	this.take_action = function (param) {
-		if (!self.graph.sentence.stopClues || version == 0) {
+		if (!self.graph.sentence.stopClues || ui_version == 0) {
 			console.log('action triggered:' + param.action + ',' + param.direction)
 			self.graph.sentence.remove_all_previews(null)
 			var before = JSON.stringify(self.graph.sentence.getLogObjs())
@@ -968,11 +968,11 @@ function Node() {
 			}
 			var after = JSON.stringify(self.graph.sentence.getLogObjs())
 			var visible_after = self.graph.sentence.get_visible_string()
-			var sm = new ActivityLogMessage(username, rule_type, rule, before, after, visible_before, visible_after)
+			var sm = new ActivityLogMessage(username, ui_version, rule_type, rule, before, after, visible_before, visible_after)
 			if (socket != null) {
 				logEventWrapper(socket, sm)
 			}
-			if (version == 0) {
+			if (ui_version == 0) {
 				if (self.graph.sentence.points_remaining > 0) {
 					var p = self.graph.sentence.points_remaining - ( 10.0 / self.graph.sentence.get_node_count('en'))
 					self.graph.sentence.points_remaining = Math.max(0, p)
@@ -1357,7 +1357,7 @@ function Sentence() {
 		})
 
 		//var rule_type = JSON.stringify({type: "remove preview", action: null, direction: null})
-		//var sm = new ActivityLogMessage(username, rule_type, null, null, null, null, null)
+		//var sm = new ActivityLogMessage(username,ui_version, rule_type, null, null, null, null, null)
 		//if (socket != null) {
 		//	if (!equalLogs(sm, previous_log_event)) {
 		//console.log("logging  event...")
@@ -1985,7 +1985,7 @@ function setup(pageView, workerId, socketObj, UI_version, isPreview) {
 	userType_span = "learner"
 	workerId_span = $('#workerId')
 	pointsEarned_span = $('#pointsEarned')
-	version = UI_version
+	ui_version = UI_version
 	$('#confirmInput').prop('disabled', true)
 	username = workerId
 	socket = socketObj

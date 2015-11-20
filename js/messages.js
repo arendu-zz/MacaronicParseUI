@@ -1,5 +1,6 @@
-function ActivityLogMessage(user, rule_type, rule, before, after, visible_before, visible_after) {
+function ActivityLogMessage(user, ui_version, rule_type, rule, before, after, visible_before, visible_after) {
 	this.username = user
+  this.ui_version = ui_version
 	this.displayname = user
 	this.rule_type = rule_type
 	this.rule = rule
@@ -25,8 +26,9 @@ var equalLogs = function (log1, log2) {
 	return true
 }
 
-function TranslationLogMessage(user, state, visible_state, translation) {
+function TranslationLogMessage(user, ui_version, state, visible_state, translation) {
 	this.workerId = user
+  this.ui_version = ui_version
 	this.state = state
 	this.input = visible_state
 	this.translation = escapeHTML(translation)
