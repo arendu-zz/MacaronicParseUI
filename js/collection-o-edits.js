@@ -54,11 +54,12 @@ completedTask = function () {
 	var total_new_points = 0
 	var listTLM = []
 	_.each(sentences, function (s) {
-		var tlm = new TranslationLogMessage(username,ui_version, s.getLogObjs(), s.get_visible_string(), s.get_user_translation())
+		var tlm = new TranslationLogMessage(username, ui_version, JSON.stringify(s.getLogObjs()), s.get_visible_string(), s.get_user_translation())
 		listTLM.push(tlm)
 		total_new_points += s.points_remaining + s.points_bonus
 	})
-	socket.emit('completedTask', {workerId: username, hitlog: listTLM, progress: progress + 1, points_earned: points_earned + parseFloat(total_new_points)})
+	var ctm = new CompletedTaskMessage(username, ui_version, listTLM, progress + 1, points_earned + parseFloat(total_new_points))
+	socket.emit('completedTask', ctm)
 
 }
 gotoPrevPage = function () {
@@ -395,7 +396,8 @@ function Node() {
 				}
 				var rule_type = JSON.stringify({type: "preview", action: "swap", direction: direction})
 				var rule = JSON.stringify({selected: bounds_str.join(' '), swaps: other_bounds_str.join(' ')})
-				var sm = new ActivityLogMessage(username,ui_version, rule_type, rule, null, null, null, null)
+				var visible_before = self.graph.sentence.get_visible_string()
+				var sm = new ActivityLogMessage(username, ui_version, rule_type, rule, null, null, visible_before, visible_before)
 				if (socket != null) {
 					logEventWrapper(socket, sm)
 				}
@@ -526,8 +528,8 @@ function Node() {
 					var translation_items = self.get_translate_preview_view(modified_nodes.add, bounds, direction)
 					var rule_type = JSON.stringify({type: "preview", action: "translate", direction: direction})
 					var rule = JSON.stringify({add: modified_nodes.addStr, remove: modified_nodes.removeStr})
-
-					var sm = new ActivityLogMessage(username,ui_version,  rule_type, rule, null, null, null, null)
+					var visible_before = self.graph.sentence.get_visible_string()
+					var sm = new ActivityLogMessage(username, ui_version, rule_type, rule, null, null, visible_before, visible_before)
 					if (socket != null) {
 						logEventWrapper(socket, sm)
 					}
@@ -2005,7 +2007,7 @@ function setup(pageView, workerId, socketObj, UI_version, isPreview) {
 			//get json_sentences from server
 			//first get user progress
 			console.log("emitting user progress request, workerId:" + workerId)
-			socket.emit('requestUserProgress', {workerId: workerId})
+			socket.emit('requestUserProgress', {username: workerId})
 			socket.on('userProgress', receivedUserProgress)
 			socket.on('thankyou', thankyouPage)
 			//socket.emit('requestJsonSentences', 'please')

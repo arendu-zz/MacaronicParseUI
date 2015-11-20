@@ -27,11 +27,18 @@ var equalLogs = function (log1, log2) {
 }
 
 function TranslationLogMessage(user, ui_version, state, visible_state, translation) {
-	this.workerId = user
-  this.ui_version = ui_version
+	this.username = user
+    this.ui_version = ui_version
 	this.state = state
 	this.input = visible_state
 	this.translation = escapeHTML(translation)
+}
+function CompletedTaskMessage(username, ui_version, listTLM, progress, points_earned) {
+  this.username  = username
+  this.ui_version = ui_version
+  this.hitlog = listTLM
+  this.points_earned = points_earned
+  this.progress = progress
 }
 
 function unescapeHTML(safe_str) {
