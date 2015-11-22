@@ -12,8 +12,8 @@ n_gram = function (a, n) {
 }
 
 simple_bleu = function (candidate, reference) {
-	var c_arr = $.trim(candidate.toLowerCase()).split(/\s+/)
-	var r_arr = $.trim(reference.toLowerCase()).split(/\s+/)
+	var c_arr = tokenize($.trim(candidate.toLowerCase()))
+	var r_arr = tokenize($.trim(reference.toLowerCase()))
 	console.log(c_arr)
 	console.log(r_arr)
 	var s = 0.0
