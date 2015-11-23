@@ -4,7 +4,7 @@
 
 var sentences = []
 var page = 0;
-var sentences_per_page = 10
+var sentences_per_page = 50
 var username = null
 var points_earned = 0
 var progress = 0
@@ -1944,6 +1944,7 @@ function receivedUserProgress(msg) {
 	sentences = []
 	console.log("got user progress...")
 	json_sentences = msg.data
+  console.log('size of page is ' + json_sentences.length)
 	points_earned = msg.points_earned
 	progress = msg.progress
 	pointsEarned_span.text(parseFloat(points_earned).toFixed(1));
