@@ -2017,7 +2017,7 @@ function setup(workerId, socketObj, UI_version, isPreview) {
 		$(mainview).empty()
 		sentences = []
 		console.log("preview mode ui")
-		json_sentences = json_str_arr.slice(14,15)
+		json_sentences = json_str_arr.slice(14, 15)
 		points_earned = 0
 		progress = 0
 		pointsEarned_span.text(parseFloat(points_earned).toFixed(1));
