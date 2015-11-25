@@ -1732,7 +1732,12 @@ function Sentence() {
 			$(this.points_container).append($(pb))
 			this.points_container.pr = pr
 			this.points_container.pb = pb
-			self.points_remaining = 10
+			if (ui_version == 0) {
+				self.points_remaining = 10
+			} else {
+				self.points_remaining = parseInt(this.get_node_count('de') * 0.7)
+			}
+
 			self.changePointsRemaining(self.points_remaining)
 			self.changePointsBonus(parseFloat(0.0).toFixed(1))
 			return this.points_container
