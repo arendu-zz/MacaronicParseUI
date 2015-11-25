@@ -1,7 +1,6 @@
 function ActivityLogMessage(user, ui_version, rule_type, rule, before, after, visible_before, visible_after) {
 	this.username = user
 	this.ui_version = ui_version
-	this.displayname = user
 	this.rule_type = rule_type
 	this.rule = rule
 	this.state_before = before
@@ -34,8 +33,9 @@ function TranslationLogMessage(user, ui_version, sentence_id, state, visible_sta
 	this.input = visible_state
 	this.translation = escapeHTML(translation)
 }
-function CompletedTaskMessage(username, ui_version, progress, points_earned) {
+function CompletedTaskMessage(username, sentences_completed, ui_version, progress, points_earned) {
 	this.username = username
+	this.sentences_completed = sentences_completed
 	this.ui_version = ui_version
 	this.points_earned = points_earned
 	this.progress = progress

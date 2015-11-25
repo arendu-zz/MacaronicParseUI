@@ -51,14 +51,26 @@ enable_submit = function () {
 }
 
 logTranslation = function (s) {
-	var tlm = new TranslationLogMessage(username, ui_version, parseInt(s.id), JSON.stringify(s.getLogObjs()), s.get_visible_string(), s.get_user_translation())
-	socket.emit('logTranslation', tlm)
+	if (username == "GUEST") {
+		console.log("ignore guest translations")
+	} else {
+		var tlm = new TranslationLogMessage(username, ui_version, parseInt(s.id), JSON.stringify(s.getLogObjs()), s.get_visible_string(), s.get_user_translation())
+		socket.emit('logTranslation', tlm)
+	}
+
 }
 
 completedTask = function () {
 	console.log("ok now do some things....")
 	var total_new_points = 0
-	var ctm = new CompletedTaskMessage(username, ui_version, progress + 1, points_earned + parseFloat(total_new_points))
+	var sentence_ids_completed = _.map(sentences, function (s) {
+		total_new_points += s.points_remaining + s.points_bonus
+		return s.id
+	});
+	var pp = points_earned + parseFloat(total_new_points)
+	console.log("points_earned:" + pp)
+	console.log("sentences completed:" + sentence_ids_completed)
+	var ctm = new CompletedTaskMessage(username, sentence_ids_completed, ui_version, progress + 1, pp)
 	socket.emit('completedTask', ctm)
 
 }
@@ -1944,7 +1956,7 @@ function receivedUserProgress(msg) {
 	sentences = []
 	console.log("got user progress...")
 	json_sentences = msg.data
-  console.log('size of page is ' + json_sentences.length)
+	console.log('size of page is ' + json_sentences.length)
 	points_earned = msg.points_earned
 	progress = msg.progress
 	pointsEarned_span.text(parseFloat(points_earned).toFixed(1));
@@ -1987,7 +1999,7 @@ function ok_parse(st, end) {
 	}
 }
 
-function setup(pageView, workerId, socketObj, UI_version, isPreview) {
+function setup(workerId, socketObj, UI_version, isPreview) {
 	mainview = $('#mainbody')
 	userType_span = "learner"
 	workerId_span = $('#workerId')
