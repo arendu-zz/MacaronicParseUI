@@ -18,6 +18,7 @@ var pointsEarned_span = null
 var global_preview_views = []
 var global_preview_classes = []
 var previous_log_event = null
+var hitId = null
 
 scaleIn = function (item) {
 	$(item).show("scale", {percent: 100}, 2000)
@@ -70,7 +71,7 @@ completedTask = function () {
 	var pp = points_earned + parseFloat(total_new_points)
 	console.log("points_earned:" + pp)
 	console.log("sentences completed:" + sentence_ids_completed)
-	var ctm = new CompletedTaskMessage(username, sentence_ids_completed, ui_version, progress + 1, pp)
+	var ctm = new CompletedTaskMessage(username, sentence_ids_completed, ui_version, progress + 1, pp, hitId)
 	socket.emit('completedTask', ctm)
 
 }

@@ -33,12 +33,13 @@ function TranslationLogMessage(user, ui_version, sentence_id, state, visible_sta
 	this.input = visible_state
 	this.translation = escapeHTML(translation)
 }
-function CompletedTaskMessage(username, sentences_completed, ui_version, progress, points_earned) {
+function CompletedTaskMessage(username, sentences_completed, ui_version, progress, points_earned, hitId) {
 	this.username = username
 	this.sentences_completed = sentences_completed
 	this.ui_version = ui_version
 	this.points_earned = points_earned
 	this.progress = progress
+	this.hitId = hitId
 }
 
 function unescapeHTML(safe_str) {
