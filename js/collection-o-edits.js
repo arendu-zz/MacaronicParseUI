@@ -1956,6 +1956,14 @@ function receivedJsonSentence(msg) {
 	ok_parse(0, 10)
 	do_precomputations()
 }
+function receivedPreview(msg) {
+	$(mainview).empty()
+	sentences = []
+	json_sentences = msg.data
+	console.log('size of page is ' + json_sentences.length)
+	ok_parse(0, 1)
+	do_precomputations()
+}
 
 function receivedUserProgress(msg) {
 	$(mainview).empty()
@@ -2015,7 +2023,9 @@ function setup(workerId, socketObj, UI_version, isPreview) {
 	username = workerId
 	socket = socketObj
 	if (isPreview) {
-		$(mainview).empty()
+		console.log("case 2")
+		console.log(socket)
+		/*$(mainview).empty()
 		sentences = []
 		console.log("preview mode ui")
 		json_sentences = json_str_arr.slice(14, 15)
@@ -2023,7 +2033,9 @@ function setup(workerId, socketObj, UI_version, isPreview) {
 		progress = 0
 		pointsEarned_span.text(parseFloat(points_earned).toFixed(1));
 		ok_parse(0, 1)
-		do_precomputations()
+		do_precomputations()*/
+		socket.emit('requestPreview', {username: workerId})
+		socket.on('previewContent', receivedPreview)
 	} else {
 		if (socket != null && username != null) {
 			console.log("case 1")
