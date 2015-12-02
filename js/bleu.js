@@ -18,7 +18,7 @@ simple_bleu = function (candidate, reference) {
 	console.log(r_arr)
 	var s = 0.0
 	var s1 = 0.0
-	_.each([1, 2, 3, 4], function (n) {
+	_.each([1, 2], function (n) {
 		var r_grams = n_gram(r_arr, n)
 		var c_grams = n_gram(c_arr, n)
 
@@ -31,8 +31,8 @@ simple_bleu = function (candidate, reference) {
 		var prec = (tp + 1) / (c_grams.length + 1)
 		var p1 = 1 / (c_grams.length + 1)
 		//console.log('prec+1: ', prec)
-		s += 0.25 * Math.log(prec)
-		s1 += 0.25 * Math.log(p1)
+		s += 0.5 * Math.log(prec)
+		s1 += 0.5 * Math.log(p1)
 
 	})
 	//console.log("s", s)

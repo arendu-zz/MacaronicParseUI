@@ -19,8 +19,7 @@
     <script type="text/javascript" src="js/regex_tokenizer.js"/>
     <script type="text/javascript" src="js/jquery.curvedarrow.js"/>
     <script type="text/javascript" src="js/jquery.straightline.js"/>
-    <script type="application/javascript" src="js/jsonstrings-coe.js"/>
-    <script type="application/javascript" src="js/nachrichtenleicht.de.js"/>
+    <script type="application/javascript" src="js/tmp.js"/>
     <script type="application/javascript" src="js/underscore-min.js"/>
     <script type="application/javascript" src="js/coe-utils.js"/>
     <script type="application/javascript" src="js/bleu.js"/>
@@ -30,7 +29,7 @@
         $(document).ready(function () {
             var socket = io();
             console.log(tokenize("but one thing is certain: these measures will have a negative impact on participation."))
-            setup_direct("developer", socket, 1, json_str_arr)
+            setup_direct("developer", socket, 0, json_str_arr)
         });
 
 
