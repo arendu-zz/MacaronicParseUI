@@ -9,6 +9,7 @@ var username = null
 var points_earned = 0
 var progress = 0
 var ui_version = 0
+var is_preview = false
 var socket = null
 var json_sentences = []
 var mainview = null
@@ -40,15 +41,20 @@ logEventWrapper = function (socket, sm) {
 }
 
 enable_submit = function () {
-	var points = _.map(sentences, function (s) {
-		return parseFloat(s.points_bonus).toFixed(1)
-	})
-	var product = _.reduce(points, function (memo, num) {
-		console.log('product ', num, memo)
-		return memo && num > 0.0;
-	}, true);
-	console.log('submit?', product)
-	$('#confirmInput').prop('disabled', !product)
+	if (sentences.length > 0 && !is_preview) {
+		var points = _.map(sentences, function (s) {
+			return parseFloat(s.points_bonus).toFixed(1)
+		})
+		var product = _.reduce(points, function (memo, num) {
+			console.log('product ', num, memo)
+			return memo && num > 0.0;
+		}, true);
+		console.log(sentences.length + " number of s")
+		console.log('submit?', product)
+		$('#confirmInput').prop('disabled', !product)
+	} else {
+		$('#confirmInput').prop('disabled', true)
+	}
 }
 
 logTranslation = function (s) {
@@ -2037,8 +2043,10 @@ function setup(workerId, socketObj, UI_version, isPreview) {
 	pointsEarned_span = $('#pointsEarned')
 	ui_version = UI_version
 	$('#confirmInput').prop('disabled', true)
+	console.log('input button should be disabled...')
 	username = workerId
 	socket = socketObj
+	is_preview = isPreview
 	if (isPreview) {
 		console.log("case 2")
 		console.log(socket)
