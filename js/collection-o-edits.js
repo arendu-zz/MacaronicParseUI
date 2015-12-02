@@ -1734,7 +1734,7 @@ function Sentence() {
 
 	this.updateStar = function (newPoints) {
 		console.log('stars: ' + (parseFloat(newPoints) / 2.0))
-		$(self.get_points_container().pb).html('<span class="stars">' + (parseFloat(newPoints) / 2.0) + '</span>');
+		$(self.get_points_container().pb).html('<span class="stars">' + parseInt((parseFloat(newPoints) / 2.0)) + '</span>');
 		$('span.stars').stars($('span.stars'));
 
 	}
