@@ -21,6 +21,12 @@ var global_preview_classes = []
 var previous_log_event = null
 var hitId = null
 
+$.fn.stars = function () {
+	return $(this).each(function () {
+		$(this).html($('<span />').width(Math.max(0, (Math.min(5, parseFloat($(this).html())))) * 16));
+	});
+}
+
 scaleIn = function (item) {
 	$(item).show("scale", {percent: 100}, 2000)
 }
@@ -1726,8 +1732,16 @@ function Sentence() {
 		}
 	}
 
+	this.updateStar = function (newPoints) {
+		console.log('stars: ' + (parseFloat(newPoints) / 2.0))
+		$(self.get_points_container().pb).html('<span class="stars">' + (parseFloat(newPoints) / 2.0) + '</span>');
+		$('span.stars').stars();
+
+	}
+
 	this.changePointsBonus = function (newPoints) {
-		self.get_points_container().pb.innerHTML = newPoints
+		//self.get_points_container().pb.innerHTML = newPoints
+		self.updateStar(newPoints)
 		enable_submit()
 	}
 
@@ -1737,8 +1751,9 @@ function Sentence() {
 			$(this.points_container).addClass('pointsContainer')
 			var pr = document.createElement('div')
 			$(pr).addClass('pointsRemaining')
-			var pb = document.createElement('div')
-			$(pb).addClass('pointsBonus')
+			var pb = document.createElement('p')
+			//$(pb).addClass('pointsBonus')
+			//$(pb).addClass('star')
 			$(this.points_container).append($(pr))
 			$(this.points_container).append($(pb))
 			this.points_container.pr = pr
