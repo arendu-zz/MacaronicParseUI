@@ -2049,7 +2049,7 @@ function setup_direct(workerId, socketObj, UI_version, full_data) {
 	username = workerId
 	socket = socketObj
 	json_sentences = full_data
-	ok_parse(0, 1)
+	ok_parse(0, 50)
 	do_precomputations()
 }
 
