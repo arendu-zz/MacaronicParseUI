@@ -21,9 +21,9 @@ var global_preview_classes = []
 var previous_log_event = null
 var hitId = null
 
-$.fn.stars = function () {
-	return $(this).each(function () {
-		$(this).html($('<span />').width(Math.max(0, (Math.min(5, parseFloat($(this).html())))) * 16));
+$.fn.stars = function (i) {
+	return i.each(function () {
+		i.html($('<span />').width(Math.max(0, (Math.min(5, parseFloat(i.html())))) * 16));
 	});
 }
 
@@ -1735,13 +1735,15 @@ function Sentence() {
 	this.updateStar = function (newPoints) {
 		console.log('stars: ' + (parseFloat(newPoints) / 2.0))
 		$(self.get_points_container().pb).html('<span class="stars">' + (parseFloat(newPoints) / 2.0) + '</span>');
-		$('span.stars').stars();
+		$('span.stars').stars($('span.stars'));
 
 	}
 
 	this.changePointsBonus = function (newPoints) {
 		//self.get_points_container().pb.innerHTML = newPoints
+
 		self.updateStar(newPoints)
+
 		enable_submit()
 	}
 
