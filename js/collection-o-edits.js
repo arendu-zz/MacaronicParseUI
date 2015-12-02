@@ -997,6 +997,10 @@ function Node() {
 				if (self.graph.sentence.points_remaining > 0) {
 					self.graph.sentence.points_remaining -= 1
 					self.graph.sentence.changePointsRemaining(self.graph.sentence.points_remaining)
+					if (self.graph.sentence.points_remaining == 0) {
+						console.log("prevent all clues!!")
+						self.graph.sentence.stopClues = true
+					}
 				} else {
 					console.log("prevent all clues!!")
 					self.graph.sentence.stopClues = true
@@ -2011,6 +2015,19 @@ function ok_parse(st, end) {
 		s.update_visible_nodes()
 		sentences.push(s)
 	}
+}
+
+function setup_direct(workerId, socketObj, UI_version, full_data) {
+	mainview = $('#mainbody')
+	userType_span = null
+	workerId_span = null
+	pointsEarned_span = null
+	ui_version = UI_version
+	username = workerId
+	socket = socketObj
+	json_sentences = full_data
+	ok_parse(0, 1)
+	do_precomputations()
 }
 
 function setup(workerId, socketObj, UI_version, isPreview) {
