@@ -27,6 +27,10 @@ filter_and_stem = function (sentence_arr) {
 	return fs
 }
 
+shifted_sig = function (val) {
+	return 1.0 / (1.0 + Math.exp(-4 * (2 * val - 0.75)))
+}
+
 simple_bleu = function (candidate, reference) {
 	if (candidate === "please,show,mercy") {
 		return 1.0
@@ -65,7 +69,8 @@ simple_bleu = function (candidate, reference) {
 
 		}
 		//console.log("BP", BP)
-		return BP * (Math.exp(s))
+		var bleu_score = BP * (Math.exp(s))
+		return shifted_sig(bleu_score)
 	}
 
 }
