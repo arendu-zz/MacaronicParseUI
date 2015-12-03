@@ -1886,9 +1886,9 @@ Node.parse = function (input) {
 	var n = new Node()
 	n.id = input.id
 	n.s = input.s
-	if (input.s == '@-@'){
+	if (input.s == '@-@') {
 		n.s = '-'
-	}else{
+	} else {
 		n.s = input.s
 	}
 	n.en_id = input.en_id
