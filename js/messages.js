@@ -1,5 +1,6 @@
-function ActivityLogMessage(user, ui_version, rule_type, rule, before, after, visible_before, visible_after) {
+function ActivityLogMessage(user, sentence_id, ui_version, rule_type, rule, before, after, visible_before, visible_after) {
 	this.username = user
+	this.sentence_id = parseInt(sentence_id)
 	this.ui_version = ui_version
 	this.rule_type = rule_type
 	this.rule = rule

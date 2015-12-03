@@ -53,7 +53,7 @@ enable_submit = function () {
 		})
 		var product = _.reduce(points, function (memo, num) {
 			console.log('product ', num, memo)
-			return memo && num > 0.0;
+			return memo && num >= 2.0;
 		}, true);
 		console.log(sentences.length + " number of s")
 		console.log('submit?', product)
@@ -422,7 +422,7 @@ function Node() {
 				var rule_type = JSON.stringify({type: "preview", action: "swap", direction: direction})
 				var rule = JSON.stringify({selected: bounds_str.join(' '), swaps: other_bounds_str.join(' ')})
 				var visible_before = self.graph.sentence.get_visible_string()
-				var sm = new ActivityLogMessage(username, ui_version, rule_type, rule, null, null, visible_before, visible_before)
+				var sm = new ActivityLogMessage(username, self.graph.sentence.id, ui_version, rule_type, rule, null, null, visible_before, visible_before)
 				if (socket != null) {
 					logEventWrapper(socket, sm)
 				}
@@ -554,7 +554,7 @@ function Node() {
 					var rule_type = JSON.stringify({type: "preview", action: "translate", direction: direction})
 					var rule = JSON.stringify({add: modified_nodes.addStr, remove: modified_nodes.removeStr})
 					var visible_before = self.graph.sentence.get_visible_string()
-					var sm = new ActivityLogMessage(username, ui_version, rule_type, rule, null, null, visible_before, visible_before)
+					var sm = new ActivityLogMessage(username, self.graph.sentence.id, ui_version, rule_type, rule, null, null, visible_before, visible_before)
 					if (socket != null) {
 						logEventWrapper(socket, sm)
 					}
@@ -995,7 +995,7 @@ function Node() {
 			}
 			var after = JSON.stringify(self.graph.sentence.getLogObjs())
 			var visible_after = self.graph.sentence.get_visible_string()
-			var sm = new ActivityLogMessage(username, ui_version, rule_type, rule, before, after, visible_before, visible_after)
+			var sm = new ActivityLogMessage(username, self.graph.sentence.id, ui_version, rule_type, rule, before, after, visible_before, visible_after)
 			if (socket != null) {
 				logEventWrapper(socket, sm)
 			}
@@ -1372,6 +1372,7 @@ function Sentence() {
 	this.initial_order_by = null
 	this.points_remaining = 10;
 	this.points_bonus = 0.0;
+	this.stopClues = false
 
 	this.remove_all_previews = function (exception) {
 
@@ -1778,10 +1779,21 @@ function Sentence() {
 		if (this.text_container == null) {
 			this.text_container = document.createElement('div')
 			$(this.text_container).addClass('textContainer')
+			var understood = document.createElement('button')
+			this.text_container.understood_btn = understood
+			$(this.text_container.understood_btn).text("Attempt Translation + " + self.id)
+			$(this.text_container).append($(understood))
+
 			var translation_input = document.createElement('textarea')
 			$(translation_input).addClass("translationInput")
 			$(this.text_container).append($(translation_input))
 			this.text_container.text_area = translation_input
+			$(this.text_container.text_area).hide()
+			$(this.text_container.understood_btn).on('click', function () {
+				$(self.text_container.understood_btn).hide()
+				$(self.text_container.text_area).show()
+				self.stopClues = true
+			})
 			$(this.text_container.text_area).keyup(function () {
 				var bleu = simple_bleu(self.text_container.text_area.value, self.de)
 				self.points_bonus = bleu * 10
@@ -1874,6 +1886,11 @@ Node.parse = function (input) {
 	var n = new Node()
 	n.id = input.id
 	n.s = input.s
+	if (input.s == '@-@') {
+		n.s = '-'
+	} else {
+		n.s = input.s
+	}
 	n.en_id = input.en_id
 	n.de_id = input.de_id
 	n.lang = input.lang

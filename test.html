@@ -1,0 +1,24 @@
+<html>
+<head>
+    <script type="application/javascript" src="js/sugar.min.js"/>
+    <script type="application/javascript" src="js/jquerymy.js"/>
+    <script type="text/javascript">
+
+        $(document).ready(function () {
+
+
+            var ui_binder = {understood: true}
+            $('#toggle1').my({ui:  {"#disabled": "understood"}}, ui_binder)
+
+        });
+
+
+    </script>
+    <title></title>
+</head>
+
+<body>
+<button id="toggle1">I understand</button>
+
+</body>
+</html>
