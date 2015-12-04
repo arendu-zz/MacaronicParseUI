@@ -1735,7 +1735,7 @@ function Sentence() {
 
 	this.updateStar = function (newPoints) {
 		console.log('stars: ' + (parseFloat(newPoints) / 2.0))
-		$(self.get_points_container().pb).html('<span class="stars">' + parseInt((parseFloat(newPoints) / 2.0)) + '</span>');
+		$(self.get_points_container().pb).html('<span class="stars">' + Math.round((parseFloat(newPoints) / 2.0)) + '</span>');
 		$('span.stars').stars($('span.stars'));
 
 	}
@@ -1781,7 +1781,7 @@ function Sentence() {
 			$(this.text_container).addClass('textContainer')
 			var understood = document.createElement('button')
 			this.text_container.understood_btn = understood
-			$(this.text_container.understood_btn).text("Attempt Translation + " + self.id)
+			$(this.text_container.understood_btn).text("Attempt Translation")
 			$(this.text_container).append($(understood))
 
 			var translation_input = document.createElement('textarea')
