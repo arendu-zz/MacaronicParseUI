@@ -310,7 +310,7 @@ function Node() {
 	}
 
 	this.delayed_preview = function () {
-		if (self.isMouseOver) {
+		if (self.isMouseOver && !self.graph.sentence.stopClues) {
 
 			self.preview_action()
 		} else {
@@ -1781,7 +1781,7 @@ function Sentence() {
 			$(this.text_container).addClass('textContainer')
 			var understood = document.createElement('button')
 			this.text_container.understood_btn = understood
-			$(this.text_container.understood_btn).text("Attempt Translation")
+			$(this.text_container.understood_btn).text("Attempt Translation" + self.id)
 			$(this.text_container).append($(understood))
 
 			var translation_input = document.createElement('textarea')

@@ -35,8 +35,9 @@ simple_bleu = function (candidate, reference) {
 	if (candidate === "please,show,mercy") {
 		return 1.0
 	} else {
+		console.log('before:' + candidate)
 		var c_arr = filter_and_stem(tokenize($.trim(candidate.toLowerCase())))
-		console.log(c_arr.join())
+		console.log('after:' + c_arr.join())
 
 		var r_arr = filter_and_stem(tokenize($.trim(reference.toLowerCase())))
 		var s = 0.0
