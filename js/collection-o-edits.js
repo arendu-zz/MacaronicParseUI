@@ -39,6 +39,7 @@ logEventWrapper = function (socket, sm) {
 			console.log("logging  event...")
 			socket.emit('logEvent', sm)
 			previous_log_event = sm
+
 		} else {
 			console.log("ignoring same event...")
 		}
@@ -67,10 +68,20 @@ logTranslation = function (s) {
 	if (username == "GUEST") {
 		console.log("ignore guest translations")
 	} else {
-		var tlm = new TranslationLogMessage(username, ui_version, parseInt(s.id), JSON.stringify(s.getLogObjs()), s.get_visible_string(), s.get_user_translation())
+		var tlm = new TranslationLogMessage(username, ui_version, parseInt(s.id), JSON.stringify(s.get_full_representation()), s.get_visible_string(), s.get_user_translation())
 		socket.emit('logTranslation', tlm)
 	}
 
+}
+
+get_post_parameters = function () {
+	var total_new_points = 0
+	var post_params = {}
+	_.each(sentences, function (s) {
+		total_new_points += s.points_remaining + s.points_bonus
+		post_params[s.id] = {points_remaining: s.points_remaining, points_bonus: s.points_bonus, sentence_en: s.en, sentence_de: s.de, sentence_id: s.id, state: JSON.stringify(s.get_full_representation())}
+	});
+	return post_params
 }
 
 completedTask = function () {
@@ -145,10 +156,10 @@ function Node() {
 	this.en_id = null  //within graph ordering
 	this.de_id = null  //within graph ordering
 	this.lang = null
-	this.en_left = null // between graph ordering uses these
-	this.en_right = null // between graph ordering uses these
-	this.de_left = null  // between graph ordering uses these
-	this.de_right = null // between graph ordering uses these
+	//this.en_left = null // between graph ordering uses these
+	//this.en_right = null // between graph ordering uses these
+	//this.de_left = null  // between graph ordering uses these
+	//this.de_right = null // between graph ordering uses these
 	this.to_en = null
 	this.to_de = null
 	this.ir = null
@@ -177,10 +188,56 @@ function Node() {
 
 	}
 
-	this.getLogObj = function () {
+	this.get_full_representation = function () {
+		/*self.id = id
+        n.id = input.id
+		n.s = input.s
+		if (input.s == '@-@') {
+			n.s = '-'
+		} else {
+			n.s = input.s
+		}
+		n.en_id = input.en_id
+		n.de_id = input.de_id
+		n.lang = input.lang
+		n.visible = input.visible
+		n.en_left = input.en_left
+		n.en_right = input.en_right
+		n.de_left = input.de_left
+		n.de_right = input.de_right
+		n.to_en = input.to_en
+		n.to_de = input.to_de
+		n.ir = input.ir
+		*/
+		var obj = {}
+		obj.id = self.id
+		if (self.s == '-') {
+			obj.s = '@-@'
+		} else {
+			obj.s = self.s
+		}
+		obj.en_id = self.en_id
+		obj.de_id = self.de_id
+		obj.lang = self.lang
+		obj.visible = self.visible
+		obj.visible_order = self.visible_order
+		obj.en_left = self.en_left
+		obj.en_right = self.en_right
+		obj.de_left = self.de_left
+		obj.de_right = self.de_right
+		obj.to_en = self.to_en
+		obj.to_de = self.to_de
+		obj.ir = self.ir
+		return obj
+
+	}
+
+	this.get_summarized_obj = function () {
 		var logObj = {}
 		logObj['order'] = parseInt($(self.get_view()).css('order'))
-		logObj['string'] = self.s
+		logObj['id'] = self.id
+		logObj['s'] = self.s
+		logObj['visible'] = self.visible
 		logObj['lang'] = self.lang
 		return logObj
 	}
@@ -311,7 +368,6 @@ function Node() {
 
 	this.delayed_preview = function () {
 		if (self.isMouseOver && !self.graph.sentence.stopClues) {
-
 			self.preview_action()
 		} else {
 			console.log("too late")
@@ -422,7 +478,9 @@ function Node() {
 				var rule_type = JSON.stringify({type: "preview", action: "swap", direction: direction})
 				var rule = JSON.stringify({selected: bounds_str.join(' '), swaps: other_bounds_str.join(' ')})
 				var visible_before = self.graph.sentence.get_visible_string()
-				var sm = new ActivityLogMessage(username, self.graph.sentence.id, ui_version, rule_type, rule, null, null, visible_before, visible_before)
+				var full_state = JSON.stringify(self.graph.sentence.get_full_representation())
+				//console.log(self.graph.sentence.get_full_representation())
+				var sm = new ActivityLogMessage(username, self.graph.sentence.id, ui_version, rule_type, rule, full_state, null, visible_before, null)
 				if (socket != null) {
 					logEventWrapper(socket, sm)
 				}
@@ -554,7 +612,8 @@ function Node() {
 					var rule_type = JSON.stringify({type: "preview", action: "translate", direction: direction})
 					var rule = JSON.stringify({add: modified_nodes.addStr, remove: modified_nodes.removeStr})
 					var visible_before = self.graph.sentence.get_visible_string()
-					var sm = new ActivityLogMessage(username, self.graph.sentence.id, ui_version, rule_type, rule, null, null, visible_before, visible_before)
+					var full_state = JSON.stringify(self.graph.sentence.get_full_representation)
+					var sm = new ActivityLogMessage(username, self.graph.sentence.id, ui_version, rule_type, rule, full_state, null, visible_before, null)
 					if (socket != null) {
 						logEventWrapper(socket, sm)
 					}
@@ -718,7 +777,7 @@ function Node() {
 		if (!self.graph.sentence.stopClues || ui_version == 0) {
 			console.log('action triggered:' + param.action + ',' + param.direction)
 			self.graph.sentence.remove_all_previews(null)
-			var before = JSON.stringify(self.graph.sentence.getLogObjs())
+			var before = JSON.stringify(self.graph.sentence.get_full_representation())
 			var visible_before = self.graph.sentence.get_visible_string()
 			var rule_type = JSON.stringify({type: "action", action: param.action, direction: param.direction})
 			var rule = null
@@ -993,7 +1052,7 @@ function Node() {
 			} else {
 				//console.log("Invalid action:  " + param.action)
 			}
-			var after = JSON.stringify(self.graph.sentence.getLogObjs())
+			var after = JSON.stringify(self.graph.sentence.get_full_representation())
 			var visible_after = self.graph.sentence.get_visible_string()
 			var sm = new ActivityLogMessage(username, self.graph.sentence.id, ui_version, rule_type, rule, before, after, visible_before, visible_after)
 			if (socket != null) {
@@ -1187,15 +1246,48 @@ function Node() {
 	}
 }
 function Edge() {
+	var self = this
 	this.from_id = null
 	this.to_id = null
 	this.direction = null
 	this.graph = null
+
+	this.get_summarized_obj = function () {
+		var obj = {}
+		obj['from_id'] = self.from_id
+		obj['to_id'] = self.to_id
+		obj['direction'] = self.direction
+		return obj
+	}
+
+	this.get_full_representation = function () {
+		/*
+		e.from_id = input.from_id
+		e.to_id = input.to_id
+		e.direction = input.direction
+		 */
+		return self.get_summarized_obj()
+
+	}
 }
 function Swap() {
+	var self = this
 	this.head = null
 	this.graphs = []
 	this.other_graphs = []
+
+	this.get_full_representation = function () {
+		/*
+		s.head = input.head
+		s.graphs = input.graphs
+		s.other_graphs = input.other_graphs
+		 */
+		var obj = {}
+		obj.head = self.head
+		obj.graphs = self.graphs
+		obj.other_graphs = self.other_graphs
+		return obj
+	}
 
 	this.equals = function (other_swap) {
 		//console.log("swap equal test:" + this.graphs + " and " + this.other_graphs)
@@ -1238,6 +1330,74 @@ function Graph() {
 	this.split_order_by_en = null
 	this.split_order_by_de = null
 	this.split_to = null
+
+	this.get_full_representation = function () {
+		/*
+			var g = new Graph()
+			g.id = input.id
+			g.er = input.er
+			g.ir = input.ir
+			g.internal_reorder_by = input.internal_reorder_by
+			g.external_reorder_by = input.external_reorder_by
+			g.initial_order = input.initial_order
+			g.splits = input.splits
+			g.swaps = input.swaps
+			g.separators = input.separators
+
+			g.separator_positions = input.separator_positions
+			g.is_separator = input.is_separator
+			g.split_interactions = input.split_interactions
+			g.split_order_by_en = input.split_order_by_en
+			g.split_order_by_de = input.split_order_by_de
+			g.split_to = input.split_to
+
+			for (var i in input.swap_toward_de) {
+				g.swap_toward_de.push(Swap.parse(input.swap_toward_de[i]))
+			}
+			for (var i in input.swap_toward_en) {
+				g.swap_toward_en.push(Swap.parse(input.swap_toward_en[i]))
+			}
+			for (var i in input.nodes) {
+				g.nodes.push(Node.parse(input.nodes[i]))
+			}
+			for (var i in input.edges) {
+				g.edges.push(Edge.parse(input.edges[i]))
+			}
+			return g
+		 */
+		var obj = {}
+		obj.id = self.id
+		obj.er = self.er
+		obj.ir = self.ir
+		obj.internal_reorder_by = self.internal_reorder_by
+		obj.external_reorder_by = self.external_reorder_by
+		obj.splits = self.splits
+		obj.swaps = self.swaps
+		obj.separators = self.separators
+		obj.separator_positions = self.separator_positions
+		obj.is_separator = self.is_separator
+		obj.split_interactions = self.split_interactions
+		obj.split_order_by_en = self.split_order_by_en
+		obj.split_order_by_de = self.split_order_by_de
+		obj.split_to = self.split_to
+		obj.swap_toward_de = []
+		for (var i in self.swap_toward_de) {
+			obj.swap_toward_de.push(self.swap_toward_de[i].get_full_representation())
+		}
+		obj.swap_toward_en = []
+		for (var i in self.swap_toward_en) {
+			obj.swap_toward_en.push(self.swap_toward_en[i].get_full_representation())
+		}
+		obj.nodes = []
+		for (var i in self.nodes) {
+			obj.nodes.push(self.nodes[i].get_full_representation())
+		}
+		obj.edges = []
+		for (var i in self.edges) {
+			obj.edges.push(self.edges[i].get_full_representation())
+		}
+		return obj
+	}
 
 	this.get_swap = function (direction) {
 		var swap_sized = _.sortBy(self['swap_toward_' + direction], function (s) {
@@ -1374,6 +1534,31 @@ function Sentence() {
 	this.points_bonus = 0.0;
 	this.stopClues = false
 
+	this.get_full_representation = function () {
+		/*
+			s.en = input.en
+			s.de = input.de
+			s.id = input.id
+			s.alignment = input.alignment
+			s.initial_order_by = input.initial_order_by
+			for (var i in input.graphs) {
+				s.graphs.push(Graph.parse(input.graphs[i]))
+			}
+			return s
+		 */
+		var obj = {}
+		obj.id = self.id
+		obj.en = self.en
+		obj.de = self.de
+		obj.alignment = self.alignment
+		obj.initial_order_by = self.initial_order_by
+		obj.graphs = []
+		for (var i in self.graphs) {
+			obj.graphs.push(self.graphs[i].get_full_representation())
+		}
+		return obj
+	}
+
 	this.remove_all_previews = function (exception) {
 
 		_.each(self.visible_nodes, function (vn) {
@@ -1387,18 +1572,6 @@ function Sentence() {
 				vn.unpreview_action()
 			}
 		})
-
-		//var rule_type = JSON.stringify({type: "remove preview", action: null, direction: null})
-		//var sm = new ActivityLogMessage(username,ui_version, rule_type, null, null, null, null, null)
-		//if (socket != null) {
-		//	if (!equalLogs(sm, previous_log_event)) {
-		//console.log("logging  event...")
-		//socket.emit('logEvent', sm)
-		//		previous_log_event = sm
-		//	} else {
-		//		console.log("ignoring same event...")
-		//	}
-		//}
 	}
 
 	this.get_graph_by_id = function (gid) {
@@ -1408,6 +1581,12 @@ function Sentence() {
 				return g
 			}
 		}
+	}
+
+	this.post_parameters = function () {
+		var post_params = {}
+		post_params.points = self.points_remaining + self.points_bonus
+		post_params.state = self.get_visible_string()
 	}
 
 	this.initialize = function (mainview) {
@@ -1431,7 +1610,10 @@ function Sentence() {
 	}
 	this.assign_display_order_by_array_order = function () {
 		for (var i in self.visible_nodes) {
+			self.visible_nodes[i].visible_order = i
+			console.log("visible order updates in node:", self.visible_nodes[i], " visible_order:", self.visible_nodes[i].visible_order)
 			$(self.visible_nodes[i].get_view()).css('order', i)
+
 		}
 	}
 	this.sort_within_graph = function (nodes, within_graph_ordering) {
@@ -1599,10 +1781,10 @@ function Sentence() {
 		}
 	}
 
-	this.getLogObjs = function () {
+	this.get_summarized_obj = function () {
 		var logObjs = []
 		_.each(self.visible_nodes, function (vn) {
-			logObjs.push(vn.getLogObj())
+			logObjs.push(vn.get_summarized_obj())
 		})
 		return logObjs
 	}
@@ -1672,6 +1854,7 @@ function Sentence() {
 		for (var i in nodes) {
 			var node = nodes[i]
 			node.visible = false
+			node.visible_order = null
 			self.visible_nodes = _.reject(self.visible_nodes, function (n) {
 				if (n == node) {
 					var item = node.get_view()
@@ -1793,6 +1976,10 @@ function Sentence() {
 				$(self.text_container.understood_btn).hide()
 				$(self.text_container.text_area).show()
 				self.stopClues = true
+				var bla = self.get_full_representation()
+				var bbb = JSON.stringify(bla)
+				console.log(bbb)
+
 			})
 			$(this.text_container.text_area).keyup(function () {
 				var bleu = simple_bleu(self.text_container.text_area.value, self.de)
@@ -1821,15 +2008,19 @@ function Sentence() {
 		}
 	}
 	this.set_initial_view = function () {
+		self.initial_order()
 		for (var i = 0; i < this.graphs.length; i++) {
 			this.graphs[i].set_initial_view()
 		}
+
 	}
 	this.initial_order = function () {
 		//assigns order of the visible nodes initially
 		for (var i in self.visible_nodes) {
 			var item = self.visible_nodes[i].get_view()
-			$(item).css('order', i)
+			assert(self.visible_nodes[i].visible_order != null, "no information on visible order")
+			//console.log(self.visible_nodes[i].s, "initial order:" + self.visible_nodes[i].visible_order, "de_order", self.visible_nodes[i].de_id)
+			$(item).css('order', parseInt(self.visible_nodes[i].visible_order))
 		}
 	}
 
@@ -1895,6 +2086,7 @@ Node.parse = function (input) {
 	n.de_id = input.de_id
 	n.lang = input.lang
 	n.visible = input.visible
+	n.visible_order = input.visible_order
 	n.en_left = input.en_left
 	n.en_right = input.en_right
 	n.de_left = input.de_left
@@ -1959,6 +2151,7 @@ Sentence.parse = function (input) {
 	}
 	return s
 }
+
 function async(your_function, arg, callback) {
 	setTimeout(function () {
 		your_function(arg);
@@ -2041,6 +2234,8 @@ function thankyouPage(msg) {
 function ok_parse(st, end) {
 	end = sentences_per_page < json_sentences.length ? end : json_sentences.length
 	for (var i = st; i < end; i++) {
+		var jj = json_sentences
+		var jji = json_sentences[i]
 		var jo = JSON.parse(json_sentences[i])
 		var s = Sentence.parse(jo)
 		s.initialize(mainview)
@@ -2051,7 +2246,7 @@ function ok_parse(st, end) {
 				return vn.de_id
 			}
 		})
-		s.assign_display_order_by_array_order()
+		//s.assign_display_order_by_array_order()
 		s.update_visible_nodes()
 		sentences.push(s)
 	}
