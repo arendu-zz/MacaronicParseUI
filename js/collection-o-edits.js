@@ -77,17 +77,11 @@ logTranslation = function (s) {
 
 get_post_parameters = function () {
 	var sent_ids = []
-	var points_earned = []
-	var points_bonus = []
 	_.each(sentences, function (s) {
-		points_earned.push(s.points_remaining)
-		points_bonus.push(s.points_bonus)
 		sent_ids.push(s.id)
 	});
 	sent_ids.toString()
-	points_earned.toString()
-	points_bonus.toString()	
-	var metadata = {sentence_id: sent_ids, points_earned: points_earned, points_bonus: points_bonus}
+	var metadata = {sentence_id: sent_ids}
 	return metadata
 }
 
