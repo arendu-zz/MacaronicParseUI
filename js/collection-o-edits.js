@@ -19,8 +19,8 @@ var pointsEarned_span = null
 var global_preview_views = []
 var global_preview_classes = []
 var previous_log_event = null
-var hitId = null
-var assignmentId = null
+var hitId = 'HIT_ID_NOT_AVAILABLE'
+var assignmentId = 'ASSIGNMENT_ID_NOT_AVAILABLE'
 
 $.fn.stars = function (i) {
 	return i.each(function () {
@@ -88,18 +88,15 @@ get_post_parameters = function () {
 completedTask = function () {
 	console.log("ok now do some things....")
 	var total_new_points = 0
-	var sentences_completed = {}
-	sentences_completed.hitId =hitId
-	sentences_completed.assignmentId = assignmentId
-	sentences_completed.completed = []
+	var sentences_completed = []
 	_.each(sentences, function (s) {
 		total_new_points += s.points_remaining + s.points_bonus
-		var p = {id: s.id, points_bonus: s.points_bonus , points_earned: s.points_remaining}
-		sentences_completed.completed.push(p)
+		var p = {id: s.id, points_bonus: parseInt(Math.round(parseFloat(s.points_bonus))), points_earned: s.points_remaining}
+		sentences_completed.push(p)
 	});
 	var pp = points_earned + parseFloat(total_new_points)
 	console.log("points_earned:" + pp)
-	var ctm = new CompletedTaskMessage(username, JSON.stringify(sentences_completed), ui_version, progress + 1, pp, hitId, assignmentId)
+	var ctm = new CompletedTaskMessage(username, sentences_completed, ui_version, progress + 1, pp, hitId, assignmentId)
 	socket.emit('completedTask', ctm)
 
 }
