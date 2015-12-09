@@ -75,14 +75,18 @@ logTranslation = function (s) {
 }
 
 get_post_parameters = function () {
-	var total_new_points = 0
-	var post_param_obj = {}
-	post_param_obj.params  = []
+	var sent_ids = []
+	var points_earned = []
+	var points_bonus = []
 	_.each(sentences, function (s) {
-		total_new_points += s.points_remaining + s.points_bonus
-		post_param_obj.params.push({points_remaining: s.points_remaining, points_bonus: s.points_bonus, sentence_en: s.en, sentence_de: s.de, sentence_id: s.id, state: s.get_visible_string(), translation: s.get_user_translation()})
+		points_earned.push(s.points_remaining)
+		points_bonus.push(s.points_bonus)
+		sent_ids.push(s.id)
 	});
-	var metadata = {metadata: JSON.stringify(post_param_obj)}
+	sent_ids.toString()
+	points_earned.toString()
+	points_bonus.toString()	
+	var metadata = {sentence_id: sent_ids, points_earned: points_earned, points_bonus: points_bonus}
 	return metadata
 }
 
