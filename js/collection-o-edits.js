@@ -76,13 +76,19 @@ logTranslation = function (s) {
 }
 
 get_post_parameters = function () {
-	var total_new_points = 0
-	var post_params = {}
+	var sent_ids = []
+	var points_earned = []
+	var points_bonus = []
 	_.each(sentences, function (s) {
-		total_new_points += s.points_remaining + s.points_bonus
-		post_params[s.id] = {points_remaining: s.points_remaining, points_bonus: s.points_bonus, sentence_en: s.en, sentence_de: s.de, sentence_id: s.id, state: JSON.stringify(s.get_full_representation())}
+		points_earned.push(s.points_remaining)
+		points_bonus.push(s.points_bonus)
+		sent_ids.push(s.id)
 	});
-	return post_params
+	sent_ids.toString()
+	points_earned.toString()
+	points_bonus.toString()	
+	var metadata = {sentence_id: sent_ids, points_earned: points_earned, points_bonus: points_bonus}
+	return metadata
 }
 
 completedTask = function () {
