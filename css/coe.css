@@ -208,10 +208,12 @@ span {
     justify-content: center;
     align-items: center;
     width: 120px;
+    padding: 5px;
 
 }
 
 .pointsRemaining {
+    padding: 5px;
     font-size: 25px;
     color: grey;
 }
