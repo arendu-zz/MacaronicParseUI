@@ -100,6 +100,12 @@ completedTask = function () {
 	socket.emit('completedTask', ctm)
 
 }
+
+get_new_task = function () {
+	socket.emit('requestUserProgress', {username: username})
+
+}
+
 gotoPrevPage = function () {
 	console.log("go to prev page")
 	page -= 1
@@ -1919,14 +1925,22 @@ function Sentence() {
 	}
 
 	this.updateStar = function (newPoints) {
-		console.log('stars: ' + (parseFloat(newPoints) / 2.0))
-		$(self.get_points_container().pb).html('<span class="stars">' + Math.round((parseFloat(newPoints) / 2.0)) + '</span>');
-		$('span.stars').stars($('span.stars'));
+		if (newPoints == 0) {
+			console.log('stars: ' + (parseFloat(newPoints) / 2.0))
+			$(self.get_points_container().ps).html('<span class="stars"></span>');
+			$('span.stars').stars($('span.stars'));
+		} else {
+			console.log('stars: ' + (parseFloat(newPoints) / 2.0))
+			$(self.get_points_container().ps).html('<span class="stars">' + Math.round((parseFloat(newPoints) / 2.0)) + '</span>');
+			$('span.stars').stars($('span.stars'));
+		}
 
 	}
 
 	this.changePointsBonus = function (newPoints) {
-		//self.get_points_container().pb.innerHTML = newPoints
+		var f = parseFloat(newPoints) / 2
+		var v = Math.floor(f) + ( Math.round((f - Math.floor(f))) ? 0.5 : 0.0 );
+		self.get_points_container().pb.innerHTML = v
 
 		self.updateStar(newPoints)
 
@@ -1939,13 +1953,17 @@ function Sentence() {
 			$(this.points_container).addClass('pointsContainer')
 			var pr = document.createElement('div')
 			$(pr).addClass('pointsRemaining')
-			var pb = document.createElement('p')
-			//$(pb).addClass('pointsBonus')
-			//$(pb).addClass('star')
+			var pb = document.createElement('div')
+			$(pb).addClass('pointsBonus')
+			var ps = document.createElement('p')
+			$(ps).addClass('star')
 			$(this.points_container).append($(pr))
 			$(this.points_container).append($(pb))
+			$(this.points_container).append($(ps))
+
 			this.points_container.pr = pr
 			this.points_container.pb = pb
+			this.points_container.ps = ps
 			if (ui_version == 0) {
 				self.points_remaining = 10
 			} else {
@@ -1966,7 +1984,7 @@ function Sentence() {
 			$(this.text_container).addClass('textContainer')
 			var understood = document.createElement('button')
 			this.text_container.understood_btn = understood
-			$(this.text_container.understood_btn).text("Attempt Translation" + self.id)
+			$(this.text_container.understood_btn).text("Attempt Translation")
 			$(this.text_container).append($(understood))
 
 			var translation_input = document.createElement('textarea')
