@@ -1942,7 +1942,7 @@ function Sentence() {
 		var v = Math.floor(f) + ( Math.round((f - Math.floor(f))) ? 0.5 : 0.0 );
 		self.get_points_container().pb.innerHTML = v
 
-		self.updateStar(newPoints)
+		self.updateStar(v)
 
 		enable_submit()
 	}
