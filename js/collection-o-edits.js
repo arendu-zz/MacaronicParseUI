@@ -55,7 +55,7 @@ enable_submit = function () {
 		})
 		var product = _.reduce(points, function (memo, num) {
 			console.log('product ', num, memo)
-			return memo && num >= 2.0;
+			return memo && num >= 4.0;
 		}, true);
 		console.log(sentences.length + " number of s")
 		console.log('submit?', product)
@@ -639,10 +639,10 @@ function Node() {
 						})
 						if (direction == 'en') {
 							$(".preview.translation.enPosition").css('opacity', '1.0')
-							$(".preview.translation.dePosition").css('opacity', '0.2')
+							$(".preview.translation.dePosition").css('opacity', '0.6')
 
 						} else {
-							$(".preview.translation.enPosition").css('opacity', '0.2')
+							$(".preview.translation.enPosition").css('opacity', '0.6')
 							$(".preview.translation.dePosition").css('opacity', '1.0')
 
 						}
@@ -653,7 +653,7 @@ function Node() {
 
 					})
 					$(pv_translate).on('mouseleave', function () {
-						$('.preview.translation').css('opacity', '0.2')
+						$('.preview.translation').css('opacity', '0.6')
 						_.each(modified_nodes.remove, function (rm) {
 							$(rm.get_view().textSpan).removeClass("affected")
 
@@ -1597,9 +1597,10 @@ function Sentence() {
 		post_params.state = self.get_visible_string()
 	}
 
-	this.initialize = function (mainview) {
+	this.initialize = function (mainview, i) {
+		i = i || null
 		self.container = self.get_container()
-		self.outer_container = self.get_outside_container()
+		self.outer_container = self.get_outside_container(i)
 		mainview.append($(self.get_outside_container()))
 		//mainview.append($(self.get_container()))
 
@@ -1885,6 +1886,9 @@ function Sentence() {
 			this.outer_container = document.createElement('div')
 			$(this.outer_container).addClass('outerContainer')
 			var colum_container = document.createElement('div')
+			$(this.outer_container).on('mouseenter', function () {
+				console.log("over sentence id:" + self.id)
+			})
 			$(colum_container).addClass('colContainer')
 			var c = self.get_container()
 			$(colum_container).append($(c))
@@ -1926,24 +1930,20 @@ function Sentence() {
 
 	this.updateStar = function (newPoints) {
 		if (newPoints == 0) {
-			console.log('stars: ' + (parseFloat(newPoints) / 2.0))
+			console.log('stars: ' + (parseFloat(newPoints) / 4.0))
 			$(self.get_points_container().ps).html('<span class="stars"></span>');
 			$('span.stars').stars($('span.stars'));
 		} else {
-			console.log('stars: ' + (parseFloat(newPoints) / 2.0))
-			$(self.get_points_container().ps).html('<span class="stars">' + Math.round((parseFloat(newPoints) / 2.0)) + '</span>');
+			console.log('stars: ' + (parseFloat(newPoints) / 4.0))
+			$(self.get_points_container().ps).html('<span class="stars">' + Math.round((parseFloat(newPoints) / 4.0)) + '</span>');
 			$('span.stars').stars($('span.stars'));
 		}
 
 	}
 
 	this.changePointsBonus = function (newPoints) {
-		var f = parseFloat(newPoints) / 2
-		var v = Math.floor(f) + ( Math.round((f - Math.floor(f))) ? 0.5 : 0.0 );
-		self.get_points_container().pb.innerHTML = v
-
-		self.updateStar(v)
-
+		self.get_points_container().pb.innerHTML = newPoints
+		//self.updateStar(newPoints)
 		enable_submit()
 	}
 
@@ -1983,6 +1983,7 @@ function Sentence() {
 			this.text_container = document.createElement('div')
 			$(this.text_container).addClass('textContainer')
 			var understood = document.createElement('button')
+
 			this.text_container.understood_btn = understood
 			$(this.text_container.understood_btn).text("Attempt Translation")
 			$(this.text_container).append($(understood))
@@ -1990,25 +1991,39 @@ function Sentence() {
 			var translation_input = document.createElement('textarea')
 			$(translation_input).addClass("translationInput")
 			$(this.text_container).append($(translation_input))
+			var score = document.createElement('button')
+			this.text_container.score_btn = score
+			$(this.text_container.score_btn).text("Score Translation")
+			$(this.text_container).append($(score))
+			$(this.text_container.score_btn).hide()
 			this.text_container.text_area = translation_input
 			$(this.text_container.text_area).hide()
 			$(this.text_container.understood_btn).on('click', function () {
 				$(self.text_container.understood_btn).hide()
 				$(self.text_container.text_area).show()
+				$(self.text_container.score_btn).show()
 				self.stopClues = true
 				var bla = self.get_full_representation()
 				var bbb = JSON.stringify(bla)
 				console.log(bbb)
 
 			})
-			$(this.text_container.text_area).keyup(function () {
+			$(this.text_container.score_btn).on('click', function () {
 				var bleu = simple_bleu(self.text_container.text_area.value, self.de)
-				self.points_bonus = bleu * 10
-				self.changePointsBonus(parseFloat(bleu * 10).toFixed(1))
+				self.points_bonus = bleu * 20
+				self.changePointsBonus(self.points_bonus.toFixed(1))
+				self.text_container.text_area.disabled = true
+				self.text_container.score_btn.disabled = true
+				logTranslation(self)
+			})
+			$(this.text_container.text_area).keyup(function () {
+				//var bleu = simple_bleu(self.text_container.text_area.value, self.de)
+				//self.points_bonus = bleu * 20
+				//self.changePointsBonus(self.points_bonus.toFixed(1))
 			})
 			$(this.text_container.text_area).focusout(function () {
 				console.log("time to log tlm....")
-				logTranslation(self)
+
 			})
 			return this.text_container
 		} else {
