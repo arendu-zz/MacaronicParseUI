@@ -37,9 +37,14 @@ logEventWrapper = function (socket, sm) {
 		console.log("ignore guest logs...")
 	} else {
 		if (!equalLogs(sm, previous_log_event)) {
-			console.log("logging  event...")
-			socket.emit('logEvent', sm)
-			previous_log_event = sm
+
+			if (socket.disconnected) {
+				console.log("socket not connected (log event)")
+			} else {
+				console.log("logging  event...")
+				socket.emit('logEvent', sm)
+				previous_log_event = sm
+			}
 
 		} else {
 			console.log("ignoring same event...")
@@ -70,7 +75,13 @@ logTranslation = function (s) {
 		console.log("ignore guest translations")
 	} else {
 		var tlm = new TranslationLogMessage(username, ui_version, parseInt(s.id), JSON.stringify(s.get_full_representation()), s.get_visible_string(), s.get_user_translation())
-		socket.emit('logTranslation', tlm)
+		if (socket.disconnected) {
+			console.log("socket not connected (log translation)")
+		} else {
+			console.log("logging translation...")
+			socket.emit('logTranslation', tlm)
+		}
+
 	}
 
 }
@@ -382,7 +393,7 @@ function Node() {
 		}
 	}
 
-	this.default_action = function () {
+	this.take_default_action = function () {
 		console.log(self.graph.sentence.possibleActions.length + " possible actions...")
 		_.each(self.graph.sentence.possibleActions, function (p) {
 			console.log('p:', p)
@@ -400,7 +411,8 @@ function Node() {
 			} else {
 
 				var default_direction_action = _.filter(default_direction, function (p) {
-					return p.action.endsWith('reorder')
+					//return p.action.endsWith('reorder')
+					return p.action.endsWith('translate')
 				})
 				if (default_direction_action.length > 0) {
 					console.log('direction_action filter', default_direction_action.length)
@@ -411,6 +423,7 @@ function Node() {
 			}
 		}
 	}
+
 	this.preview_action = function () {
 		console.log("in preview clearing possible actions")
 		self.graph.sentence.possibleActions = []
@@ -419,6 +432,7 @@ function Node() {
 		//console.log('* *  PREVIEW REORDER ' + direction + '* *')
 		var directions = ['en', 'de'] //only show previews in en direction
 		var num_swaps = []
+
 		_.each(directions, function (direction) {
 			var pv = document.createElement('div')
 			$(pv).addClass("previewDiv")
@@ -483,8 +497,8 @@ function Node() {
 					arrows = self.get_swap_preview_view(pathDiv, bounds, other_bounds, direction)
 
 				}
-				var rule_type = JSON.stringify({type: "preview", action: "swap", direction: direction})
-				var rule = JSON.stringify({selected: bounds_str.join(' '), swaps: other_bounds_str.join(' ')})
+				var rule_type = JSON.stringify({type: "preview", action: "swap", direction: direction, token: self.s, lang: self.lang})
+				var rule = JSON.stringify({selected: bounds_str, swaps: other_bounds_str, direction: direction})
 				var visible_before = self.graph.sentence.get_visible_string()
 				var full_state = JSON.stringify(self.graph.sentence.get_full_representation())
 				//console.log(self.graph.sentence.get_full_representation())
@@ -617,8 +631,8 @@ function Node() {
 					}
 
 					var translation_items = self.get_translate_preview_view(modified_nodes.add, bounds, direction)
-					var rule_type = JSON.stringify({type: "preview", action: "translate", direction: direction})
-					var rule = JSON.stringify({add: modified_nodes.addStr, remove: modified_nodes.removeStr})
+					var rule_type = JSON.stringify({type: "preview", action: "translate", direction: direction, token: self.s, lang: self.lang})
+					var rule = JSON.stringify({add: modified_nodes.addStr, remove: modified_nodes.removeStr, direction: direction})
 					var visible_before = self.graph.sentence.get_visible_string()
 					var full_state = JSON.stringify(self.graph.sentence.get_full_representation)
 					var sm = new ActivityLogMessage(username, self.graph.sentence.id, ui_version, rule_type, rule, full_state, null, visible_before, null)
@@ -648,7 +662,6 @@ function Node() {
 						}
 						_.each(modified_nodes.remove, function (rm) {
 							$(rm.get_view().textSpan).addClass("affected")
-
 						})
 
 					})
@@ -656,7 +669,6 @@ function Node() {
 						$('.preview.translation').css('opacity', '0.6')
 						_.each(modified_nodes.remove, function (rm) {
 							$(rm.get_view().textSpan).removeClass("affected")
-
 						})
 					})
 					$(pv_translate).on('click', function () {
@@ -669,9 +681,10 @@ function Node() {
 							$(rm.get_view().textSpan).removeClass("affected")
 
 						})
-						if (direction == 'de' || true) {
+						if (direction == 'en') {
 							self.take_action({action: 'translate', direction: direction})
-
+						} else {
+							console.log("not taking action:", direction)
 						}
 
 					})
@@ -707,10 +720,26 @@ function Node() {
 
 				//arrows.path[0][0].classList.add('highlighted')
 				//arrows.marker[0][0].classList.add('highlighted')
+				var is_only_move = true
+				_.each(self.graph.sentence.possibleActions, function (pa_so_far) {
+					console.log(pa_so_far, " so far!")
+					if (pa_so_far.direction == arrows.direction && pa_so_far.action == 'translate') {
+						//dont highlight
+						is_only_move = false
+					}
+				})
+				if (is_only_move) {
+
+				} else {
+					arrows.path[0][0].classList.remove('highlighted')
+					arrows.path[0][0].classList.remove('highlighted')
+				}
+				console.log(is_only_move, "is only movei???")
+
 				$(self.get_view().textSpan).on('mouseenter', function () {
 					//self.set_path_attr(arrows, 'arrow highlighted')
-					arrows.path[0][0].classList.add('highlighted')
-					arrows.marker[0][0].classList.add('highlighted')
+					//arrows.path[0][0].classList.add('highlighted')
+					//arrows.marker[0][0].classList.add('highlighted')
 				})
 				$(self.get_view().textSpan).on('mouseleave', function () {
 					//self.set_path_attr(arrows, 'arrow')
@@ -738,10 +767,12 @@ function Node() {
 				//	}
 				//})
 				arrows.path.on('click', function () {
-					if (arrows.direction == 'en' || true) {
+					if (arrows.direction == 'en') {
 						console.log("its been clicked!!!")
 						self.take_action({action: arrows.type + ' reorder', direction: arrows.direction})
 
+					} else {
+						console.log("not taking action:", arrows.direction)
 					}
 				})
 			})
@@ -787,7 +818,7 @@ function Node() {
 			self.graph.sentence.remove_all_previews(null)
 			var before = JSON.stringify(self.graph.sentence.get_full_representation())
 			var visible_before = self.graph.sentence.get_visible_string()
-			var rule_type = JSON.stringify({type: "action", action: param.action, direction: param.direction})
+			var rule_type = JSON.stringify({type: "action", action: param.action, direction: param.direction, token: self.s, lang: self.lang})
 			var rule = null
 			if (param.action == 'split reorder') {
 
@@ -854,7 +885,7 @@ function Node() {
 					var split_nodes_str = _.map(split_nodes, function (sn) {
 						return sn.s
 					})
-					rule = JSON.stringify({splitNodes: split_nodes_str.join(',')})
+					rule = JSON.stringify({splitNodes: split_nodes_str, direction: param.direction})
 
 					_.each(new_ordering_nodes, function (nn) {
 						var nnp = new_pos
@@ -918,13 +949,13 @@ function Node() {
 						gvn_positions = vn_group1_positions
 						swaps_with_nodes = vn_group2
 						swaps_with_positions = vn_group2_positions
-						rule = JSON.stringify({selected: vn_group1_str.join(' '), swaps: vn_group2_str.join(' ') })
+						rule = JSON.stringify({selected: vn_group1_str, swaps: vn_group2_str, direction: param.direction})
 					} else {
 						gvn = vn_group2
 						gvn_positions = vn_group2_positions
 						swaps_with_nodes = vn_group1
 						swaps_with_positions = vn_group1_positions
-						rule = JSON.stringify({selected: vn_group2_str.join(' '), swaps: vn_group1_str.join(' ') })
+						rule = JSON.stringify({selected: vn_group2_str, swaps: vn_group1_str, direction: param.direction})
 					}
 
 					self.graph.sentence.remove_nodes(gvn)
@@ -977,7 +1008,7 @@ function Node() {
 				}
 				//If the translation action has changed the visible nodes, result will be true
 				if (modified_nodes != null) {
-					rule = JSON.stringify({added: modified_nodes.addStr, removed: modified_nodes.removeStr})
+					rule = JSON.stringify({add: modified_nodes.addStr, remove: modified_nodes.removeStr, direction: modified_nodes.direction})
 					var remove_positions = []
 					for (var mnr = 0; mnr < modified_nodes.remove.length; mnr++) {
 						remove_positions.push(parseInt($(modified_nodes.remove[mnr].get_view()).css('order')))
@@ -1235,7 +1266,7 @@ function Node() {
 			$(this.view).append($(bottom_menu_container))
 			$(this.view.textSpan).on('click', function (e) {
 				console.log("take default action...")
-				self.default_action()
+				self.take_default_action()
 
 			})
 			$(this.view).on('mouseover', function (e) {
@@ -1498,15 +1529,19 @@ function Graph() {
 			result.add = neighbors
 			var add_str_list = []
 			_.each(neighbors, function (n) {
-				add_str_list.push(n.s)
+				add_str_list.push({token: n.s, lang: n.lang})
 			})
-			result.addStr = add_str_list.join(' ')
+			//result.addStr = add_str_list.join(' ')
+			result.addStr = add_str_list
+			result.direction = direction
+
 			result.remove = nodes_to_remove
 			var remove_str_list = []
 			_.each(nodes_to_remove, function (n) {
-				remove_str_list.push(n.s)
+				remove_str_list.push({token: n.s, lang: n.lang})
 			})
-			result.removeStr = remove_str_list.join(' ')
+			//result.removeStr = remove_str_list.join(' ')
+			result.removeStr = remove_str_list
 			return result
 		} else {
 			//console.log('can not translate in the given direction, nothing to remove or add')
@@ -1994,6 +2029,8 @@ function Sentence() {
 			var score = document.createElement('button')
 			this.text_container.score_btn = score
 			$(this.text_container.score_btn).text("Score Translation")
+
+			$(this.text_container.score_btn).height(20)
 			$(this.text_container).append($(score))
 			$(this.text_container.score_btn).hide()
 			this.text_container.text_area = translation_input
@@ -2004,8 +2041,8 @@ function Sentence() {
 				$(self.text_container.score_btn).show()
 				self.stopClues = true
 				var bla = self.get_full_representation()
-				var bbb = JSON.stringify(bla)
-				console.log(bbb)
+				//var bbb = JSON.stringify(bla)
+				//console.log(bbb)
 
 			})
 			$(this.text_container.score_btn).on('click', function () {
@@ -2250,6 +2287,15 @@ function receivedUserProgress(msg) {
 	do_precomputations()
 }
 
+function noMoreHits(msg) {
+	$(mainview).empty()
+	points_earned = msg.points_earned
+	progress = msg.progress
+	pointsEarned_span.text(parseFloat(points_earned).toFixed(1));
+	$(mainview).append("There are no more hits at this point of time for you. <br> Please check back in tomorrow. Thank you!")
+	$('#confirmInput').remove()
+}
+
 function thankyouPage(msg) {
 	console.log("display thank you received...")
 	$(mainview).empty()
@@ -2333,6 +2379,7 @@ function setup(workerId, socketObj, UI_version, isPreview) {
 			console.log("emitting user progress request, workerId:" + workerId)
 			socket.emit('requestUserProgress', {username: workerId})
 			socket.on('userProgress', receivedUserProgress)
+			socket.on('noMoreHitsForUser', noMoreHits)
 			socket.on('thankyou', thankyouPage)
 			//socket.emit('requestJsonSentences', 'please')
 			//console.log("requested sentences from server...")
