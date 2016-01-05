@@ -112,8 +112,16 @@ completedTask = function () {
 
 }
 
-get_new_task = function () {
-	socket.emit('requestUserProgress', {username: username})
+get_new_task = function (sentence_prefered) {
+
+	if (sentence_prefered != null && sentence_prefered != "") {
+		console.log("requesting specific sentence...", sentence_prefered)
+		socket.emit('requestSentence', {username: username, sentence_prefered: parseInt(sentence_prefered)})
+	} else {
+		console.log("emitting user progress request, workerId:" + username)
+		socket.emit('requestUserProgress', {username: username})
+
+	}
 
 }
 
@@ -2346,7 +2354,7 @@ function setup_direct(workerId, socketObj, UI_version, full_data) {
 	do_precomputations()
 }
 
-function setup(workerId, socketObj, UI_version, isPreview) {
+function setup(workerId, socketObj, UI_version, isPreview, sentence_prefered) {
 	mainview = $('#mainbody')
 	userType_span = "learner"
 	workerId_span = $('#workerId')
@@ -2376,8 +2384,14 @@ function setup(workerId, socketObj, UI_version, isPreview) {
 			console.log("case 1")
 			//get json_sentences from server
 			//first get user progress
-			console.log("emitting user progress request, workerId:" + workerId)
-			socket.emit('requestUserProgress', {username: workerId})
+			if (sentence_prefered != null && sentence_prefered != "") {
+				console.log("requesting specific sentence...", sentence_prefered)
+				socket.emit('requestSentence', {username: workerId, sentence_prefered: parseInt(sentence_prefered)})
+			} else {
+				console.log("emitting user progress request, workerId:" + workerId)
+				socket.emit('requestUserProgress', {username: workerId})
+
+			}
 			socket.on('userProgress', receivedUserProgress)
 			socket.on('noMoreHitsForUser', noMoreHits)
 			socket.on('thankyou', thankyouPage)
