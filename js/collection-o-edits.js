@@ -19,6 +19,7 @@ var pointsEarned_span = null
 var global_preview_views = []
 var global_preview_classes = []
 var previous_log_event = null
+var num_of_low_scores
 var hitId = 'HIT_ID_NOT_AVAILABLE'
 var assignmentId = 'ASSIGNMENT_ID_NOT_AVAILABLE'
 
@@ -28,6 +29,17 @@ $.fn.stars = function (i) {
 	});
 }
 
+updateMessageBox = function (message) {
+	if (message == $('#messageBox').html()) {
+		console.log("same message...")
+	} else {
+		console.log('MESSAGE BOX' + $('#messageBox').html())
+		$('#messageBox').html(message)
+		$('#messageBox').css("backgroundColor", "yellow");
+		$('#messageBox').animate({ backgroundColor: "transparent" }, 800);
+	}
+
+}
 scaleIn = function (item) {
 	$(item).show("scale", {percent: 100}, 2000)
 }
@@ -54,7 +66,7 @@ logEventWrapper = function (socket, sm) {
 }
 
 enable_submit = function () {
-	if (sentences.length > 0 && !is_preview) {
+	/*if (sentences.length > 0 && !is_preview) {
 		var points = _.map(sentences, function (s) {
 			return parseFloat(s.points_bonus).toFixed(1)
 		})
@@ -67,6 +79,23 @@ enable_submit = function () {
 		$('#confirmInput').prop('disabled', !product)
 	} else {
 		$('#confirmInput').prop('disabled', true)
+	}*/
+	if (sentences.length > 0 && !is_preview) {
+		var points = _.map(sentences, function (s) {
+			return parseFloat(s.points_bonus).toFixed(1)
+		})
+		var product = _.reduce(points, function (memo, num) {
+			console.log('product ', num, memo)
+			return memo && num >= 4.0;
+		}, true);
+		console.log(sentences.length + " number of s")
+		console.log('submit?', product)
+		if (num_of_low_scores >= 10 && !product) {
+			$('#confirmInput').prop('disabled', true)
+		} else {
+			$('#confirmInput').prop('disabled', false)
+			updateMessageBox("Click Submit to get your next hit.")
+		}
 	}
 }
 
@@ -99,15 +128,20 @@ get_post_parameters = function () {
 completedTask = function () {
 	console.log("ok now do some things....")
 	var total_new_points = 0
+	var low_scores = 0
 	var sentences_completed = []
 	_.each(sentences, function (s) {
 		total_new_points += s.points_remaining + s.points_bonus
+		if (s.points_bonus <= 4.0) {
+			low_scores += 1
+		}
 		var p = {id: s.id, points_bonus: parseInt(Math.round(parseFloat(s.points_bonus))), points_earned: s.points_remaining}
 		sentences_completed.push(p)
 	});
 	var pp = points_earned + parseFloat(total_new_points)
-	console.log("points_earned:" + pp)
-	var ctm = new CompletedTaskMessage(username, sentences_completed, ui_version, progress + 1, pp, hitId, assignmentId)
+	var total_ls = num_of_low_scores + low_scores
+	console.log("points_earned:", pp, " low scores so far:", total_ls, num_of_low_scores, low_scores)
+	var ctm = new CompletedTaskMessage(username, sentences_completed, ui_version, progress + 1, pp, hitId, assignmentId, parseInt(total_ls))
 	socket.emit('completedTask', ctm)
 
 }
@@ -821,6 +855,7 @@ function Node() {
 	}
 
 	this.take_action = function (param) {
+		updateMessageBox("Once you understand the sentence, click 'Attempt Translation'")
 		if (!self.graph.sentence.stopClues || ui_version == 0) {
 			console.log('action triggered:' + param.action + ',' + param.direction)
 			self.graph.sentence.remove_all_previews(null)
@@ -2048,7 +2083,8 @@ function Sentence() {
 				$(self.text_container.text_area).show()
 				$(self.text_container.score_btn).show()
 				self.stopClues = true
-				var bla = self.get_full_representation()
+				updateMessageBox("Type your translation guess, then click 'score translation'.");
+				//var bla = self.get_full_representation()
 				//var bbb = JSON.stringify(bla)
 				//console.log(bbb)
 
@@ -2060,6 +2096,14 @@ function Sentence() {
 				self.text_container.text_area.disabled = true
 				self.text_container.score_btn.disabled = true
 				logTranslation(self)
+				if (self.points_bonus <= 4.0) {
+					if ($('.instructions').is(':hidden')) {
+						$('.instructions').toggle()
+					}
+					updateMessageBox("This is a low scoring translation! You are only allowed a limited number of low score submissions. <br> <b>next time try using more clues!</b>");
+				}
+				$('#confirmInput').prop('disabled', false)
+
 			})
 			$(this.text_container.text_area).keyup(function () {
 				//var bleu = simple_bleu(self.text_container.text_area.value, self.de)
@@ -2284,15 +2328,24 @@ function receivedPreview(msg) {
 
 function receivedUserProgress(msg) {
 	$(mainview).empty()
+	$('#confirmInput').prop('disabled', true)
 	sentences = []
 	console.log("got user progress...")
 	json_sentences = msg.data
 	console.log('size of page is ' + json_sentences.length)
 	points_earned = msg.points_earned
-	progress = msg.progress
-	pointsEarned_span.text(parseFloat(points_earned).toFixed(1));
-	ok_parse(0, 1)
-	do_precomputations()
+	num_of_low_scores = msg.low_scores
+
+	if (num_of_low_scores > 15) {
+		tooManyLowScores()
+	} else {
+		console.log("low score:", num_of_low_scores)
+		progress = msg.progress
+		pointsEarned_span.text(parseFloat(points_earned).toFixed(1));
+		ok_parse(0, 1)
+		do_precomputations()
+	}
+
 }
 
 function noMoreHits(msg) {
@@ -2318,6 +2371,14 @@ function thankyouPage(msg) {
 	}
 
 	$('#confirmInput').remove()
+}
+
+function tooManyLowScores() {
+	$('.instructions').hide()
+	$(mainview).append("<p><b> You have too many low scoring submissions to continue further.")
+	$('#confirmInput').prop('disabled', true)
+	$('#confirmInput').remove()
+
 }
 
 function ok_parse(st, end) {
@@ -2352,6 +2413,10 @@ function setup_direct(workerId, socketObj, UI_version, full_data) {
 	json_sentences = full_data
 	ok_parse(0, 50)
 	do_precomputations()
+}
+
+function updateLowScores(msg) {
+	num_of_low_scores = msg.low_scores
 }
 
 function setup(workerId, socketObj, UI_version, isPreview, sentence_prefered) {
@@ -2395,6 +2460,7 @@ function setup(workerId, socketObj, UI_version, isPreview, sentence_prefered) {
 			socket.on('userProgress', receivedUserProgress)
 			socket.on('noMoreHitsForUser', noMoreHits)
 			socket.on('thankyou', thankyouPage)
+
 			//socket.emit('requestJsonSentences', 'please')
 			//console.log("requested sentences from server...")
 			//socket.on('JsonSentences', receivedJsonSentence);

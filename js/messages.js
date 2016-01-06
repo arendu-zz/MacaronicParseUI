@@ -34,7 +34,7 @@ function TranslationLogMessage(user, ui_version, sentence_id, state, visible_sta
 	this.input = visible_state
 	this.translation = escapeHTML(translation)
 }
-function CompletedTaskMessage(username, sentences_completed, ui_version, progress, points_earned, hitId, assignment_id) {
+function CompletedTaskMessage(username, sentences_completed, ui_version, progress, points_earned, hitId, assignment_id, low_scores) {
 	this.username = username
 	this.sentences_completed = sentences_completed
 	this.ui_version = ui_version
@@ -42,6 +42,7 @@ function CompletedTaskMessage(username, sentences_completed, ui_version, progres
 	this.progress = progress
 	this.hitId = hitId
 	this.assignment_id = assignment_id
+	this.low_scores = low_scores
 }
 
 function unescapeHTML(safe_str) {
