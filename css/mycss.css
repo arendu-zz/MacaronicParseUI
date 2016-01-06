@@ -47,11 +47,14 @@ div {
 }
 
 table {
-    border-collapse: collapse;
+    /*border: 2px;*/
+    /*border-collapse: collapse;*/
+    /*border-style: solid;*/
 }
 
 table td {
     border: 2px;
+    border-collapse: collapse;
     /*border-style: solid;*/
 
 }
