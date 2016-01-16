@@ -1162,6 +1162,7 @@ function Node() {
 		} else {
 			console.log("no more clues!!!!")
 		}
+		self.graph.sentence.wordOptionWrapper.updateOptions()
 	}
 
 	this.isTranslationSame = function (modifiedNodes) {
@@ -1615,6 +1616,7 @@ function Sentence() {
 	this.container = null
 	this.outer_container = null
 	this.points_container = null
+	this.wordOptionWrapper = null
 	this.initial_order_by = null
 	this.points_remaining = 10;
 	this.points_bonus = 0.0;
@@ -1963,20 +1965,24 @@ function Sentence() {
 		if (this.outer_container == null) {
 			this.outer_container = document.createElement('div')
 			$(this.outer_container).addClass('outerContainer')
-			var colum_container = document.createElement('div')
+			var column_container = document.createElement('div')
 			$(this.outer_container).on('mouseenter', function () {
 				console.log("over sentence id:" + self.id)
 			})
-			$(colum_container).addClass('colContainer')
+			$(column_container).addClass('colContainer')
 			var c = self.get_container()
-			$(colum_container).append($(c))
-			var t = self.get_text_container()
-			$(colum_container).append($(t))
-			this.outer_container.text_container = t
+			$(column_container).append($(c))
+			//var t = self.get_text_container()
+			//$(column_container).append($(t))
+			//this.outer_container.text_container = t
 			this.outer_container.macaronic_container = c
-			$(this.outer_container).append($(colum_container))
-			this.points_container = self.get_points_container()
-			$(this.outer_container).append($(this.points_container))
+			var wol = new WordOptionWrapper(self)
+			this.wordOptionWrapper = wol
+			$(column_container).append(wol.get_view())
+			$(this.outer_container).append($(column_container))
+			//this.points_container = self.get_points_container()
+			//$(this.outer_container).append($(this.points_container))
+
 			return this.outer_container
 		} else {
 			return this.outer_container
@@ -2305,9 +2311,19 @@ function precomputations(i) {
 	s.set_initial_view()
 }
 
+function wordOptionsComp(i) {
+	var s = sentences[i]
+	s.wordOptionWrapper.initialOptions()
+}
+
 function do_precomputations() {
 	for (var i = 0; i < sentences.length; i++) {
 		async(precomputations, i, null)
+	}
+}
+function do_wordOptionWrapper() {
+	for (var i = 0; i < sentences.length; i++) {
+		async(wordOptionsComp, i, null)
 	}
 }
 
@@ -2344,6 +2360,7 @@ function receivedUserProgress(msg) {
 		pointsEarned_span.text(parseFloat(points_earned).toFixed(1));
 		ok_parse(0, 1)
 		do_precomputations()
+		do_wordOptionWrapper()
 	}
 
 }
@@ -2389,6 +2406,7 @@ function ok_parse(st, end) {
 		var jo = JSON.parse(json_sentences[i])
 		var s = Sentence.parse(jo)
 		s.initialize(mainview)
+
 		s.visible_nodes = _.sortBy(s.visible_nodes, function (vn) {
 			if (s.initial_order_by == 'en') {
 				return vn.en_id
@@ -2398,6 +2416,7 @@ function ok_parse(st, end) {
 		})
 		//s.assign_display_order_by_array_order()
 		s.update_visible_nodes()
+		///s.wordOptionWrapper.updateOptions()
 		sentences.push(s)
 	}
 }

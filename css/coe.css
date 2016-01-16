@@ -228,7 +228,6 @@ span {
     color: green;
 }
 
-
 .outerContainer {
     display: flex;
     flex-direction: row;
@@ -429,4 +428,47 @@ span {
     font-weight: bold;
 }
 
+.wordOptionAttemptContainer {
+    display: -moz-box;
+    display: -ms-box;
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    /*----- flex-start | flex-end | center | space-between | space-around*/
+    align-items: center;
+    /*----- flex-start | flex-end | center | baseline | stretch*/
+    align-content: center;
+}
+
+.wordOption {
+    padding: 2px;
+}
+
+.wordOption.prompt {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+
+}
+
+.wordOptionContainer {
+    display: -moz-box;
+    display: -ms-box;
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    border: 1px #000000;
+
+}
+
+input[disabled] {
+    background: lightgray;
+}
 
