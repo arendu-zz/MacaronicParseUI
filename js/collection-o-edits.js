@@ -453,8 +453,8 @@ function Node() {
 			} else {
 
 				var default_direction_action = _.filter(default_direction, function (p) {
-					//return p.action.endsWith('reorder')
-					return p.action.endsWith('translate')
+					return p.action.endsWith('reorder')
+					//return p.action.endsWith('translate')
 				})
 				if (default_direction_action.length > 0) {
 					console.log('direction_action filter', default_direction_action.length)
@@ -466,7 +466,8 @@ function Node() {
 		}
 	}
 
-	this.preview_action = function () {
+	this.preview_action = function (onlyDefault) {
+		var onlyDefault = onlyDefault || false;
 		console.log("in preview clearing possible actions")
 		self.graph.sentence.possibleActions = []
 		self.graph.sentence.remove_all_previews(self)
@@ -682,12 +683,26 @@ function Node() {
 						logEventWrapper(socket, sm)
 					}
 
-					_.each(translation_items, function (wordSpan) {
-						$(pv_translate).append(wordSpan)
+					if (onlyDefault) {
+						if (num_swaps.length == 0 && direction == 'en') {
+							console.log("show translations... ONLY WHEN NO SWAP")
+							_.each(translation_items, function (wordSpan) {
+								$(pv_translate).append(wordSpan)
 
-					})
+							})
+							self.graph.sentence.possibleActions.push({node: self, action: 'translate', direction: direction})
+						} else {
+							console.log("not showing translation...")
+						}
+					} else {
+						console.log("show all translations...")
+						_.each(translation_items, function (wordSpan) {
+							$(pv_translate).append(wordSpan)
 
-					self.graph.sentence.possibleActions.push({node: self, action: 'translate', direction: direction})
+						})
+						self.graph.sentence.possibleActions.push({node: self, action: 'translate', direction: direction})
+
+					}
 
 					$(pv_translate).on('mouseenter', function () {
 						_.each(document.getElementsByClassName("arrow"), function (arrow) {
@@ -1153,10 +1168,12 @@ function Node() {
 					if (self.graph.sentence.points_remaining == 0) {
 						console.log("prevent all clues!!")
 						self.graph.sentence.stopClues = true
+						self.graph.sentence.wordOptionWrapper.stopClues()
 					}
 				} else {
 					console.log("prevent all clues!!")
 					self.graph.sentence.stopClues = true
+					self.graph.sentence.wordOptionWrapper.stopClues()
 				}
 			}
 		} else {
@@ -1621,6 +1638,27 @@ function Sentence() {
 	this.points_remaining = 10;
 	this.points_bonus = 0.0;
 	this.stopClues = false
+
+	this.getClue = function () {
+		console.log("in sentence get clue")
+		var visible_nodes_l2 = []
+		_.each(self.visible_nodes, function (n) {
+			if (n.lang == 'de' && ['-', ',', '?', '.', ':', '!'].indexOf(n.s) < 0) {
+				visible_nodes_l2.push(n)
+			}
+		})
+
+		if (visible_nodes_l2.length > 0) {
+			var n = visible_nodes_l2[0]
+			n.preview_action(true)
+			//setTimeout(n.take_default_action(), 3000);
+			setTimeout(function () {
+				console.log('after 3 second!!')
+				n.take_default_action()
+			}, 500)
+		}
+
+	}
 
 	this.get_full_representation = function () {
 		/*

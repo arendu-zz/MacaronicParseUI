@@ -74,6 +74,16 @@ function WordOption(id, l2_word, l1_translations, wrapper) {
 		}
 	}
 
+	this.getEnabledAttemptBox = function () {
+		var r = null
+		_.each(self.attempts, function (t) {
+			if (!$(t.view).prop('disabled')) {
+				r = t
+			}
+		})
+		return r
+	}
+
 	this.computeScore = function () {
 		var maxscore = 0.0
 		_.each(self.attempts, function (t_attempt) {
@@ -142,8 +152,13 @@ function WordOptionWrapper(l2_sentence) {
 			this.view.optionContainer = document.createElement('div')
 			$(this.view.optionContainer).addClass('wordOptionContainer')
 			$(this.view).append($(this.view.optionContainer))
+			this.view.getClue = document.createElement('button')
+			$(this.view.getClue).text('Get Clue')
+			$(this.view).append($(this.view.getClue))
+			$(this.view.getClue).click(this.getClue)
 			this.view.calculateScore = document.createElement('button')
 			$(this.view.calculateScore).text('Calculate Score')
+			$(this.view.calculateScore).prop('disabled', true)
 			$(this.view).append($(this.view.calculateScore))
 			$(this.view.calculateScore).click(this.computeScores)
 			return this.view
@@ -153,11 +168,24 @@ function WordOptionWrapper(l2_sentence) {
 	}
 
 	this.computeScores = function () {
-
 		_.each(self.options, function (wo, k) {
 			wo.disablePreviousAttempts()
 			wo.computeScore()
 		})
+	}
+
+	this.getClue = function () {
+		//console.log("in get clue wo")
+		$(self.view.getClue).prop('disabled', true)
+		setTimeout(function () {
+			$(self.view.getClue).prop('disabled', false)
+		}, 500)
+		self.l2_sentence.getClue()
+	}
+
+	this.stopClues = function () {
+		$(this.view.getClue).prop('disabled', true)
+		$(this.view.calculateScore).prop('disabled', false)
 	}
 
 	this.setOptionsByOrder = function (newOrder) {
@@ -165,6 +193,8 @@ function WordOptionWrapper(l2_sentence) {
 			var idx = newOrder.indexOf(no_id)
 			var wo = self.options[no_id]
 			$(wo.get_view()).css('order', idx)
+			wo.getEnabledAttemptBox().view.tabIndex = parseInt(idx) + 1
+			//console.log(wo.l2_word, "tab index", wo.getEnabledAttemptBox().view.tabIndex)
 
 		})
 	}
@@ -180,11 +210,11 @@ function WordOptionWrapper(l2_sentence) {
 		})
 
 		self.setOptionsByOrder(newOrder)
-		console.log("new order:", newOrder)
+		//console.log("new order:", newOrder)
 		_.each(self.options, function (wo, k) {
 			wo.allowNewAttempts = (newOrder.indexOf(k) >= 0)
-			console.log(wo.l2_word, wo.id, k, "in new order?", newOrder.indexOf(k))
-			console.log(wo.l2_word, wo.id, k, "has been clicked?", newOrder.indexOf(k))
+			//console.log(wo.l2_word, wo.id, k, "in new order?", newOrder.indexOf(k))
+			//console.log(wo.l2_word, wo.id, k, "has been clicked?", newOrder.indexOf(k))
 			wo.addAttempt()
 		})
 
