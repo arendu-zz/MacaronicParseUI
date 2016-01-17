@@ -79,21 +79,24 @@ function WordOption(id, l2_word, l1_translations, wrapper) {
 		_.each(self.attempts, function (t) {
 			if (!$(t.view).prop('disabled')) {
 				r = t
+			} else {
+				console.log($(t.view).val(), "is disabled!!")
 			}
 		})
 		return r
 	}
 
 	this.computeScore = function () {
-		var maxscore = 0.0
+		var maxscore_attempt = new TranslationAttempt(self)
 		_.each(self.attempts, function (t_attempt) {
 			console.log("comparing:", t_attempt.val().toLowerCase(), t_attempt.wo.l1_translation.toLowerCase())
 			if (t_attempt.val().toLowerCase() == t_attempt.wo.l1_translation.toLowerCase()) {
 
-				maxscore = t_attempt.max_points > maxscore ? t_attempt.max_points : maxscore
+				maxscore_attempt = t_attempt.max_points > maxscore_attempt.max_points ? t_attempt : maxscore_attempt
 			}
 		})
-		self.set_score(maxscore)
+		self.set_score(maxscore_attempt.max_points)
+		$(maxscore_attempt.view).addClass('correct')
 	}
 
 	this.set_score = function (score) {
@@ -188,28 +191,40 @@ function WordOptionWrapper(l2_sentence) {
 		$(this.view.calculateScore).prop('disabled', false)
 	}
 
-	this.setOptionsByOrder = function (newOrder) {
-		_.each(newOrder, function (no_id) {
-			var idx = newOrder.indexOf(no_id)
-			var wo = self.options[no_id]
+	this.setOptionsByOrder = function (l2_remaining) {
+		_.each(l2_remaining, function (l2, wo_id) {
+			console.log(l2)
+			var idx = l2.position
+			var wo = self.options[l2.wo_id]
 			$(wo.get_view()).css('order', idx)
+			var r = wo.getEnabledAttemptBox()
 			wo.getEnabledAttemptBox().view.tabIndex = parseInt(idx) + 1
-			//console.log(wo.l2_word, "tab index", wo.getEnabledAttemptBox().view.tabIndex)
 
 		})
 	}
 
 	this.updateOptions = function () {
-		var newOrder = []
+		/*var newOrder = []
 		_.each(self.l2_sentence.visible_nodes, function (n) {
 			if (n.lang == 'de' && ['-', ',', '?', '.', ':', '!'].indexOf(n.s) < 0) {
 				//console.log('in here...')
 				var wo_id = n.graph.id + "," + n.id
 				newOrder.push(wo_id)
 			}
+		})*/
+
+		var l2_remaining = []
+		var newOrder = []
+		var current_idx = 0
+		_.each(self.l2_sentence.visible_nodes, function (n) {
+			if (n.lang == 'de' && ['-', ',', '?', '.', ':', '!'].indexOf(n.s) < 0) {
+				var wo_id = n.graph.id + "," + n.id
+				l2_remaining.push({wo_id: wo_id, position: current_idx})
+				newOrder.push(wo_id)
+			}
+			current_idx += 1
 		})
 
-		self.setOptionsByOrder(newOrder)
 		//console.log("new order:", newOrder)
 		_.each(self.options, function (wo, k) {
 			wo.allowNewAttempts = (newOrder.indexOf(k) >= 0)
@@ -218,11 +233,14 @@ function WordOptionWrapper(l2_sentence) {
 			wo.addAttempt()
 		})
 
+		self.setOptionsByOrder(l2_remaining)
+
 	}
 
 	this.initialOptions = function () {
 		//self.l2_sentence.sort_visible_nodes_by_display_order()
-		var newOrder = []
+		var l2_remaining = []
+		var current_idx = 0
 		_.each(self.l2_sentence.visible_nodes, function (n) {
 			if (n.lang == 'de' && ['-', ',', '?', '.', ':', '!'].indexOf(n.s) < 0) {
 				var modified_nodes = n.graph.translate_from(n, 'en')
@@ -232,15 +250,16 @@ function WordOptionWrapper(l2_sentence) {
 				})
 				var wo = new WordOption(wo_id, n.s, l1_translations, self)
 				self.options[wo_id] = wo
-				newOrder.push(wo_id)
+				l2_remaining.push({wo_id: wo_id, position: current_idx})
 			}
+			current_idx += 1
 		})
 
 		_.each(self.options, function (wo, k) {
 			$(self.get_view().optionContainer).append(wo.get_view())
 		})
 
-		self.setOptionsByOrder(newOrder)
+		self.setOptionsByOrder(l2_remaining)
 	}
 
 }

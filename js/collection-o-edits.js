@@ -474,6 +474,9 @@ function Node() {
 
 		//console.log('* *  PREVIEW REORDER ' + direction + '* *')
 		var directions = ['en', 'de'] //only show previews in en direction
+		if (onlyDefault) {
+			directions = ['en']
+		}
 		var num_swaps = []
 
 		_.each(directions, function (direction) {
@@ -1647,13 +1650,11 @@ function Sentence() {
 				visible_nodes_l2.push(n)
 			}
 		})
-
 		if (visible_nodes_l2.length > 0) {
-			var n = visible_nodes_l2[0]
+			var n = visible_nodes_l2[Math.floor(Math.random() * visible_nodes_l2.length)];
 			n.preview_action(true)
 			//setTimeout(n.take_default_action(), 3000);
 			setTimeout(function () {
-				console.log('after 3 second!!')
 				n.take_default_action()
 			}, 500)
 		}

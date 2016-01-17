@@ -468,6 +468,10 @@ span {
 
 }
 
+input[disabled].correct {
+    background: lightgreen;
+}
+
 input[disabled] {
     background: lightgray;
 }
