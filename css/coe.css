@@ -33,7 +33,7 @@ div {
 }
 
 span {
-    cursor: pointer;
+    cursor: default;
     -webkit-user-select: none;
     -khtml-user-select: none;
     -moz-user-select: none;
@@ -456,6 +456,10 @@ span {
 
 }
 
+.translationAttempt {
+    width: 95%;
+}
+
 .wordOptionContainer {
     display: -moz-box;
     display: -ms-box;
@@ -466,6 +470,10 @@ span {
     flex-wrap: wrap;
     border: 1px #000000;
 
+}
+
+.guessing {
+    border-bottom: 2px solid #333333;
 }
 
 input[disabled].correct {

@@ -9,11 +9,12 @@ function TranslationAttempt(wo) {
 	this.max_points = 0.0
 	this.wo = wo
 	this.view = null
+	this.isCorrect = null
 
 	this.get_view = function () {
 		if (this.view == null) {
 			this.view = document.createElement('input')
-			this.view.size = self.wo.l2_word.length
+			$(this.view).addClass("translationAttempt")
 			$(this.view).focusout(function () {
 				console.log("focusout...")
 				self.max_points = 0.0
@@ -22,7 +23,12 @@ function TranslationAttempt(wo) {
 						self.max_points += 1
 					}
 				})
-				console.log("l2_word:", self.wo.l2_word, "max_points:", self.max_points)
+				console.log("l2_node.s:", self.wo.l2_node.s, "max_points:", self.max_points)
+				$(self.wo.l2_node.get_view().textSpan).removeClass("guessing")
+			})
+
+			$(this.view).focusin(function () {
+				$(self.wo.l2_node.get_view().textSpan).addClass("guessing")
 			})
 			return this.view
 		} else {
@@ -39,11 +45,11 @@ function TranslationAttempt(wo) {
 	}
 }
 
-function WordOption(id, l2_word, l1_translations, wrapper) {
+function WordOption(id, l2_node, l1_translations, wrapper) {
 	var self = this
 	this.id = id
-	this.l2_word = l2_word
-	this.l1_translation = l1_translations.join([separator = " "])
+	this.l2_node = l2_node
+	this.l1_translation = l1_translations
 	this.score = 0.0
 	this.view = null
 	this.attempts = []
@@ -53,13 +59,12 @@ function WordOption(id, l2_word, l1_translations, wrapper) {
 	this.get_view = function () {
 		if (this.view == null) {
 			this.view = document.createElement('div')
+			$(this.view).width(this.l2_node.get_view_position().width)
 			$(this.view).addClass('wordOption')
 			this.view.prompt = document.createElement('span')
-
-			$(this.view.prompt).addClass('wordOption prompt')
-			$(this.view.prompt).text(this.l2_word)
-
-			$(this.view).append($(this.view.prompt))
+			//$(this.view.prompt).addClass('wordOption prompt')
+			//$(this.view.prompt).text(this.l2_node.s)
+			//$(this.view).append($(this.view.prompt))
 			this.view.attemptContainer = document.createElement('div')
 			$(this.view.attemptContainer).addClass('wordOptionAttemptContainer')
 			$(this.view).append($(this.view.attemptContainer))
@@ -86,14 +91,39 @@ function WordOption(id, l2_word, l1_translations, wrapper) {
 		return r
 	}
 
+	this.guess_correctness = function (attempt) {
+		var acceptance = 0.0
+		var guess_phrase = attempt.val().split(" ")
+		_.each(attempt.wo.l1_translation, function (l1_word) {
+			_.each(guess_phrase, function (guess_word) {
+				if (guess_word.toLowerCase() == l1_word.toLowerCase()) {
+					acceptance += (1.0 / guess_phrase.length )
+				} else if (stemmer(guess_word.toLowerCase()) == stemmer(l1_word.toLowerCase())) {
+					acceptance += (0.5 / guess_phrase.length )
+				} else {
+
+				}
+			})
+		})
+		return acceptance
+	}
+
 	this.computeScore = function () {
 		var maxscore_attempt = new TranslationAttempt(self)
 		_.each(self.attempts, function (t_attempt) {
-			console.log("comparing:", t_attempt.val().toLowerCase(), t_attempt.wo.l1_translation.toLowerCase())
-			if (t_attempt.val().toLowerCase() == t_attempt.wo.l1_translation.toLowerCase()) {
+			var correctness = self.guess_correctness(t_attempt)
+			maxscore_attempt = t_attempt.max_points * correctness > maxscore_attempt.max_points ? t_attempt : maxscore_attempt
+			/*if (t_attempt.val().toLowerCase() == t_attempt.wo.l1_translation.toLowerCase()) {
 
 				maxscore_attempt = t_attempt.max_points > maxscore_attempt.max_points ? t_attempt : maxscore_attempt
-			}
+
+			} else if (stemmer(t_attempt.val().toLowerCase()) == stemmer(t_attempt.wo.l1_translation.toLowerCase())) {
+				t_attempt.max_points = t_attempt.max_points / 2
+				maxscore_attempt = t_attempt.max_points > maxscore_attempt.max_points ? t_attempt : maxscore_attempt
+
+			} else {
+
+			}*/
 		})
 		self.set_score(maxscore_attempt.max_points)
 		$(maxscore_attempt.view).addClass('correct')
@@ -122,13 +152,23 @@ function WordOption(id, l2_word, l1_translations, wrapper) {
 		})
 
 		var hasBeenAttempted = !(attemptsSoFar.indexOf("") >= 0)
-		console.log(self.l2_word, "previous attempts?", attemptsSoFar, attemptsSoFar.indexOf(""))
-		console.log(self.l2_word, "has previously been attempted?", hasBeenAttempted)
-		console.log(self.l2_word, "allow new attempts?", self.allowNewAttempts)
+		//var hasCorrectAttempt = false
+		/*_.each(self.attempts, function (attemptInput) {
+			if (attemptInput.val().toLowerCase() == self.l1_translation.toLowerCase()) {
+				hasCorrectAttempt = true
+				$(attemptInput.view).addClass('correct')
+				self.allowNewAttempts = false
+			}
+		})*/
+		console.log(self.l2_node.s, "previous attempts?", attemptsSoFar, attemptsSoFar.indexOf(""))
+		console.log(self.l2_node.s, "has previously been attempted?", hasBeenAttempted)
+		console.log(self.l2_node.s, "allow new attempts?", self.allowNewAttempts)
 		if (self.allowNewAttempts) {
 			if (!hasBeenAttempted) {
 				console.log("skippppp...")
-			} else {
+			} /*else if (hasCorrectAttempt) {
+				console.log("skippppp...already guessed correctly")
+			}*/ else {
 				self.disablePreviousAttempts()
 				var translationAttempt = new TranslationAttempt(self)
 				$(self.get_view().attemptContainer).append($(translationAttempt.get_view()))
@@ -136,7 +176,7 @@ function WordOption(id, l2_word, l1_translations, wrapper) {
 			}
 
 		} else {
-			console.log(self.l2_word, "has been clicked")
+			console.log(self.l2_node.s, "has been clicked")
 			self.disablePreviousAttempts()
 		}
 	}
@@ -155,10 +195,10 @@ function WordOptionWrapper(l2_sentence) {
 			this.view.optionContainer = document.createElement('div')
 			$(this.view.optionContainer).addClass('wordOptionContainer')
 			$(this.view).append($(this.view.optionContainer))
-			this.view.getClue = document.createElement('button')
-			$(this.view.getClue).text('Get Clue')
-			$(this.view).append($(this.view.getClue))
-			$(this.view.getClue).click(this.getClue)
+			this.view.get_clue = document.createElement('button')
+			$(this.view.get_clue).text('Get Clue')
+			$(this.view).append($(this.view.get_clue))
+			$(this.view.get_clue).click(this.get_clue)
 			this.view.calculateScore = document.createElement('button')
 			$(this.view.calculateScore).text('Calculate Score')
 			$(this.view.calculateScore).prop('disabled', true)
@@ -177,18 +217,35 @@ function WordOptionWrapper(l2_sentence) {
 		})
 	}
 
-	this.getClue = function () {
-		//console.log("in get clue wo")
-		$(self.view.getClue).prop('disabled', true)
+	this.get_clue = function () {
+		var correct_nodes = self.checkAttempts()
+		$(self.view.get_clue).prop('disabled', true)
 		setTimeout(function () {
-			$(self.view.getClue).prop('disabled', false)
+			$(self.view.get_clue).prop('disabled', false)
 		}, 500)
-		self.l2_sentence.getClue()
+		self.l2_sentence.get_clue(correct_nodes)
 	}
 
 	this.stopClues = function () {
-		$(this.view.getClue).prop('disabled', true)
+
+		$(this.view.get_clue).prop('disabled', true)
 		$(this.view.calculateScore).prop('disabled', false)
+	}
+
+	this.checkAttempts = function () {
+		var correct_nodes = []
+		_.each(self.options, function (wo, k) {
+			_.each(wo.attempts, function (attempt) {
+				var correctness = wo.guess_correctness(attempt)
+				if (correctness == 1.0) {
+					attempt.isCorrect = true
+					wo.allowNewAttempts = false
+					$(attempt.get_view()).addClass('correct')
+					correct_nodes.push(wo.l2_node)
+				}
+			})
+		})
+		return correct_nodes
 	}
 
 	this.setOptionsByOrder = function (l2_remaining) {
@@ -198,21 +255,16 @@ function WordOptionWrapper(l2_sentence) {
 			var wo = self.options[l2.wo_id]
 			$(wo.get_view()).css('order', idx)
 			var r = wo.getEnabledAttemptBox()
-			wo.getEnabledAttemptBox().view.tabIndex = parseInt(idx) + 1
+			if (r === null) {
+
+			} else {
+				wo.getEnabledAttemptBox().view.tabIndex = parseInt(idx) + 1
+			}
 
 		})
 	}
 
 	this.updateOptions = function () {
-		/*var newOrder = []
-		_.each(self.l2_sentence.visible_nodes, function (n) {
-			if (n.lang == 'de' && ['-', ',', '?', '.', ':', '!'].indexOf(n.s) < 0) {
-				//console.log('in here...')
-				var wo_id = n.graph.id + "," + n.id
-				newOrder.push(wo_id)
-			}
-		})*/
-
 		var l2_remaining = []
 		var newOrder = []
 		var current_idx = 0
@@ -224,12 +276,8 @@ function WordOptionWrapper(l2_sentence) {
 			}
 			current_idx += 1
 		})
-
-		//console.log("new order:", newOrder)
 		_.each(self.options, function (wo, k) {
-			wo.allowNewAttempts = (newOrder.indexOf(k) >= 0)
-			//console.log(wo.l2_word, wo.id, k, "in new order?", newOrder.indexOf(k))
-			//console.log(wo.l2_word, wo.id, k, "has been clicked?", newOrder.indexOf(k))
+			wo.allowNewAttempts = (newOrder.indexOf(k) >= 0) && wo.allowNewAttempts
 			wo.addAttempt()
 		})
 
@@ -238,7 +286,6 @@ function WordOptionWrapper(l2_sentence) {
 	}
 
 	this.initialOptions = function () {
-		//self.l2_sentence.sort_visible_nodes_by_display_order()
 		var l2_remaining = []
 		var current_idx = 0
 		_.each(self.l2_sentence.visible_nodes, function (n) {
@@ -248,7 +295,7 @@ function WordOptionWrapper(l2_sentence) {
 				var l1_translations = _.map(modified_nodes.addStr, function (a) {
 					return a.token
 				})
-				var wo = new WordOption(wo_id, n.s, l1_translations, self)
+				var wo = new WordOption(wo_id, n, l1_translations, self)
 				self.options[wo_id] = wo
 				l2_remaining.push({wo_id: wo_id, position: current_idx})
 			}

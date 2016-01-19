@@ -22,6 +22,7 @@ var previous_log_event = null
 var num_of_low_scores
 var hitId = 'HIT_ID_NOT_AVAILABLE'
 var assignmentId = 'ASSIGNMENT_ID_NOT_AVAILABLE'
+var chain_of_nodes = []
 
 $.fn.stars = function (i) {
 	return i.each(function () {
@@ -435,7 +436,8 @@ function Node() {
 		}
 	}
 
-	this.take_default_action = function () {
+	this.take_default_action = function (default_type) {
+		var default_type = default_type || 'reorder'
 		console.log(self.graph.sentence.possibleActions.length + " possible actions...")
 		_.each(self.graph.sentence.possibleActions, function (p) {
 			console.log('p:', p)
@@ -453,7 +455,7 @@ function Node() {
 			} else {
 
 				var default_direction_action = _.filter(default_direction, function (p) {
-					return p.action.endsWith('reorder')
+					return p.action.endsWith(default_type)
 					//return p.action.endsWith('translate')
 				})
 				if (default_direction_action.length > 0) {
@@ -704,7 +706,6 @@ function Node() {
 
 						})
 						self.graph.sentence.possibleActions.push({node: self, action: 'translate', direction: direction})
-
 					}
 
 					$(pv_translate).on('mouseenter', function () {
@@ -794,7 +795,7 @@ function Node() {
 					arrows.path[0][0].classList.remove('highlighted')
 					arrows.path[0][0].classList.remove('highlighted')
 				}
-				console.log(is_only_move, "is only movei???")
+				console.log(is_only_move, "is only movie???")
 
 				$(self.get_view().textSpan).on('mouseenter', function () {
 					//self.set_path_attr(arrows, 'arrow highlighted')
@@ -818,14 +819,6 @@ function Node() {
 					arrows.path[0][0].classList.remove('highlighted')
 				})
 				self.graph.sentence.possibleActions.push({ node: self, action: arrows.type + ' reorder', direction: arrows.direction})
-				//$(self.get_view().textSpan).off('click') //THIS IS IMPORTANT SINCE WE ARE ADDING LISTENERS REPEATEDLY
-				//$(self.get_view().textSpan).on('click', function () {
-				//	if (arrows.direction == 'en' || true) {
-				//		console.log("its been  from textSpan clicked!!!")
-				//self.take_action({action: arrows.type + ' reorder', direction: arrows.direction})
-
-				//	}
-				//})
 				arrows.path.on('click', function () {
 					if (arrows.direction == 'en') {
 						console.log("its been clicked!!!")
@@ -1165,7 +1158,7 @@ function Node() {
 					self.graph.sentence.changePointsRemaining(parseFloat(self.graph.sentence.points_remaining).toFixed(1))
 				}
 			} else {
-				if (self.graph.sentence.points_remaining > 0) {
+				/*if (self.graph.sentence.points_remaining > 0) {
 					self.graph.sentence.points_remaining -= 1
 					self.graph.sentence.changePointsRemaining(self.graph.sentence.points_remaining)
 					if (self.graph.sentence.points_remaining == 0) {
@@ -1175,6 +1168,18 @@ function Node() {
 					}
 				} else {
 					console.log("prevent all clues!!")
+					self.graph.sentence.stopClues = true
+					self.graph.sentence.wordOptionWrapper.stopClues()
+				}*/
+
+				var l2_words_remaining = 0
+				var punct = ['-', ',', '?', '.', ':', '!']
+				_.each(self.graph.sentence.visible_nodes, function (vn) {
+					if (vn.lang == 'de' && punct.indexOf(vn.s) == -1) {
+						l2_words_remaining += 1
+					}
+				})
+				if (l2_words_remaining == 0) {
 					self.graph.sentence.stopClues = true
 					self.graph.sentence.wordOptionWrapper.stopClues()
 				}
@@ -1330,13 +1335,16 @@ function Node() {
 			$(this.view).append($(bottom_menu_container))
 			$(this.view.textSpan).on('click', function (e) {
 				console.log("take default action...")
-				self.take_default_action()
+				//self.take_default_action()
 
 			})
 			$(this.view).on('mouseover', function (e) {
 				self.isMouseOver = true
-				//self.preview_action()
-				setTimeout(self.delayed_preview, 100);
+				if (self.lang == 'en') {
+					self.preview_action()
+				}
+
+				//setTimeout(self.delayed_preview, 100);
 			})
 			$(this.view).on('mouseleave', function (e) {
 				self.isMouseOver = false
@@ -1642,7 +1650,18 @@ function Sentence() {
 	this.points_bonus = 0.0;
 	this.stopClues = false
 
-	this.getClue = function () {
+	this.get_clue = function (additional_nodes) {
+		chain_of_nodes = []
+		var chain_of_node_ids = []
+		var additional_nodes = additional_nodes || []
+		_.each(additional_nodes, function (an) {
+			//an.preview_action(true)
+			//an.take_default_action('translate')
+			chain_of_nodes.push({action: 'translate', node: an})
+			var an_id = an.id + ',' + an.graph.id
+			chain_of_node_ids.push(an_id)
+
+		})
 		console.log("in sentence get clue")
 		var visible_nodes_l2 = []
 		_.each(self.visible_nodes, function (n) {
@@ -1651,16 +1670,56 @@ function Sentence() {
 			}
 		})
 		if (visible_nodes_l2.length > 0) {
-			var n = visible_nodes_l2[Math.floor(Math.random() * visible_nodes_l2.length)];
-			n.preview_action(true)
-			//setTimeout(n.take_default_action(), 3000);
+			var sorted_visible_l2 = _.sortBy(visible_nodes_l2, function (n) {
+				return 1.0 - n.frequency
+			})
+			//var n = visible_nodes_l2[Math.floor(Math.random() * visible_nodes_l2.length)];
+			var n_best = sorted_visible_l2[0]
+			n_best.preview_action(true)
+
 			setTimeout(function () {
-				n.take_default_action()
-			}, 500)
+				n_best.take_default_action()
+			}, 750)
+			for (var i = 0; i < sorted_visible_l2.length; i++) {
+				if (sorted_visible_l2[i].s.toLowerCase() == n_best.s.toLowerCase()) {
+					var sv_id = sorted_visible_l2[i].id + ',' + sorted_visible_l2[i].graph.id
+					if (chain_of_node_ids.indexOf(sv_id) >= 0) {
+						console.log('node already in additional nodes...')
+					} else {
+						chain_of_nodes.push({action: 'default', node: sorted_visible_l2[i]})
+						chain_of_node_ids.push(sv_id)
+					}
+					//sorted_visible_l2[i].preview_action(true)
+					//setTimeout(function () {
+					//sorted_visible_l2[i].take_default_action()
+					//}, 500)
+				}
+			}
 		}
+
+		//self.preview_chain()
 
 	}
 
+	this.preview_chain = function () {
+		if (chain_of_nodes.length > 0) {
+			var current = chain_of_nodes.shift()
+			current.node.preview_action(current.action)
+			setTimeout(function () {
+				self.translate_chain(current)
+			}, 500)
+		} else {
+			console.log("done chain...")
+		}
+	}
+
+	this.translate_chain = function (current) {
+		current.node.take_default_action(current.action)
+		setTimeout(function () {
+			self.preview_chain()
+		}, 500)
+
+	}
 	this.get_full_representation = function () {
 		/*
 			s.en = input.en
@@ -2255,6 +2314,7 @@ Node.parse = function (input) {
 	n.de_id = input.de_id
 	n.lang = input.lang
 	n.visible = input.visible
+	n.frequency = input.frequency
 	n.visible_order = input.visible_order
 	n.en_left = input.en_left
 	n.en_right = input.en_right
