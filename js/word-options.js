@@ -27,7 +27,7 @@ function TranslationAttempt(wo) {
 						some_guess_exits = true
 					}
 				})
-				console.log("l2_node.s:", self.wo.l2_node.s, "max_points:", self.max_points)
+				//console.log("l2_node.s:", self.wo.l2_node.s, "max_points:", self.max_points)
 				$(self.wo.l2_node.get_view().textSpan).removeClass("guessing")
 				if (some_guess_exits) {
 					//$(self.wo.wrapper.get_view().submit_guess).prop('disabled', false)
@@ -52,7 +52,7 @@ function TranslationAttempt(wo) {
 				self.max_points += 1
 			}
 		})
-		console.log("updated max points:", wo.l2_node.s, self.max_points)
+		//console.log("updated max points:", wo.l2_node.s, self.max_points)
 	}
 
 	this.val = function () {

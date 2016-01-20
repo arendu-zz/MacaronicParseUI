@@ -468,6 +468,21 @@ function Node() {
 		}
 	}
 
+	this.has_possible_actions = function (direction) {
+		if (self.graph.swaps && self["swap_reorder_" + direction]) {
+			return true
+		} else if (self.graph.splits && self["split_reorder_" + direction]) {
+			return true
+		}
+		var modified_nodes = self.graph.translate_from(self, direction)
+		if (modified_nodes != null) {
+			return true
+		}
+
+		return false
+
+	}
+
 	this.preview_action = function (onlyDefault) {
 		var onlyDefault = onlyDefault || false;
 		console.log("in preview clearing possible actions")
@@ -1653,15 +1668,63 @@ function Sentence() {
 				visible_nodes_l2.push(n)
 			}
 		})
-		if (visible_nodes_l2.length > 0) {
-			var sorted_visible_l2 = _.sortBy(visible_nodes_l2, function (n) {
-				return 1.0 - n.frequency
+
+		var actionable_graphs = {}
+		_.each(self.graphs, function (g) {
+			var actionable = false
+			var because_of = null
+			_.each(g.get_visible_nodes(), function (gvn) {
+
+				if (gvn.has_possible_actions('en')) {
+					actionable = true
+					because_of = gvn
+
+				}
 			})
-			var n_best = sorted_visible_l2.shift()
-			var n_best_id = n_best.id + ',' + n_best.graph.id
+			if (actionable) {
+				actionable_graphs[g.id] = g
+				console.log("graph", g.id, "is actionable because of", because_of.s)
+			} else {
+				console.log("graph", g.id, "is NOT actionable.")
+			}
+		})
+
+		actionable_graphs = _.map(actionable_graphs, function (g, k) {
+			var g_frequency = 0.0
+			var l2_node_count = 0
+			_.each(g.nodes, function (gn) {
+				if (gn.lang == 'de') {
+					l2_node_count += 1
+					g_frequency += gn.frequency
+				}
+
+			})
+			var g_actionable_nodes = _.sortBy(g.get_visible_nodes(), function (gvn) {
+				if (gvn.lang == 'de' && ['-', ',', '?', '.', ':', '!'].indexOf(gvn.s) < 0) {
+					return 1.0 - gvn.frequency
+				} else if (gvn.land == 'en') {
+					return 0.0
+				} else {
+					return 1.0
+				}
+			})
+
+			return {id: k, graph: g, frequency: 1.0 - (g_frequency / l2_node_count), actionable_node: g_actionable_nodes[0]}
+		})
+		var sorted_actionable_graphs = _.sortBy(actionable_graphs, function (o) {
+			return o.frequency
+		})
+		var sorted_actionable_nodes = _.filter(sorted_actionable_graphs, function (o) {
+			return ['-', ',', '?', '.', ':', '!'].indexOf(o.actionable_node.s) < 0
+		})
+
+		if (sorted_actionable_nodes.length > 0) {
+			var n_best = sorted_actionable_nodes[0].actionable_node
+			var n_best_id = n_best.id + ',' + sorted_actionable_nodes[0].graph.id
 			chain_of_nodes.push({action: true, node: n_best, delay: 400})
 			chain_of_node_ids.push(n_best_id)
 		}
+		console.log("ok")
 		self.preview_chain("get_clue")
 	}
 
