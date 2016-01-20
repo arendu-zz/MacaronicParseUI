@@ -555,7 +555,9 @@ function Node() {
 					logEventWrapper(socket, sm)
 				}
 
-				num_swaps.push(arrows)
+				if (onlyDefault) {
+					num_swaps.push(arrows)
+				}
 
 			} else if (self.graph.splits && self["split_reorder_" + direction]) {
 				//console.log("this graphs splits")
@@ -650,7 +652,11 @@ function Node() {
 					moving_to_bounds['right'] = moving_to_bounds.left + moving_to_bounds.width
 					var pathDiv = document.createElement('div')
 					var arrows = self.get_split_preview_view(pathDiv, bounds, moving_bounds, moving_to_bounds, direction)
-					num_swaps.push(arrows)
+
+					if (onlyDefault) {
+						num_swaps.push(arrows)
+					}
+
 					//TODO log preview of split!
 
 				}
@@ -1158,21 +1164,7 @@ function Node() {
 					self.graph.sentence.changePointsRemaining(parseFloat(self.graph.sentence.points_remaining).toFixed(1))
 				}
 			} else {
-				/*if (self.graph.sentence.points_remaining > 0) {
-					self.graph.sentence.points_remaining -= 1
-					self.graph.sentence.changePointsRemaining(self.graph.sentence.points_remaining)
-					if (self.graph.sentence.points_remaining == 0) {
-						console.log("prevent all clues!!")
-						self.graph.sentence.stopClues = true
-						self.graph.sentence.wordOptionWrapper.stopClues()
-					}
-				} else {
-					console.log("prevent all clues!!")
-					self.graph.sentence.stopClues = true
-					self.graph.sentence.wordOptionWrapper.stopClues()
-				}*/
-
-				var l2_words_remaining = 0
+				/*var l2_words_remaining = 0
 				var punct = ['-', ',', '?', '.', ':', '!']
 				_.each(self.graph.sentence.visible_nodes, function (vn) {
 					if (vn.lang == 'de' && punct.indexOf(vn.s) == -1) {
@@ -1182,12 +1174,12 @@ function Node() {
 				if (l2_words_remaining == 0) {
 					self.graph.sentence.stopClues = true
 					self.graph.sentence.wordOptionWrapper.stopClues()
-				}
+				}*/
 			}
 		} else {
 			console.log("no more clues!!!!")
 		}
-		self.graph.sentence.wordOptionWrapper.updateOptions()
+
 	}
 
 	this.isTranslationSame = function (modifiedNodes) {
@@ -1650,18 +1642,10 @@ function Sentence() {
 	this.points_bonus = 0.0;
 	this.stopClues = false
 
-	this.get_clue = function (additional_nodes) {
+	this.get_clue = function () {
+		self.wordOptionWrapper.disable_get_clue()
 		chain_of_nodes = []
 		var chain_of_node_ids = []
-		var additional_nodes = additional_nodes || []
-		_.each(additional_nodes, function (an) {
-			//an.preview_action(true)
-			//an.take_default_action('translate')
-			chain_of_nodes.push({action: 'translate', node: an})
-			var an_id = an.id + ',' + an.graph.id
-			chain_of_node_ids.push(an_id)
-
-		})
 		console.log("in sentence get clue")
 		var visible_nodes_l2 = []
 		_.each(self.visible_nodes, function (n) {
@@ -1673,51 +1657,62 @@ function Sentence() {
 			var sorted_visible_l2 = _.sortBy(visible_nodes_l2, function (n) {
 				return 1.0 - n.frequency
 			})
-			//var n = visible_nodes_l2[Math.floor(Math.random() * visible_nodes_l2.length)];
-			var n_best = sorted_visible_l2[0]
-			n_best.preview_action(true)
-
-			setTimeout(function () {
-				n_best.take_default_action()
-			}, 750)
-			for (var i = 0; i < sorted_visible_l2.length; i++) {
-				if (sorted_visible_l2[i].s.toLowerCase() == n_best.s.toLowerCase()) {
-					var sv_id = sorted_visible_l2[i].id + ',' + sorted_visible_l2[i].graph.id
-					if (chain_of_node_ids.indexOf(sv_id) >= 0) {
-						console.log('node already in additional nodes...')
-					} else {
-						chain_of_nodes.push({action: 'default', node: sorted_visible_l2[i]})
-						chain_of_node_ids.push(sv_id)
-					}
-					//sorted_visible_l2[i].preview_action(true)
-					//setTimeout(function () {
-					//sorted_visible_l2[i].take_default_action()
-					//}, 500)
-				}
-			}
+			var n_best = sorted_visible_l2.shift()
+			var n_best_id = n_best.id + ',' + n_best.graph.id
+			chain_of_nodes.push({action: true, node: n_best, delay: 400})
+			chain_of_node_ids.push(n_best_id)
 		}
+		self.preview_chain("get_clue")
+	}
 
-		//self.preview_chain()
+	this.submit_guess = function (additional_nodes) {
+		chain_of_nodes = []
+		var chain_of_node_ids = []
+		var additional_nodes = additional_nodes || []
+		_.each(additional_nodes, function (an) {
+			//an.preview_action(true)
+			//an.take_default_action('translate')
+			chain_of_nodes.push({action: false, node: an, delay: 0})
+			var an_id = an.id + ',' + an.graph.id
+			chain_of_node_ids.push(an_id)
+
+		})
+
+		self.preview_chain("submit_guess")
 
 	}
 
-	this.preview_chain = function () {
+	this.preview_chain = function (chain_type) {
 		if (chain_of_nodes.length > 0) {
 			var current = chain_of_nodes.shift()
+			console.log('PREVIEWING CHAIN ACTION:', current.node.s, current.action, current.delay)
 			current.node.preview_action(current.action)
 			setTimeout(function () {
-				self.translate_chain(current)
-			}, 500)
+				self.translate_chain(current, chain_type)
+			}, current.delay)
 		} else {
-			console.log("done chain...")
+			if (chain_type == "submit_guess") {
+				//do something...
+				self.wordOptionWrapper.update_attemptability()
+				self.wordOptionWrapper.update_max_points()
+				self.wordOptionWrapper.enable_get_clue()
+				self.wordOptionWrapper.check_for_completion()
+			} else if (chain_type == "get_clue") {
+				self.wordOptionWrapper.update_attemptability()
+				self.wordOptionWrapper.update_max_points()
+				self.wordOptionWrapper.enable_get_clue()
+				self.wordOptionWrapper.check_for_completion()
+			}
+
 		}
 	}
 
-	this.translate_chain = function (current) {
+	this.translate_chain = function (current, chain_type) {
 		current.node.take_default_action(current.action)
+
 		setTimeout(function () {
-			self.preview_chain()
-		}, 500)
+			self.preview_chain(chain_type)
+		}, 20)
 
 	}
 	this.get_full_representation = function () {
@@ -1798,7 +1793,7 @@ function Sentence() {
 	this.assign_display_order_by_array_order = function () {
 		for (var i in self.visible_nodes) {
 			self.visible_nodes[i].visible_order = i
-			console.log("visible order updates in node:", self.visible_nodes[i], " visible_order:", self.visible_nodes[i].visible_order)
+			//console.log("visible order updates in node:", self.visible_nodes[i], " visible_order:", self.visible_nodes[i].visible_order)
 			$(self.visible_nodes[i].get_view()).css('order', i)
 
 		}
@@ -2515,7 +2510,7 @@ function ok_parse(st, end) {
 		})
 		//s.assign_display_order_by_array_order()
 		s.update_visible_nodes()
-		///s.wordOptionWrapper.updateOptions()
+		///s.wordOptionWrapper.update_attemptability()
 		sentences.push(s)
 	}
 }
