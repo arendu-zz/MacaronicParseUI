@@ -10,6 +10,17 @@ function ActivityLogMessage(user, sentence_id, ui_version, rule_type, rule, befo
 	this.visible_after = visible_after
 }
 
+function GuessLogMessage(user, sentence_id, ui_version, reveal, reordering, guesses_state, sentence_state, sentence_visible) {
+	this.username = user
+	this.sentence_id = sentence_id
+	this.ui_version = ui_version
+	this.show_reordering = reordering
+	this.reveal_instantly = reveal
+	this.guesses_state = guesses_state
+	this.sentence_state = sentence_state
+	this.sentence_visible = sentence_visible
+}
+
 var equalLogs = function (log1, log2) {
 	console.log("comparing:", log1, "and:", log2)
 	if (log2 == null) {

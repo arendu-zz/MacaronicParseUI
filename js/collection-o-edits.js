@@ -23,6 +23,8 @@ var num_of_low_scores
 var hitId = 'HIT_ID_NOT_AVAILABLE'
 var assignmentId = 'ASSIGNMENT_ID_NOT_AVAILABLE'
 var chain_of_nodes = []
+var ignoreReorder = false //make this false to use reordering
+var revealCorrectInstantly = true
 
 $.fn.stars = function (i) {
 	return i.each(function () {
@@ -133,7 +135,7 @@ completedTask = function () {
 	var sentences_completed = []
 	_.each(sentences, function (s) {
 		total_new_points += s.points_remaining + s.points_bonus
-		if (s.points_bonus <= 4.0) {
+		if (s.points_bonus <= 1.0) {
 			low_scores += 1
 		}
 		var p = {id: s.id, points_bonus: parseInt(Math.round(parseFloat(s.points_bonus))), points_earned: s.points_remaining}
@@ -437,6 +439,7 @@ function Node() {
 	}
 
 	this.take_default_action = function (default_type) {
+
 		var default_type = default_type || 'reorder'
 		console.log(self.graph.sentence.possibleActions.length + " possible actions...")
 		_.each(self.graph.sentence.possibleActions, function (p) {
@@ -469,10 +472,13 @@ function Node() {
 	}
 
 	this.has_possible_actions = function (direction) {
-		if (self.graph.swaps && self["swap_reorder_" + direction]) {
+
+		if (self.graph.swaps && self["swap_reorder_" + direction] && !ignoreReorder) {
 			return true
-		} else if (self.graph.splits && self["split_reorder_" + direction]) {
+		} else if (self.graph.splits && self["split_reorder_" + direction] && !ignoreReorder) {
 			return true
+		} else {
+
 		}
 		var modified_nodes = self.graph.translate_from(self, direction)
 		if (modified_nodes != null) {
@@ -484,6 +490,7 @@ function Node() {
 	}
 
 	this.preview_action = function (onlyDefault) {
+
 		var onlyDefault = onlyDefault || false;
 		console.log("in preview clearing possible actions")
 		self.graph.sentence.possibleActions = []
@@ -509,7 +516,7 @@ function Node() {
 			var pv_bounds = self.get_view_text_position()
 			pv_bounds['right'] = pv_bounds.left + pv_bounds.width
 
-			if (self.graph.swaps && self["swap_reorder_" + direction]) {
+			if (self.graph.swaps && self["swap_reorder_" + direction] && !ignoreReorder) {
 				var self_1 = false
 				var self_2 = false
 				var swap_obj = self.graph.get_swap(direction)
@@ -560,6 +567,7 @@ function Node() {
 					arrows = self.get_swap_preview_view(pathDiv, bounds, other_bounds, direction)
 
 				}
+
 				var rule_type = JSON.stringify({type: "preview", action: "swap", direction: direction, token: self.s, lang: self.lang})
 				var rule = JSON.stringify({selected: bounds_str, swaps: other_bounds_str, direction: direction})
 				var visible_before = self.graph.sentence.get_visible_string()
@@ -574,7 +582,7 @@ function Node() {
 					num_swaps.push(arrows)
 				}
 
-			} else if (self.graph.splits && self["split_reorder_" + direction]) {
+			} else if (self.graph.splits && self["split_reorder_" + direction] && !ignoreReorder) {
 				//console.log("this graphs splits")
 				var split_possible = false
 				var gvn = _.filter(self.graph.nodes, function (node) {
@@ -887,7 +895,6 @@ function Node() {
 	}
 
 	this.take_action = function (param) {
-		updateMessageBox("Once you understand the sentence, click 'Attempt Translation'")
 		if (!self.graph.sentence.stopClues || ui_version == 0) {
 			console.log('action triggered:' + param.action + ',' + param.direction)
 			self.graph.sentence.remove_all_previews(null)
@@ -1180,7 +1187,6 @@ function Node() {
 				}
 			} else {
 				/*var l2_words_remaining = 0
-				var punct = ['-', ',', '?', '.', ':', '!']
 				_.each(self.graph.sentence.visible_nodes, function (vn) {
 					if (vn.lang == 'de' && punct.indexOf(vn.s) == -1) {
 						l2_words_remaining += 1
@@ -1330,7 +1336,7 @@ function Node() {
 			$(s).on('mouseenter', function (e) {
 				//self.preview_action({action: 'external reorder', direction: 'en'})
 				//self.preview_action({action: 'translate', direction: 'en'})
-				//self.isMouseOver = true
+				self.isMouseOver = true
 				//setTimeout(self.delayed_preview, 10);
 				//self.preview_action()
 			})
@@ -1653,82 +1659,87 @@ function Sentence() {
 	this.points_container = null
 	this.wordOptionWrapper = null
 	this.initial_order_by = null
-	this.points_remaining = 10;
+	this.points_remaining = 0;
 	this.points_bonus = 0.0;
 	this.stopClues = false
 
-	this.get_clue = function () {
+	this.get_clue = function (nodes) {
 		self.wordOptionWrapper.disable_get_clue()
-		chain_of_nodes = []
-		var chain_of_node_ids = []
-		console.log("in sentence get clue")
-		var visible_nodes_l2 = []
-		_.each(self.visible_nodes, function (n) {
-			if (n.lang == 'de' && ['-', ',', '?', '.', ':', '!'].indexOf(n.s) < 0) {
-				visible_nodes_l2.push(n)
-			}
-		})
-
-		var actionable_graphs = {}
-		_.each(self.graphs, function (g) {
-			var actionable = false
-			var because_of = null
-			_.each(g.get_visible_nodes(), function (gvn) {
-
-				if (gvn.has_possible_actions('en')) {
-					actionable = true
-					because_of = gvn
-
+		chain_of_nodes = nodes || []
+		if (chain_of_nodes.length == 0) {
+			var chain_of_node_ids = []
+			console.log("in sentence get clue")
+			var visible_nodes_l2 = []
+			_.each(self.visible_nodes, function (n) {
+				if (n.lang == 'de') {
+					visible_nodes_l2.push(n)
 				}
 			})
-			if (actionable) {
-				actionable_graphs[g.id] = g
-				console.log("graph", g.id, "is actionable because of", because_of.s)
-			} else {
-				console.log("graph", g.id, "is NOT actionable.")
-			}
-		})
 
-		actionable_graphs = _.map(actionable_graphs, function (g, k) {
-			var g_frequency = 0.0
-			var l2_node_count = 0
-			_.each(g.nodes, function (gn) {
-				if (gn.lang == 'de') {
-					l2_node_count += 1
-					g_frequency += gn.frequency
-				}
+			var actionable_graphs = {}
+			_.each(self.graphs, function (g) {
+				var actionable = false
+				var because_of = null
+				_.each(g.get_visible_nodes(), function (gvn) {
 
-			})
-			var g_actionable_nodes = _.sortBy(g.get_visible_nodes(), function (gvn) {
-				if (gvn.lang == 'de' && ['-', ',', '?', '.', ':', '!'].indexOf(gvn.s) < 0) {
-					return 1.0 - gvn.frequency
-				} else if (gvn.land == 'en') {
-					return 0.0
+					if (gvn.has_possible_actions('en')) {
+						actionable = true
+						because_of = gvn
+
+					}
+				})
+				if (actionable) {
+					actionable_graphs[g.id] = g
+					console.log("graph", g.id, "is actionable because of", because_of.s)
 				} else {
-					return 1.0
+					console.log("graph", g.id, "is NOT actionable.")
 				}
 			})
 
-			return {id: k, graph: g, frequency: 1.0 - (g_frequency / l2_node_count), actionable_node: g_actionable_nodes[0]}
-		})
-		var sorted_actionable_graphs = _.sortBy(actionable_graphs, function (o) {
-			return o.frequency
-		})
-		var sorted_actionable_nodes = _.filter(sorted_actionable_graphs, function (o) {
-			return ['-', ',', '?', '.', ':', '!'].indexOf(o.actionable_node.s) < 0
-		})
+			actionable_graphs = _.map(actionable_graphs, function (g, k) {
+				var g_frequency = 0.0
+				var l2_node_count = 0
+				_.each(g.nodes, function (gn) {
+					if (gn.lang == 'de') {
+						l2_node_count += 1
+						g_frequency += gn.frequency
+					}
 
-		if (sorted_actionable_nodes.length > 0) {
-			var n_best = sorted_actionable_nodes[0].actionable_node
-			var n_best_id = n_best.id + ',' + sorted_actionable_nodes[0].graph.id
-			chain_of_nodes.push({action: true, node: n_best, delay: 400})
-			chain_of_node_ids.push(n_best_id)
+				})
+				var g_actionable_nodes = _.sortBy(g.get_visible_nodes(), function (gvn) {
+					if (gvn.lang == 'de') {
+						return 1.0 - gvn.frequency
+					} else if (gvn.land == 'en') {
+						return 0.0
+					} else {
+						return 1.0
+					}
+				})
+
+				return {id: k, graph: g, frequency: 1.0 - (g_frequency / l2_node_count), actionable_node: g_actionable_nodes[0]}
+			})
+			var sorted_actionable_graphs = _.sortBy(actionable_graphs, function (o) {
+				return o.frequency
+			})
+			var sorted_actionable_nodes = _.filter(sorted_actionable_graphs, function (o) {
+				return true //punct.indexOf(o.actionable_node.s) < 0
+			})
+
+			if (sorted_actionable_nodes.length > 0) {
+				var n_best = sorted_actionable_nodes[0].actionable_node
+				var n_best_id = n_best.id + ',' + sorted_actionable_nodes[0].graph.id
+				chain_of_nodes.push({action: true, node: n_best, delay: 60})
+				chain_of_node_ids.push(n_best_id)
+			}
+			self.preview_chain("get_clue")
+		} else {
+			self.preview_chain("reveal_get_clue")
 		}
-		console.log("ok")
-		self.preview_chain("get_clue")
+
 	}
 
 	this.submit_guess = function (additional_nodes) {
+		throw {name: "ShouldNotBeUsed", message: "actually calls get_clue()"};
 		chain_of_nodes = []
 		var chain_of_node_ids = []
 		var additional_nodes = additional_nodes || []
@@ -1741,21 +1752,29 @@ function Sentence() {
 
 		})
 
-		self.preview_chain("submit_guess")
+		//self.preview_chain("submit_guess")
+		self.wordOptionWrapper.update_attemptability()
+		self.wordOptionWrapper.update_max_points()
+		self.wordOptionWrapper.enable_get_clue()
+		self.wordOptionWrapper.check_for_completion()
 
 	}
 
 	this.preview_chain = function (chain_type) {
 		if (chain_of_nodes.length > 0) {
 			var current = chain_of_nodes.shift()
-			console.log('PREVIEWING CHAIN ACTION:', current.node.s, current.action, current.delay)
-			current.node.preview_action(current.action)
-			setTimeout(function () {
-				self.translate_chain(current, chain_type)
-			}, current.delay)
+			if (current.node.visible) {
+				console.log('PREVIEWING CHAIN ACTION:', current.node.s, current.action, current.delay)
+				current.node.preview_action(current.action)
+				setTimeout(function () {
+					self.translate_chain(current, chain_type)
+				}, current.delay)
+			}
+
 		} else {
 			if (chain_type == "submit_guess") {
 				//do something...
+				throw {name: "ShouldNotBeUsed", message: "actually calls get_clue()"};
 				self.wordOptionWrapper.update_attemptability()
 				self.wordOptionWrapper.update_max_points()
 				self.wordOptionWrapper.enable_get_clue()
@@ -1763,8 +1782,20 @@ function Sentence() {
 			} else if (chain_type == "get_clue") {
 				self.wordOptionWrapper.update_attemptability()
 				self.wordOptionWrapper.update_max_points()
-				self.wordOptionWrapper.enable_get_clue()
+				if (revealCorrectInstantly) {
+					self.wordOptionWrapper.reveal_correct()
+				}
+				self.wordOptionWrapper.enable_submit_guess()
 				self.wordOptionWrapper.check_for_completion()
+				self.wordOptionWrapper.make_focus_button()
+				updateMessageBox("One (or more) foreign words have been revealed (in blue)<br> do you want to change your previous guess? (or submit the same guesses again)")
+			} else if (chain_type == "reveal_get_clue") {
+				self.wordOptionWrapper.update_attemptability()
+				self.wordOptionWrapper.update_max_points()
+				self.wordOptionWrapper.enable_submit_guess()
+				self.wordOptionWrapper.check_for_completion()
+				self.wordOptionWrapper.make_focus_button()
+				self.wordOptionWrapper.removeOldAttempts()
 			}
 
 		}
@@ -2207,7 +2238,7 @@ function Sentence() {
 			if (ui_version == 0) {
 				self.points_remaining = 10
 			} else {
-				self.points_remaining = parseInt(this.get_node_count('de') * 0.7)
+				self.points_remaining = 0 //parseInt(this.get_node_count('de') * 0.7)
 			}
 
 			self.changePointsRemaining(self.points_remaining)
@@ -2500,6 +2531,7 @@ function receivedPreview(msg) {
 }
 
 function receivedUserProgress(msg) {
+	updateMessageBox("For each foreign word, guess its meaning in the text box below it<br>")
 	$(mainview).empty()
 	$('#confirmInput').prop('disabled', true)
 	sentences = []

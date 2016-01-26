@@ -141,6 +141,8 @@ span {
     /*-webkit-flex-grow: 2;*/
     /*flex-grow: 1;*/
     /*flex-shrink: 0;*/
+    font-size: large;
+
 
 }
 
@@ -414,6 +416,7 @@ span {
     /*----- nowrap | wrap | wrap-reverse*/
     padding-top: 0px;
     padding-bottom: 0px;
+    /*visibility: hidden;*/
 }
 
 .container:hover {
@@ -434,12 +437,22 @@ span {
     display: -webkit-box;
     display: -webkit-flex;
     display: flex;
-    flex-direction: column;
+    flex-direction: column-reverse;
     justify-content: flex-start;
     /*----- flex-start | flex-end | center | space-between | space-around*/
     align-items: center;
     /*----- flex-start | flex-end | center | baseline | stretch*/
     align-content: center;
+}
+
+.wordOptionContainer-Container {
+    display: -moz-box;
+    display: -ms-box;
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: flex;
+    flex-direction: row;
+
 }
 
 .wordOption {
@@ -453,11 +466,14 @@ span {
     -moz-user-select: none;
     -ms-user-select: none;
     user-select: none;
+    font-size: small;
+    font-family: Arial;
 
 }
 
 .translationAttempt {
     width: 95%;
+    font-family: Arial;
 }
 
 .wordOptionContainer {
@@ -472,15 +488,50 @@ span {
 
 }
 
-.guessing {
+.guessing.textspan.de.enorder {
     border-bottom: 2px solid #333333;
+    background: #ADD8E6;
+    box-shadow: 0px 0px 10px #ADD8E6;
 }
 
-input[disabled].correct {
-    background: lightgreen;
+.guessing {
+    /*border-bottom: 2px solid #333333;*/
+    background: #ADD8E6;
+    box-shadow: 0px 0px 10px #ADD8E6;
 }
 
-input[disabled] {
-    background: lightgray;
+button {
+    height: 20px;
+    margin-top: 19px;
+    margin-left: 5px;
+}
+
+.totalScore {
+    margin-top: 19px;
+    margin-left: 5px;
+}
+
+.translationAttempt.glow {
+
+}
+
+.translationAttempt:last-child {
+    margin-bottom: 5px;
+}
+
+.translationAttempt[readOnly].revealed.translationAttempt {
+    background-color: #ADD8E6;
+}
+
+.translationAttempt[readOnly].correct.translationAttempt {
+    background-color: #90EE90;
+}
+
+.translationAttempt[readOnly].incorrect.translationAttempt {
+    background-color: #FFC1C1;
+}
+
+.translationAttempt[readOnly].translationAttempt {
+    background-color: #C0C0C0;
 }
 
