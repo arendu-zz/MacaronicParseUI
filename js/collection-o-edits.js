@@ -3,6 +3,7 @@
  */
 
 var sentences = []
+var sentence_ids = []
 var page = 0;
 var sentences_per_page = 50
 var username = null
@@ -24,7 +25,7 @@ var hitId = 'HIT_ID_NOT_AVAILABLE'
 var assignmentId = 'ASSIGNMENT_ID_NOT_AVAILABLE'
 var chain_of_nodes = []
 var ignoreReorder = false //make this false to use reordering
-var revealCorrectInstantly = true
+var revealCorrectInstantly = false
 
 $.fn.stars = function (i) {
 	return i.each(function () {
@@ -171,6 +172,7 @@ gotoPrevPage = function () {
 	if (page >= 0) {
 		$(mainview).empty()
 		sentences = []
+		sentence_ids = []
 		ok_parse(st, end)
 		do_precomputations()
 	}
@@ -209,6 +211,7 @@ gotoNextPage = function () {
 
 	$(mainview).empty()
 	sentences = []
+	sentence_ids = []
 	ok_parse(st, end)
 	do_precomputations()
 }
@@ -1728,7 +1731,7 @@ function Sentence() {
 			if (sorted_actionable_nodes.length > 0) {
 				var n_best = sorted_actionable_nodes[0].actionable_node
 				var n_best_id = n_best.id + ',' + sorted_actionable_nodes[0].graph.id
-				chain_of_nodes.push({action: true, node: n_best, delay: 60})
+				chain_of_nodes.push({action: true, node: n_best, delay: 600})
 				chain_of_node_ids.push(n_best_id)
 			}
 			self.preview_chain("get_clue")
@@ -2524,6 +2527,7 @@ function receivedJsonSentence(msg) {
 function receivedPreview(msg) {
 	$(mainview).empty()
 	sentences = []
+	sentence_ids = []
 	json_sentences = msg.data
 	console.log('size of page is ' + json_sentences.length)
 	ok_parse(0, 1)
@@ -2531,10 +2535,12 @@ function receivedPreview(msg) {
 }
 
 function receivedUserProgress(msg) {
+	console.log("user received progress:", msg)
 	updateMessageBox("For each foreign word, guess its meaning in the text box below it<br>")
 	$(mainview).empty()
 	$('#confirmInput').prop('disabled', true)
 	sentences = []
+	sentence_ids = []
 	console.log("got user progress...")
 	json_sentences = msg.data
 	console.log('size of page is ' + json_sentences.length)
@@ -2607,6 +2613,7 @@ function ok_parse(st, end) {
 		s.update_visible_nodes()
 		///s.wordOptionWrapper.update_attemptability()
 		sentences.push(s)
+		sentence_ids.push(s.id)
 	}
 }
 
@@ -2643,6 +2650,7 @@ function setup(workerId, socketObj, UI_version, isPreview, sentence_prefered) {
 		console.log(socket)
 		/*$(mainview).empty()
 		sentences = []
+		sentence_ids = []
 		console.log("preview mode ui")
 		json_sentences = json_str_arr.slice(14, 15)
 		points_earned = 0

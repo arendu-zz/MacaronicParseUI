@@ -339,6 +339,8 @@ function WordOptionWrapper(l2_sentence) {
 		$(self.get_view().totalScore).show()
 		self.l2_sentence.points_earned = 0
 		self.l2_sentence.points_bonus = self.total_score
+		$(self.view.calculateScore).prop('disabled', true)
+		$(self.view.submit_guess).prop('disabled', true)
 		enable_submit()
 
 	}
