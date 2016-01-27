@@ -1721,7 +1721,26 @@ function Sentence() {
 
 				return {id: k, graph: g, frequency: 1.0 - (g_frequency / l2_node_count), actionable_node: g_actionable_nodes[0]}
 			})
-			var sorted_actionable_graphs = _.sortBy(actionable_graphs, function (o) {
+			var graph_freq = _.map(actionable_graphs, function (o) {
+				return 1.0 - parseFloat(o.frequency)
+			})
+			var sums = graph_freq.reduce(function (pv, cv) {
+				return pv + cv
+			}, 0);
+			var graph_freq_norm = _.map(graph_freq, function (gf) {
+				return gf / sums
+			})
+			var disc = SJS.Discrete(graph_freq_norm);
+			var random_graph_idx = disc.draw()
+			var random_graph = actionable_graphs[random_graph_idx]
+			if (random_graph) {
+				var n_best = random_graph.actionable_node
+				var n_best_id = n_best.id + ',' + random_graph.graph.id
+				chain_of_nodes.push({action: true, node: n_best, delay: 600})
+				chain_of_node_ids.push(n_best_id)
+			}
+
+			/*var sorted_actionable_graphs = _.sortBy(actionable_graphs, function (o) {
 				return o.frequency
 			})
 			var sorted_actionable_nodes = _.filter(sorted_actionable_graphs, function (o) {
@@ -1733,7 +1752,7 @@ function Sentence() {
 				var n_best_id = n_best.id + ',' + sorted_actionable_nodes[0].graph.id
 				chain_of_nodes.push({action: true, node: n_best, delay: 600})
 				chain_of_node_ids.push(n_best_id)
-			}
+			}*/
 			self.preview_chain("get_clue")
 		} else {
 			self.preview_chain("reveal_get_clue")
