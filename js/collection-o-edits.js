@@ -33,6 +33,11 @@ $.fn.stars = function (i) {
 	});
 }
 
+emitUserTabOut = function () {
+	if (socket) {
+		socket.emit('userTabbed', {username: username, ui_version: ui_version, sentence_id: sentence_ids[0], assignmentId: assignmentId, hitId: hitId})
+	}
+}
 updateMessageBox = function (message) {
 	if (message == $('#messageBox').html()) {
 		console.log("same message...")
