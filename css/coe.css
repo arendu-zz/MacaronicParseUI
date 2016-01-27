@@ -489,7 +489,7 @@ span {
 }
 
 .guessing.textspan.de.enorder {
-    border-bottom: 2px solid #333333;
+    /*border-bottom: 2px solid #333333;*/
     background: #ADD8E6;
     box-shadow: 0px 0px 10px #ADD8E6;
 }
