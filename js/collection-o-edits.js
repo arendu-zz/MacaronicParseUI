@@ -25,7 +25,7 @@ var hitId = 'HIT_ID_NOT_AVAILABLE'
 var assignmentId = 'ASSIGNMENT_ID_NOT_AVAILABLE'
 var chain_of_nodes = []
 var ignoreReorder = false //make this false to use reordering
-var revealCorrectInstantly = false
+var revealCorrectInstantly = true
 
 $.fn.stars = function (i) {
 	return i.each(function () {
