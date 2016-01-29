@@ -26,6 +26,7 @@ var assignmentId = 'ASSIGNMENT_ID_NOT_AVAILABLE'
 var chain_of_nodes = []
 var ignoreReorder = false //make this false to use reordering
 var revealCorrectInstantly = true
+var old_instruction_message = null
 
 $.fn.stars = function (i) {
 	return i.each(function () {
@@ -33,17 +34,29 @@ $.fn.stars = function (i) {
 	});
 }
 
+function toggle_instructions() {
+	$('.instructions').toggle();
+}
+
 emitUserTabOut = function () {
-	if (socket) {
+	if (socket && !is_preview) {
 		socket.emit('userTabbed', {username: username, ui_version: ui_version, sentence_id: sentence_ids[0], assignmentId: assignmentId, hitId: hitId})
 	}
 }
-updateMessageBox = function (message) {
-	if (message == $('#messageBox').html()) {
-		console.log("same message...")
+updateMessageBox = function (message, force) {
+	var f = force || false
+
+	if (message == old_instruction_message) {
+		//console.log("same message...")
 	} else {
-		console.log('MESSAGE BOX' + $('#messageBox').html())
-		$('#messageBox').html(message)
+		if (force) {
+			if (!$('#messageBox').is(":visible")) {
+				toggle_instructions()
+			}
+		}
+		//console.log('MESSAGE BOX' + $('#messageBox').html())
+		old_instruction_message = message
+		$('#messageBox').html(message + "<br><small>click here stop instructions!</small>")
 		$('#messageBox').css("backgroundColor", "yellow");
 		$('#messageBox').animate({ backgroundColor: "transparent" }, 800);
 	}
@@ -440,7 +453,7 @@ function Node() {
 
 	this.delayed_preview = function () {
 		if (self.isMouseOver && !self.graph.sentence.stopClues) {
-			self.preview_action()
+			self.preview_action(true)
 		} else {
 			console.log("too late")
 		}
@@ -582,7 +595,7 @@ function Node() {
 				var full_state = JSON.stringify(self.graph.sentence.get_full_representation())
 				//console.log(self.graph.sentence.get_full_representation())
 				var sm = new ActivityLogMessage(username, self.graph.sentence.id, ui_version, rule_type, rule, full_state, null, visible_before, null)
-				if (socket != null) {
+				if (socket != null && !is_preview) {
 					logEventWrapper(socket, sm)
 				}
 
@@ -721,7 +734,7 @@ function Node() {
 					var visible_before = self.graph.sentence.get_visible_string()
 					var full_state = JSON.stringify(self.graph.sentence.get_full_representation)
 					var sm = new ActivityLogMessage(username, self.graph.sentence.id, ui_version, rule_type, rule, full_state, null, visible_before, null)
-					if (socket != null) {
+					if (socket != null && !is_preview) {
 						logEventWrapper(socket, sm)
 					}
 
@@ -1184,7 +1197,7 @@ function Node() {
 			var after = JSON.stringify(self.graph.sentence.get_full_representation())
 			var visible_after = self.graph.sentence.get_visible_string()
 			var sm = new ActivityLogMessage(username, self.graph.sentence.id, ui_version, rule_type, rule, before, after, visible_before, visible_after)
-			if (socket != null) {
+			if (socket != null && !is_preview) {
 				logEventWrapper(socket, sm)
 			}
 			if (ui_version == 0) {
@@ -1349,13 +1362,13 @@ function Node() {
 				//self.preview_action()
 			})
 			$(s).on('mouseleave', function () {
-				//self.isMouseOver = false
+				self.isMouseOver = false
 			})
 			var bottom_menu_container = document.createElement('div')
 			$(bottom_menu_container).addClass('node_menu_container')
 			$(this.view).append($(bottom_menu_container))
 			$(this.view.textSpan).on('click', function (e) {
-				console.log("take default action...")
+				//console.log("take default action...")
 				//self.take_default_action()
 
 			})
@@ -1371,6 +1384,28 @@ function Node() {
 				self.isMouseOver = false
 
 			})
+			var modified_nodes = self.graph.translate_from(self, "de")
+			var copy_down = null
+			if (modified_nodes) {
+				_.each(modified_nodes.add, function (parent_node) {
+					if (parent_node.inline_translation.revealed && ['-', ',', '?', '.', ':', '!'].indexOf(parent_node.s) < 0) {
+						console.log("weird copy down....", $(parent_node.inline_translation.input_box).val())
+						copy_down = parent_node.inline_translation
+					}
+				})
+			}
+			var inline = null
+			if (copy_down) {
+				inline = copy_down.copy(self)
+			} else {
+				inline = new InlineTranslationAttempt(self)
+			}
+
+			this.inline_translation = inline
+			inline.update_avaiable_points()
+			var inline_view = inline.get_view()
+			this.view.inline_translation_view = inline_view
+			$(this.view).append($(inline_view))
 			return this.view
 		} else {
 			return this.view
@@ -1690,7 +1725,7 @@ function Sentence() {
 				var because_of = null
 				_.each(g.get_visible_nodes(), function (gvn) {
 
-					if (gvn.has_possible_actions('en')) {
+					if (gvn.has_possible_actions('en') && !gvn.inline_translation.revealed) {
 						actionable = true
 						because_of = gvn
 
@@ -1714,14 +1749,11 @@ function Sentence() {
 					}
 
 				})
-				var g_actionable_nodes = _.sortBy(g.get_visible_nodes(), function (gvn) {
-					if (gvn.lang == 'de') {
-						return 1.0 - gvn.frequency
-					} else if (gvn.land == 'en') {
-						return 0.0
-					} else {
-						return 1.0
-					}
+				var g_actionable_nodes = _.filter(g.get_visible_nodes(), function (gvn) {
+					return !gvn.inline_translation.revealed && gvn.lang == 'de'
+				})
+				var g_actionable_nodes = _.sortBy(g_actionable_nodes, function (gvn) {
+					return 1.0 - gvn.frequency
 				})
 
 				return {id: k, graph: g, frequency: 1.0 - (g_frequency / l2_node_count), actionable_node: g_actionable_nodes[0]}
@@ -1805,6 +1837,8 @@ function Sentence() {
 				self.wordOptionWrapper.update_attemptability()
 				self.wordOptionWrapper.update_max_points()
 				self.wordOptionWrapper.enable_get_clue()
+				self.wordOptionWrapper.update_avaiable_points()
+				self.wordOptionWrapper.update_tab_order()
 				self.wordOptionWrapper.check_for_completion()
 			} else if (chain_type == "get_clue") {
 				self.wordOptionWrapper.update_attemptability()
@@ -1813,16 +1847,27 @@ function Sentence() {
 					self.wordOptionWrapper.reveal_correct()
 				}
 				self.wordOptionWrapper.enable_submit_guess()
+				self.wordOptionWrapper.enable_get_clue()
+
+				self.wordOptionWrapper.update_avaiable_points()
+				self.wordOptionWrapper.update_tab_order()
+				self.wordOptionWrapper.check_to_enable_get_next_clue()
+
+				//self.wordOptionWrapper.make_focus_button()
 				self.wordOptionWrapper.check_for_completion()
-				self.wordOptionWrapper.make_focus_button()
-				updateMessageBox("One (or more) foreign words have been revealed (in blue)<br> do you want to change your previous guess? (or submit the same guesses again)")
+				updateMessageBox("One (or more) foreign words have been revealed (in blue)<br> try guessing the remaining foreign words with this new information!")
 			} else if (chain_type == "reveal_get_clue") {
 				self.wordOptionWrapper.update_attemptability()
 				self.wordOptionWrapper.update_max_points()
 				self.wordOptionWrapper.enable_submit_guess()
-				self.wordOptionWrapper.check_for_completion()
+				self.wordOptionWrapper.enable_get_clue()
+				self.wordOptionWrapper.update_avaiable_points()
+				self.wordOptionWrapper.update_tab_order()
+
+				self.wordOptionWrapper.check_to_enable_get_next_clue()
 				self.wordOptionWrapper.make_focus_button()
 				self.wordOptionWrapper.removeOldAttempts()
+				self.wordOptionWrapper.check_for_completion()
 			}
 
 		}
@@ -2560,7 +2605,7 @@ function receivedPreview(msg) {
 
 function receivedUserProgress(msg) {
 	console.log("user received progress:", msg)
-	updateMessageBox("For each foreign word, guess its meaning in the text box below it<br>")
+	updateMessageBox("For each foreign word, guess its meaning in the text box below it<br> (you may leave it blank if you have no reasonable guesses)")
 	$(mainview).empty()
 	$('#confirmInput').prop('disabled', true)
 	sentences = []

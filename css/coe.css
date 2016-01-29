@@ -133,7 +133,7 @@ span {
     /*border: 2px solid grey;*/
     justify-content: space-around;
     flex-direction: column;
-    height: 70px;
+    height: 120px;
     /*transition: height 0.25s;*/
     /*padding: 0px;*/
     /*height: -webkit-fit-content;*/
@@ -142,7 +142,6 @@ span {
     /*flex-grow: 1;*/
     /*flex-shrink: 0;*/
     font-size: large;
-
 
 }
 
@@ -452,11 +451,13 @@ span {
     display: -webkit-flex;
     display: flex;
     flex-direction: row;
+    align-items: center;
 
 }
 
 .wordOption {
     padding: 2px;
+    display: none;
 }
 
 .wordOption.prompt {
@@ -468,12 +469,14 @@ span {
     user-select: none;
     font-size: small;
     font-family: Arial;
+    display: none;
 
 }
 
 .translationAttempt {
     width: 95%;
     font-family: Arial;
+    display: none;
 }
 
 .wordOptionContainer {
@@ -508,7 +511,16 @@ button {
 
 .totalScore {
     margin-top: 19px;
+    margin-left: 15px;
+    font-size: 25px;
+    color: gray;
+}
+
+.totalScore.number {
+    margin-top: 19px;
     margin-left: 5px;
+    font-size: 25px;
+    color: green;
 }
 
 .translationAttempt.glow {
@@ -535,3 +547,46 @@ button {
     background-color: #C0C0C0;
 }
 
+.inlineTranslation {
+    display: -moz-box;
+    display: -ms-box;
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+}
+
+.emptyPadding {
+    height: 0px;
+}
+
+.inlineTranslationInput {
+    -webkit-transition: background-color 0.4s;
+    -moz-transition: background-color 0.4s;
+    -ms-transition: background-color 0.4s;
+    -o-transition: background-color 0.4s;
+    transition: background-color 0.4s;
+}
+
+.inlineTranslation.revealed {
+    opacity: 0.2;
+}
+
+.inlineTranslationInput.correctGuess {
+    background-color: #90EE90;
+}
+
+.inlineTranslationInput.incorrectGuess {
+    background-color: #FFC1C1;
+
+}
+
+.available_points {
+    font-size: x-small;
+    color: darkgray;
+}
+
+small {
+    font-size: x-small;
+}

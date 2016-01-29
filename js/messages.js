@@ -10,7 +10,7 @@ function ActivityLogMessage(user, sentence_id, ui_version, rule_type, rule, befo
 	this.visible_after = visible_after
 }
 
-function GuessLogMessage(user, sentence_id, ui_version, reveal, reordering, guesses_state, sentence_state, sentence_visible) {
+function GuessLogMessage(user, sentence_id, ui_version, reveal, reordering, guesses_state, sentence_state, sentence_visible, guesses_visible) {
 	this.username = user
 	this.sentence_id = sentence_id
 	this.ui_version = ui_version
@@ -19,6 +19,7 @@ function GuessLogMessage(user, sentence_id, ui_version, reveal, reordering, gues
 	this.guesses_state = guesses_state
 	this.sentence_state = sentence_state
 	this.sentence_visible = sentence_visible
+	this.guesses_visible = guesses_visible
 }
 
 var equalLogs = function (log1, log2) {
