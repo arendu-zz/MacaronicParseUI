@@ -472,7 +472,7 @@ function WordOptionWrapper(l2_sentence) {
 		} else {
 
 		}
-		
+
 		_.each(self.l2_sentence.visible_nodes, function (vn) {
 			if (vn.lang == 'de') {
 				if (vn.inline_translation.get_correctness_score() == 1) {
@@ -508,6 +508,17 @@ function WordOptionWrapper(l2_sentence) {
 	}
 
 	this.get_random_clue = function () {
+		if (socket && !is_preview) {
+			var guess_state = JSON.stringify(self.guess_state_inline())
+			var sentence_state = JSON.stringify(self.l2_sentence.get_full_representation())
+			var sentence_visible = self.l2_sentence.get_visible_string()
+			var guess_visible = self.guess_state_simple()
+			var gm = new GuessLogMessage(username, self.l2_sentence.id, ui_version, revealCorrectInstantly, !ignoreReorder, guess_state, sentence_state, sentence_visible, guess_visible)
+			socket.emit('logGuesses', gm)
+
+		} else {
+
+		}
 		self.l2_sentence.get_clue()
 	}
 
