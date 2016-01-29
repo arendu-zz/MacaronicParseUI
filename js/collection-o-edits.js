@@ -262,6 +262,7 @@ function Node() {
 	this.out_of_main_view = true
 	this.out_of_preview_view = true
 	this.isMouseOver = false
+	this.inline_translation = null
 
 	this.get_view_position = function () {
 		var v = self.get_view()
@@ -1388,10 +1389,13 @@ function Node() {
 			var copy_down = null
 			if (modified_nodes) {
 				_.each(modified_nodes.add, function (parent_node) {
-					if (parent_node.inline_translation.revealed && ['-', ',', '?', '.', ':', '!'].indexOf(parent_node.s) < 0) {
-						console.log("weird copy down....", $(parent_node.inline_translation.input_box).val())
-						copy_down = parent_node.inline_translation
+					if (parent_node.inline_translation) {
+						if (parent_node.inline_translation.revealed && ['-', ',', '?', '.', ':', '!'].indexOf(parent_node.s) < 0) {
+							console.log("weird copy down....", $(parent_node.inline_translation.input_box).val())
+							copy_down = parent_node.inline_translation
+						}
 					}
+
 				})
 			}
 			var inline = null
