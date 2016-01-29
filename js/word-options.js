@@ -461,8 +461,18 @@ function WordOptionWrapper(l2_sentence) {
 
 	this.submit_guess_inline = function () {
 		updateMessageBox("Correct guesses are green and incorrect guesses will disappear! <br> you can guess them again or get more clues.")
-		console.log(self.guess_state_inline())
-		console.log(self.guess_state_simple())
+		if (socket && !is_preview) {
+			var guess_state = JSON.stringify(self.guess_state_inline())
+			var sentence_state = JSON.stringify(self.l2_sentence.get_full_representation())
+			var sentence_visible = self.l2_sentence.get_visible_string()
+			var guess_visible = self.guess_state_simple()
+			var gm = new GuessLogMessage(username, self.l2_sentence.id, ui_version, revealCorrectInstantly, !ignoreReorder, guess_state, sentence_state, sentence_visible, guess_visible)
+			socket.emit('logGuesses', gm)
+
+		} else {
+
+		}
+		
 		_.each(self.l2_sentence.visible_nodes, function (vn) {
 			if (vn.lang == 'de') {
 				if (vn.inline_translation.get_correctness_score() == 1) {
@@ -494,18 +504,6 @@ function WordOptionWrapper(l2_sentence) {
 		self.check_for_completion()
 		self.enable_get_clue()
 		self.disable_submit_guess()
-
-		if (socket && !is_preview) {
-			var guess_state = JSON.stringify(self.guess_state_inline())
-			var sentence_state = JSON.stringify(self.l2_sentence.get_full_representation())
-			var sentence_visible = self.l2_sentence.get_visible_string()
-			var guess_visible = self.guess_state_simple()
-			var gm = new GuessLogMessage(username, self.l2_sentence.id, ui_version, revealCorrectInstantly, !ignoreReorder, guess_state, sentence_state, sentence_visible, guess_visible)
-			socket.emit('logGuesses', gm)
-
-		} else {
-
-		}
 
 	}
 
