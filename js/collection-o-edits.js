@@ -679,7 +679,7 @@ function Node() {
 						} else {
 							modified_nodes['moving'] = nn
 							modified_nodes['moving_to'] = self.graph.sentence.get_node_by_order(nnp)
-							console.log('moving to reference' + modified_nodes.moving_to.s)
+							//console.log('moving to reference' + modified_nodes.moving_to.s)
 							modified_nodes['is_left'] = nnpc > nnp
 						}
 					} else {

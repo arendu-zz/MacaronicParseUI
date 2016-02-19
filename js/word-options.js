@@ -89,7 +89,7 @@ var InlineTranslationAttempt = function InlineTranslationAttempt(node) {
 				})
 			}
 			if (['-', ',', '?', '.', ':', '!'].indexOf(self.node.s.trim()) >= 0) {
-				self.turn_off()
+				//self.turn_off()
 			}
 			return this.view;
 		} else {
@@ -701,6 +701,7 @@ function WordOptionWrapper(l2_sentence) {
 		})
 	}
 	this.initialOptions = function () {
+		self.get_punct_clues()
 		/*var l2_remaining = []
 		var current_idx = 0
 		_.each(self.l2_sentence.visible_nodes, function (n) {
