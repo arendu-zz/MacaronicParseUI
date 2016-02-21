@@ -59,8 +59,8 @@ var InlineTranslationAttempt = function InlineTranslationAttempt(node) {
 			$(this.view).append($(this.view.available_points))
 
 			$(this.view.input_box).keyup(function (e) {
+				self.node.graph.sentence.wordOptionWrapper.check_to_enable_submit()
 
-				self.check_to_enable_get_next_clue()
 				updateMessageBox("Click 'Submit Guess' to get feeback on the guesses.<br> (correct guesses will earn points shown below each box)")
 			})
 
@@ -79,13 +79,17 @@ var InlineTranslationAttempt = function InlineTranslationAttempt(node) {
 				$(this.view).focusin(function () {
 					self.addGuessingClass()
 				})
+				$(this.view).focusout(function () {
+					self.removeGuessingClass()
+
+				})
 
 				$(this.view).on('mouseenter', function () {
-					self.addGuessingClass()
+					//self.addGuessingClass()
 
 				})
 				$(this.view).on('mouseleave', function () {
-					self.removeGuessingClass()
+					//self.removeGuessingClass()
 
 				})
 			}
@@ -105,22 +109,6 @@ var InlineTranslationAttempt = function InlineTranslationAttempt(node) {
 		self.revealed = true
 		$(self.view.input_box).off()
 		$(self.view).off()
-	}
-
-	this.check_to_enable_get_next_clue = function () {
-		var ok_to_get_clue = true
-		_.each(self.node.graph.sentence.visible_nodes, function (vn) {
-			if (vn.lang == "de" && $(vn.inline_translation.view.input_box).val().trim() != "" && !vn.inline_translation.revealed) {
-				ok_to_get_clue = false
-			}
-		})
-		if (ok_to_get_clue) {
-			self.node.graph.sentence.wordOptionWrapper.enable_get_clue()
-			self.node.graph.sentence.wordOptionWrapper.disable_submit_guess()
-		} else {
-			self.node.graph.sentence.wordOptionWrapper.disable_get_clue()
-			self.node.graph.sentence.wordOptionWrapper.enable_submit_guess()
-		}
 	}
 
 	this.get_summary = function () {
@@ -154,7 +142,7 @@ var InlineTranslationAttempt = function InlineTranslationAttempt(node) {
 	this.get_effort_score = function () {
 		var g = $(self.view.input_box).val().trim()
 		if (g == "" || self.previous_wrong_guesses.indexOf(g) >= 0 || var_glove[g] == null) {
-			return -0.5
+			return -1
 		} else {
 			self.previous_wrong_guesses.push(g)
 			var c = self.l1_translation
@@ -181,7 +169,8 @@ var InlineTranslationAttempt = function InlineTranslationAttempt(node) {
 	}
 
 	this.remove_wrong_guesses = function (flashClass) {
-		var delay = flashClass == 'incorrectGuess' ? 800 : 1600;
+		var delay = flashClass == 'incorrectGuess' ? 200 : 400;
+		console.log("removing wrong guess...")
 		if ($(self.view.input_box).val().trim() != "") {
 
 			$(self.view.input_box).addClass(flashClass)
@@ -294,6 +283,7 @@ function TranslationAttempt(wo) {
 			$(this.view).focusout(function () {
 				console.log("focusout...")
 				var some_guess_exits = false
+				var any_blanks = false
 				self.max_points = 0.0
 				_.each(self.wo.wrapper.options, function (other_wo, k) {
 					if (other_wo.allowNewAttempts) {
@@ -302,10 +292,13 @@ function TranslationAttempt(wo) {
 					if (other_wo.get_enabled_attempt() != null && other_wo.get_enabled_attempt().val() != "") {
 						some_guess_exits = true
 					}
+					if (other_wo.get_enabled_attempt().val() != "") {
+						any_blanks = true
+					}
 				})
 				//console.log("l2_node.s:", self.wo.l2_node.s, "max_points:", self.max_points)
 				self.removeGuessingClass()
-				if (some_guess_exits) {
+				if (some_guess_exits && !any_blanks) {
 					//$(self.wo.wrapper.get_view().submit_guess).prop('disabled', false)
 					self.wo.wrapper.enable_submit_guess()
 				}
@@ -358,7 +351,7 @@ function TranslationAttempt(wo) {
 	this.fadeIn_new_attempt = function () {
 		//$(self.view).css("backgroundColor", "#FFFF00");
 		if (self.after_reveal) {
-			//$(self.view).animate({ backgroundColor: "transparent" }, 800);
+			//$(self.view).animate({ backgroundColor: "transparent" }, 200);
 			//$(self.view).css("background", "transparent");
 			//$(self.view).css("background", "lightblue");
 			$(self.view).addClass('revealed')
@@ -496,6 +489,8 @@ function WordOptionWrapper(l2_sentence) {
 	}
 
 	this.submit_guess_inline = function () {
+		self.disable_submit_guess()
+		self.disable_input_boxes()
 		updateMessageBox("Correct guesses are green and incorrect guesses will disappear! <br> you can guess them again or get more clues.")
 		if (socket && !is_preview) {
 			var guess_state = JSON.stringify(self.guess_state_inline())
@@ -509,46 +504,70 @@ function WordOptionWrapper(l2_sentence) {
 
 		}
 		//var no_correct = true
-		_.each(self.l2_sentence.visible_nodes, function (vn) {
-
-			if (vn.lang == 'de') {
-				if (vn.inline_translation.get_correctness_score() == 1) {
-					vn.inline_translation.update_on_correct()
-					if (vn.inline_translation.available_points > 0) {
-						//no_correct = false
-					}
-					self.total_score += vn.inline_translation.available_points
-					vn.inline_translation.available_points = 0
-					vn.inline_translation.update_avaiable_points()
-				} else {
-					var ef = vn.inline_translation.get_effort_score()
-					if (!isNaN(ef) && ef > 0) {
-						self.effort_score += ef
-						vn.inline_translation.remove_wrong_guesses('closeGuess')
-					} else if (!isNaN(ef) && ef < 0) {
-						self.effort_score += ef
-						vn.inline_translation.remove_wrong_guesses('incorrectGuess')
-					}
-
-				}
-				vn.inline_translation.update_avaiable_points()
-			}
+		var un_releveled = _.filter(self.l2_sentence.visible_nodes, function (vn) {
+			return !vn.inline_translation.revealed && vn.lang == 'de'
 		})
+		_.each(un_releveled, function (vn, idx) {
 
-		$(self.view.totalScore).text(self.total_score.toString())
-		$(self.view.effortScore).text(self.effort_score.toString())
-		self.l2_sentence.points_bonus = self.total_score + self.effort_score
+			setTimeout(function () {
+				console.log("idx:", idx, "vn:", vn)
+				if (vn.lang == 'de') {
+					console.log("de..")
+					if (vn.inline_translation.get_correctness_score() == 1) {
+						console.log("correct..")
+						vn.inline_translation.update_on_correct()
+						if (vn.inline_translation.available_points > 0) {
+							//no_correct = false
+						}
+						self.total_score += vn.inline_translation.available_points
+						$(self.view.totalScore).text(self.total_score.toString())
+						vn.inline_translation.available_points = 0
+						vn.inline_translation.update_avaiable_points()
+					} else {
+						console.log("not correct..")
+						var ef = vn.inline_translation.get_effort_score()
+						ef = isNaN(ef) ? 0 : ef
+						if (ef > 0) {
+							self.effort_score += ef
+							vn.inline_translation.remove_wrong_guesses('closeGuess')
+						} else if (ef < 0) {
+							self.effort_score += ef
+							vn.inline_translation.remove_wrong_guesses('incorrectGuess')
+						} else {
+							console.log(" no effect...")
+							vn.inline_translation.remove_wrong_guesses('incorrectGuess')
+						}
+						$(self.view.effortScore).text(self.effort_score.toString())
+
+					}
+					vn.inline_translation.update_avaiable_points()
+				}
+			}, 400 * idx)
+
+		})
+		setTimeout(function () {
+			var is_complete = self.check_for_completion()
+			self.l2_sentence.points_bonus = self.total_score + self.effort_score
+			//self.enable_get_clue()
+			if (!is_complete) {
+				self.disable_submit_guess()
+				self.get_random_clue()
+			}
+
+		}, 400 * un_releveled.length + 1)
+
+		/*
 		console.log("new effor score:", self.effort_score)
-		var is_complete = self.check_for_completion()
+
 		//self.enable_get_clue()
-		//self.disable_submit_guess()
+		//
 		if (is_complete) {
 			console.log("IS COMLETED")
 		} else if (!is_complete) {
 			console.log("IS NOT  COMLETED and all were wrong...")
 			self.disable_submit_guess()
-			setTimeout(self.get_random_clue, 1800)
-		}
+			setTimeout(self.get_random_clue, 200)
+		}*/
 	}
 
 	this.get_random_clue = function () {
@@ -569,14 +588,13 @@ function WordOptionWrapper(l2_sentence) {
 		self.l2_sentence.get_clue(null, rem)
 	}
 
-	this.submit_guess = function () {
+	/*this.submit_guess = function () {
 		self.disable_submit_guess()
-		/*self.l2_sentence.submit_guess(correct_nodes)*/
 
 		$(self.view.submit_guess).prop('disabled', true)
 		self.l2_sentence.get_clue()
 
-	}
+	}*/
 
 	this.guess_state_inline = function () {
 		var state = {}
@@ -658,10 +676,12 @@ function WordOptionWrapper(l2_sentence) {
 		$('input[tabindex=1]').focus()
 	}
 	this.enable_submit_guess = function () {
+
 		$(this.view.submit_guess).prop('disabled', false)
 		//$(this.view.get_clue).prop('disabled', true)
 	}
 	this.disable_submit_guess = function () {
+
 		$(this.view.submit_guess).prop('disabled', true)
 		//$(this.view.get_clue).prop('disabled', false)
 	}
@@ -680,7 +700,23 @@ function WordOptionWrapper(l2_sentence) {
 			wo.update_max_points()
 		})
 	}
+	this.enable_input_boxes = function () {
+		_.each(self.l2_sentence.visible_nodes, function (vn) {
+			if (vn.inline_translation.revealed) {
+			} else {
+				$(vn.inline_translation.view.input_box).prop('disabled', false)
+			}
+		})
+	}
+	this.disable_input_boxes = function () {
+		_.each(self.l2_sentence.visible_nodes, function (vn) {
+			if (vn.inline_translation.revealed) {
+			} else {
+				$(vn.inline_translation.view.input_box).prop('disabled', true)
+			}
+		})
 
+	}
 	this.check_for_completion = function () {
 		var l2_words_remaining = 0
 
@@ -793,20 +829,22 @@ function WordOptionWrapper(l2_sentence) {
 			}
 		})
 	}
+	this.check_to_enable_submit = function () {
+		var ok_to_submit = true
+		var un_revealed = _.filter(self.l2_sentence.visible_nodes, function (vn) {
+			return !vn.inline_translation.revealed && vn.lang == 'de'
+		})
+		_.each(un_revealed, function (vn) {
+			if ($(vn.inline_translation.view.input_box).val().trim() == '') {
+				ok_to_submit = false
 
-	this.check_to_enable_get_next_clue = function () {
-		var ok_to_get_clue = true
-		_.each(self.l2_sentence.visible_nodes, function (vn) {
-			if (vn.lang == "de" && $(vn.inline_translation.view.input_box).val().trim() != "" && !vn.inline_translation.revealed) {
-				ok_to_get_clue = false
 			}
 		})
-		if (ok_to_get_clue) {
-			self.enable_get_clue()
-			self.disable_submit_guess()
-		} else {
-			self.disable_get_clue()
+		if (ok_to_submit) {
+
 			self.enable_submit_guess()
+		} else {
+			self.disable_submit_guess()
 		}
 	}
 

@@ -573,8 +573,12 @@ button {
     opacity: 0.2;
 }
 
-.inlineTranslationInput.correctGuess {
+.inlineTranslationInput.correctGuess:disabled {
     background-color: #90EE90;
+}
+
+.inlineTranslationInput:disabled {
+    background-color: #efefef;
 }
 
 .inlineTranslationInput.incorrectGuess {

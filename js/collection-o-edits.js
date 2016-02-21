@@ -1793,7 +1793,7 @@ function Sentence() {
 				var because_of = null
 				_.each(g.get_visible_nodes(), function (gvn) {
 
-					if (gvn.has_possible_actions('en') && !gvn.inline_translation.revealed) {
+					if (gvn.lang == 'de' && gvn.has_possible_actions('en') && !gvn.inline_translation.revealed) {
 						actionable = true
 						because_of = gvn
 
@@ -1933,10 +1933,11 @@ function Sentence() {
 
 				self.wordOptionWrapper.update_avaiable_points()
 				self.wordOptionWrapper.update_tab_order()
-				self.wordOptionWrapper.check_to_enable_get_next_clue()
+				self.wordOptionWrapper.check_to_enable_submit()
 
 				//self.wordOptionWrapper.make_focus_button()
 				self.wordOptionWrapper.check_for_completion()
+				self.wordOptionWrapper.enable_input_boxes()
 				updateMessageBox("One (or more) foreign words have been revealed (in blue)<br> try guessing the remaining foreign words with this new information!")
 			} else if (chain_type == "reveal_get_clue") {
 				self.wordOptionWrapper.update_attemptability()
@@ -1946,7 +1947,7 @@ function Sentence() {
 				self.wordOptionWrapper.update_avaiable_points()
 				self.wordOptionWrapper.update_tab_order()
 
-				self.wordOptionWrapper.check_to_enable_get_next_clue()
+				self.wordOptionWrapper.check_to_enable_submit()
 				self.wordOptionWrapper.make_focus_button()
 				self.wordOptionWrapper.removeOldAttempts()
 				self.wordOptionWrapper.check_for_completion()
