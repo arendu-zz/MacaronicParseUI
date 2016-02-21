@@ -40,7 +40,13 @@ function toggle_instructions() {
 
 emitUserTabOut = function () {
 	if (socket && !is_preview) {
-		socket.emit('userTabbed', {username: username, ui_version: ui_version, sentence_id: sentence_ids[0], assignmentId: assignmentId, hitId: hitId})
+		socket.emit('userTabbed', {
+			username: username,
+			ui_version: ui_version,
+			sentence_id: sentence_ids[0],
+			assignmentId: assignmentId,
+			hitId: hitId
+		})
 	}
 }
 updateMessageBox = function (message, force) {
@@ -58,7 +64,7 @@ updateMessageBox = function (message, force) {
 		old_instruction_message = message
 		$('#messageBox').html(message + "<br><small>click here stop instructions!</small>")
 		$('#messageBox').css("backgroundColor", "yellow");
-		$('#messageBox').animate({ backgroundColor: "transparent" }, 800);
+		$('#messageBox').animate({backgroundColor: "transparent"}, 800);
 	}
 
 }
@@ -157,7 +163,9 @@ completedTask = function () {
 		if (s.points_bonus <= 1.0) {
 			low_scores += 1
 		}
-		var p = {id: s.id, points_bonus: parseInt(Math.round(parseFloat(s.points_bonus))), points_earned: s.points_remaining}
+		var p = {
+			id: s.id, points_bonus: parseInt(Math.round(parseFloat(s.points_bonus))), points_earned: s.points_remaining
+		}
 		sentences_completed.push(p)
 	});
 	var pp = points_earned + parseFloat(total_new_points)
@@ -542,7 +550,9 @@ function Node() {
 				var self_1 = false
 				var self_2 = false
 				var swap_obj = self.graph.get_swap(direction)
-				var bounds = {'height': 0, 'left': Number.POSITIVE_INFINITY, 'right': Number.NEGATIVE_INFINITY, 'top': 0 }
+				var bounds = {
+					'height': 0, 'left': Number.POSITIVE_INFINITY, 'right': Number.NEGATIVE_INFINITY, 'top': 0
+				}
 				var bounds_str = []
 				_.each(swap_obj.graphs, function (gid) {
 					var g = self.graph.sentence.get_graph_by_id(gid)
@@ -558,7 +568,9 @@ function Node() {
 					bounds.top = b.top
 					bounds.height = b.height
 				})
-				var other_bounds = {'height': 0, 'left': Number.POSITIVE_INFINITY, 'right': Number.NEGATIVE_INFINITY, 'top': 0 }
+				var other_bounds = {
+					'height': 0, 'left': Number.POSITIVE_INFINITY, 'right': Number.NEGATIVE_INFINITY, 'top': 0
+				}
 				var other_bounds_str = []
 				_.each(swap_obj.other_graphs, function (gid) {
 					var g = self.graph.sentence.get_graph_by_id(gid)
@@ -590,7 +602,13 @@ function Node() {
 
 				}
 
-				var rule_type = JSON.stringify({type: "preview", action: "swap", direction: direction, token: self.s, lang: self.lang})
+				var rule_type = JSON.stringify({
+												   type: "preview",
+												   action: "swap",
+												   direction: direction,
+												   token: self.s,
+												   lang: self.lang
+											   })
 				var rule = JSON.stringify({selected: bounds_str, swaps: other_bounds_str, direction: direction})
 				var visible_before = self.graph.sentence.get_visible_string()
 				var full_state = JSON.stringify(self.graph.sentence.get_full_representation())
@@ -730,8 +748,18 @@ function Node() {
 					}
 
 					var translation_items = self.get_translate_preview_view(modified_nodes.add, bounds, direction)
-					var rule_type = JSON.stringify({type: "preview", action: "translate", direction: direction, token: self.s, lang: self.lang})
-					var rule = JSON.stringify({add: modified_nodes.addStr, remove: modified_nodes.removeStr, direction: direction})
+					var rule_type = JSON.stringify({
+													   type: "preview",
+													   action: "translate",
+													   direction: direction,
+													   token: self.s,
+													   lang: self.lang
+												   })
+					var rule = JSON.stringify({
+												  add: modified_nodes.addStr,
+												  remove: modified_nodes.removeStr,
+												  direction: direction
+											  })
 					var visible_before = self.graph.sentence.get_visible_string()
 					var full_state = JSON.stringify(self.graph.sentence.get_full_representation)
 					var sm = new ActivityLogMessage(username, self.graph.sentence.id, ui_version, rule_type, rule, full_state, null, visible_before, null)
@@ -746,7 +774,11 @@ function Node() {
 								$(pv_translate).append(wordSpan)
 
 							})
-							self.graph.sentence.possibleActions.push({node: self, action: 'translate', direction: direction})
+							self.graph.sentence.possibleActions.push({
+																		 node: self,
+																		 action: 'translate',
+																		 direction: direction
+																	 })
 						} else {
 							console.log("not showing translation...")
 						}
@@ -756,7 +788,11 @@ function Node() {
 							$(pv_translate).append(wordSpan)
 
 						})
-						self.graph.sentence.possibleActions.push({node: self, action: 'translate', direction: direction})
+						self.graph.sentence.possibleActions.push({
+																	 node: self,
+																	 action: 'translate',
+																	 direction: direction
+																 })
 					}
 
 					$(pv_translate).on('mouseenter', function () {
@@ -869,7 +905,11 @@ function Node() {
 					arrows.path[0][0].classList.remove('highlighted')
 					arrows.path[0][0].classList.remove('highlighted')
 				})
-				self.graph.sentence.possibleActions.push({ node: self, action: arrows.type + ' reorder', direction: arrows.direction})
+				self.graph.sentence.possibleActions.push({
+															 node: self,
+															 action: arrows.type + ' reorder',
+															 direction: arrows.direction
+														 })
 				arrows.path.on('click', function () {
 					if (arrows.direction == 'en') {
 						console.log("its been clicked!!!")
@@ -904,7 +944,11 @@ function Node() {
 					arrows.path[0][0].classList.remove('highlighted')
 					arrows.path[0][0].classList.remove('highlighted')
 				})
-				self.graph.sentence.possibleActions.push({ node: self, action: arrows.type + ' reorder', direction: arrows.direction})
+				self.graph.sentence.possibleActions.push({
+															 node: self,
+															 action: arrows.type + ' reorder',
+															 direction: arrows.direction
+														 })
 				arrows.path.on('click', function () {
 					if (arrows.direction == 'en' || true) {
 						console.log("its been clicked!!!")
@@ -922,7 +966,13 @@ function Node() {
 			self.graph.sentence.remove_all_previews(null)
 			var before = JSON.stringify(self.graph.sentence.get_full_representation())
 			var visible_before = self.graph.sentence.get_visible_string()
-			var rule_type = JSON.stringify({type: "action", action: param.action, direction: param.direction, token: self.s, lang: self.lang})
+			var rule_type = JSON.stringify({
+											   type: "action",
+											   action: param.action,
+											   direction: param.direction,
+											   token: self.s,
+											   lang: self.lang
+										   })
 			var rule = null
 			if (param.action == 'split reorder') {
 
@@ -1053,13 +1103,21 @@ function Node() {
 						gvn_positions = vn_group1_positions
 						swaps_with_nodes = vn_group2
 						swaps_with_positions = vn_group2_positions
-						rule = JSON.stringify({selected: vn_group1_str, swaps: vn_group2_str, direction: param.direction})
+						rule = JSON.stringify({
+												  selected: vn_group1_str,
+												  swaps: vn_group2_str,
+												  direction: param.direction
+											  })
 					} else {
 						gvn = vn_group2
 						gvn_positions = vn_group2_positions
 						swaps_with_nodes = vn_group1
 						swaps_with_positions = vn_group1_positions
-						rule = JSON.stringify({selected: vn_group2_str, swaps: vn_group1_str, direction: param.direction})
+						rule = JSON.stringify({
+												  selected: vn_group2_str,
+												  swaps: vn_group1_str,
+												  direction: param.direction
+											  })
 					}
 
 					self.graph.sentence.remove_nodes(gvn)
@@ -1112,7 +1170,11 @@ function Node() {
 				}
 				//If the translation action has changed the visible nodes, result will be true
 				if (modified_nodes != null) {
-					rule = JSON.stringify({add: modified_nodes.addStr, remove: modified_nodes.removeStr, direction: modified_nodes.direction})
+					rule = JSON.stringify({
+											  add: modified_nodes.addStr,
+											  remove: modified_nodes.removeStr,
+											  direction: modified_nodes.direction
+										  })
 					var remove_positions = []
 					for (var mnr = 0; mnr < modified_nodes.remove.length; mnr++) {
 						remove_positions.push(parseInt($(modified_nodes.remove[mnr].get_view()).css('order')))
@@ -1710,9 +1772,11 @@ function Sentence() {
 	this.points_bonus = 0.0;
 	this.stopClues = false
 
-	this.get_clue = function (nodes) {
+	this.get_clue = function (nodes, num_clues) {
+		console.log("going to reveal ", num_clues, "random clues...")
 		self.wordOptionWrapper.disable_get_clue()
 		chain_of_nodes = nodes || []
+		num_clues = num_clues || 2
 		if (chain_of_nodes.length == 0) {
 			var chain_of_node_ids = []
 			console.log("in sentence get clue")
@@ -1760,7 +1824,12 @@ function Sentence() {
 					return 1.0 - gvn.frequency
 				})
 
-				return {id: k, graph: g, frequency: 1.0 - (g_frequency / l2_node_count), actionable_node: g_actionable_nodes[0]}
+				return {
+					id: k,
+					graph: g,
+					frequency: 1.0 - (g_frequency / l2_node_count),
+					actionable_node: g_actionable_nodes[0]
+				}
 			})
 			var graph_freq = _.map(actionable_graphs, function (o) {
 				return 1.0 - parseFloat(o.frequency)
@@ -1771,14 +1840,23 @@ function Sentence() {
 			var graph_freq_norm = _.map(graph_freq, function (gf) {
 				return gf / sums
 			})
-			var disc = SJS.Discrete(graph_freq_norm);
-			var random_graph_idx = disc.draw()
-			var random_graph = actionable_graphs[random_graph_idx]
-			if (random_graph) {
-				var n_best = random_graph.actionable_node
-				var n_best_id = n_best.id + ',' + random_graph.graph.id
-				chain_of_nodes.push({action: true, node: n_best, delay: 600})
-				chain_of_node_ids.push(n_best_id)
+			var loop_limit = 0
+			while (chain_of_node_ids.length < num_clues && loop_limit < 20) {
+				loop_limit += 1
+				var disc = SJS.Discrete(graph_freq_norm);
+				var random_graph_idx = disc.draw()
+				var random_graph = actionable_graphs[random_graph_idx]
+				if (random_graph) {
+					var n_best = random_graph.actionable_node
+					var n_best_id = n_best.id + ',' + random_graph.graph.id
+					if (chain_of_node_ids.indexOf(n_best_id) >= 0) {
+						console.log("selected same clue.. skipping..")
+					} else {
+						chain_of_nodes.push({action: true, node: n_best, delay: 800})
+						chain_of_node_ids.push(n_best_id)
+					}
+
+				}
 			}
 
 			/*var sorted_actionable_graphs = _.sortBy(actionable_graphs, function (o) {
@@ -1850,8 +1928,8 @@ function Sentence() {
 				if (revealCorrectInstantly) {
 					self.wordOptionWrapper.reveal_correct()
 				}
-				self.wordOptionWrapper.enable_submit_guess()
-				self.wordOptionWrapper.enable_get_clue()
+				//self.wordOptionWrapper.enable_submit_guess()
+				//self.wordOptionWrapper.enable_get_clue()
 
 				self.wordOptionWrapper.update_avaiable_points()
 				self.wordOptionWrapper.update_tab_order()
@@ -1959,6 +2037,12 @@ function Sentence() {
 		self.visible_nodes = _.sortBy(self.visible_nodes, function (node) {
 			return parseInt($(node.get_view()).css('order'))
 		});
+	}
+	this.get_visible_nodes_by_lang = function (lang) {
+		var l = _.filter(self.visible_nodes, function (vn) {
+			return vn.lang == lang
+		})
+		return l
 	}
 	this.assign_display_order_by_array_order = function () {
 		for (var i in self.visible_nodes) {
@@ -2442,7 +2526,7 @@ function Sentence() {
 			}
 			if (item.highlight_movement) {
 				$(item.span).css("backgroundColor", "orange");
-				$(item.span).animate({ backgroundColor: "transparent" }, 500);
+				$(item.span).animate({backgroundColor: "transparent"}, 500);
 				item.highlight_movement = false
 			} else {
 				////console.log("no movement")

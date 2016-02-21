@@ -582,6 +582,10 @@ button {
 
 }
 
+.inlineTranslationInput.closeGuess {
+    background-color: #EEEE00;
+}
+
 .available_points {
     font-size: x-small;
     color: darkgray;

@@ -9,6 +9,7 @@ var InlineTranslationAttempt = function InlineTranslationAttempt(node) {
 	this.node = node
 	this.view = null
 	this.revealed = false
+	this.previous_wrong_guesses = []
 
 	this.copy = function (new_node) {
 		var n = new InlineTranslationAttempt(new_node)
@@ -138,9 +139,9 @@ var InlineTranslationAttempt = function InlineTranslationAttempt(node) {
 		var guess_phrase = $(self.view.input_box).val().split(" ")
 		_.each(self.l1_translation, function (l1_word) {
 			_.each(guess_phrase, function (guess_word) {
-				if (guess_word.toLowerCase() == l1_word.toLowerCase()) {
+				if (guess_word.toLowerCase() == accentsTidy(l1_word.toLowerCase())) {
 					acceptance += (1.0 / guess_phrase.length )
-				} else if (stemmer(guess_word.toLowerCase()) == stemmer(l1_word.toLowerCase())) {
+				} else if (stemmer(guess_word.toLowerCase()) == stemmer(accentsTidy(l1_word.toLowerCase()))) {
 					acceptance += (1.0 / guess_phrase.length )
 				} else {
 
@@ -150,13 +151,44 @@ var InlineTranslationAttempt = function InlineTranslationAttempt(node) {
 		return acceptance
 	}
 
-	this.remove_wrong_guesses = function () {
+	this.get_effort_score = function () {
+		var g = $(self.view.input_box).val().trim()
+		if (g == "" || self.previous_wrong_guesses.indexOf(g) >= 0 || var_glove[g] == null) {
+			return -0.5
+		} else {
+			self.previous_wrong_guesses.push(g)
+			var c = self.l1_translation
+			if (g.indexOf(' ') >= 0) {
+				g = g.split([separator = ' '])
+			}
+			var g_glove = get_glove_vec(g)
+			var c_glove = get_glove_vec(c)
+			var cosine_sim = null
+			if (g_glove == null || c_glove == null) {
+
+			} else {
+				cosine_sim = cosine_similarity(g_glove, c_glove)
+			}
+			console.log("cosine score for g:", g, "c", c, "score:", cosine_sim)
+			if (cosine_sim == null || cosine_sim < 0.4) {
+				return 0
+			} else {
+				var score = parseInt((cosine_sim - 0.4) * 10)
+				return score
+			}
+		}
+
+	}
+
+	this.remove_wrong_guesses = function (flashClass) {
+		var delay = flashClass == 'incorrectGuess' ? 800 : 1600;
 		if ($(self.view.input_box).val().trim() != "") {
-			$(self.view.input_box).addClass('incorrectGuess')
+
+			$(self.view.input_box).addClass(flashClass)
 			setTimeout(function () {
-				$(self.view.input_box).removeClass('incorrectGuess')
+				$(self.view.input_box).removeClass(flashClass)
 				$(self.view.input_box).val("")
-			}, 800)
+			}, delay)
 		}
 
 	}
@@ -164,6 +196,7 @@ var InlineTranslationAttempt = function InlineTranslationAttempt(node) {
 	this.update_on_correct = function () {
 		if (self.get_correctness_score() == 1) {
 			self.revealed = true
+			$(self.view.input_box).text(self.l1_translation)
 			$(self.view.input_box).addClass('correctGuess')
 			$(self.view.input_box).prop('disabled', true)
 			$(self.view.input_box).off()
@@ -215,7 +248,7 @@ var InlineTranslationAttempt = function InlineTranslationAttempt(node) {
 
 	this.update_avaiable_points = function () {
 		if (!self.revealed) {
-			self.available_points = parseInt((self.points_from_frequency()) + (self.points_from_remaining()))
+			self.available_points = 10 //parseInt((self.points_from_frequency()) + (self.points_from_remaining()))
 			$(self.get_view().available_points).text('+' + self.available_points.toString())
 		} else {
 			$(self.get_view().available_points).text('+0')
@@ -235,14 +268,16 @@ function TranslationAttempt(wo) {
 	this.isCorrect = false
 	this.after_reveal = false
 
-	this.get_correctness_score = function () {
+	/*this.get_correctness_score = function () {
 		var acceptance = 0.0
 		var guess_phrase = self.val().split(" ")
 		_.each(self.wo.l1_translation, function (l1_word) {
 			_.each(guess_phrase, function (guess_word) {
-				if (guess_word.toLowerCase() == l1_word.toLowerCase()) {
+				console.log("WTF!!", accentsTidy(l1_word.toLowerCase()))
+
+				if (guess_word.toLowerCase() == accentsTidy(l1_word.toLowerCase())) {
 					acceptance += (1.0 / guess_phrase.length )
-				} else if (stemmer(guess_word.toLowerCase()) == stemmer(l1_word.toLowerCase())) {
+				} else if (stemmer(guess_word.toLowerCase()) == stemmer(accentsTidy(l1_word.toLowerCase()))) {
 					acceptance += (1.0 / guess_phrase.length )
 				} else {
 
@@ -250,7 +285,7 @@ function TranslationAttempt(wo) {
 			})
 		})
 		return acceptance
-	}
+	}*/
 
 	this.get_view = function () {
 		if (this.view == null) {
@@ -384,7 +419,8 @@ function WordOptionWrapper(l2_sentence) {
 			this.view.get_clue = document.createElement('button')
 			$(this.view.get_clue).text('Get Random Clue')
 			$(this.view).append($(this.view.get_clue))
-			$(this.view.get_clue).click(this.get_random_clue)
+			$(this.view.get_clue).hide()
+			//$(this.view.get_clue).click(this.get_random_clue)
 
 			/*this.view.calculateScore = document.createElement('button')
 			$(this.view.calculateScore).text('Calculate Score')
@@ -404,7 +440,7 @@ function WordOptionWrapper(l2_sentence) {
 			$(this.view.totalScore).text('0')
 			$(this.view).append($(this.view.totalScore))
 
-			/*this.view.effort_txt = document.createElement('span')
+			this.view.effort_txt = document.createElement('span')
 			$(this.view.effort_txt).addClass("totalScore")
 			$(this.view.effort_txt).text('Effort:')
 			$(this.view).append($(this.view.effort_txt))
@@ -412,7 +448,7 @@ function WordOptionWrapper(l2_sentence) {
 			this.view.effortScore = document.createElement('span')
 			$(this.view.effortScore).addClass("totalScore number")
 			$(this.view.effortScore).text('0')
-			$(this.view).append($(this.view.effortScore))*/
+			$(this.view).append($(this.view.effortScore))
 
 			return this.view
 		} else {
@@ -447,14 +483,14 @@ function WordOptionWrapper(l2_sentence) {
 		var single_punct_nodes = []
 		_.each(self.l2_sentence.visible_nodes, function (vn) {
 			var gvns = vn.graph.get_visible_nodes()
-			if (vn.lang == 'de' && gvns.length == 1 && ['-', ',', '?', '.', ':', '!'].indexOf(vn.s) >= 0) {
+			if (vn.lang == 'de' && gvns.length == 1 && ['&quot;', '"', '-', ',', '?', '.', ':', '!'].indexOf(vn.s) >= 0) {
 				single_punct_nodes.push({action: true, node: vn, delay: 10})
 			} else {
 				console.log(vn.s, gvns.length)
 			}
 		})
 		if (single_punct_nodes.length > 0) {
-			self.l2_sentence.get_clue(single_punct_nodes)
+			self.l2_sentence.get_clue(single_punct_nodes, 1)
 		}
 
 	}
@@ -472,39 +508,47 @@ function WordOptionWrapper(l2_sentence) {
 		} else {
 
 		}
-
+		//var no_correct = true
 		_.each(self.l2_sentence.visible_nodes, function (vn) {
+
 			if (vn.lang == 'de') {
 				if (vn.inline_translation.get_correctness_score() == 1) {
 					vn.inline_translation.update_on_correct()
+					if (vn.inline_translation.available_points > 0) {
+						//no_correct = false
+					}
 					self.total_score += vn.inline_translation.available_points
 					vn.inline_translation.available_points = 0
 					vn.inline_translation.update_avaiable_points()
 				} else {
-					vn.inline_translation.remove_wrong_guesses()
+					var ef = vn.inline_translation.get_effort_score()
+					if (!isNaN(ef) && ef > 0) {
+						self.effort_score += ef
+						vn.inline_translation.remove_wrong_guesses('closeGuess')
+					} else if (!isNaN(ef) && ef < 0) {
+						self.effort_score += ef
+						vn.inline_translation.remove_wrong_guesses('incorrectGuess')
+					}
 
 				}
 				vn.inline_translation.update_avaiable_points()
-
 			}
-
 		})
 
-		if ($(self.view.totalScore).text() == self.total_score.toString() && self.total_score > 0) {
-			var rand = Math.random() * 10
-			if (rand > self.effort_score) {
-				self.effort_score += 1
-			}
-		} else {
-			console.log("no effort...", self.effort_score, rand, self.total_score.toString(), $(self.view.totalScore).val())
-		}
 		$(self.view.totalScore).text(self.total_score.toString())
-		//$(self.view.effortScore).text(self.effort_score.toString())
-		self.l2_sentence.points_bonus = self.total_score //+ self.effort_score
-		self.check_for_completion()
-		self.enable_get_clue()
-		self.disable_submit_guess()
-
+		$(self.view.effortScore).text(self.effort_score.toString())
+		self.l2_sentence.points_bonus = self.total_score + self.effort_score
+		console.log("new effor score:", self.effort_score)
+		var is_complete = self.check_for_completion()
+		//self.enable_get_clue()
+		//self.disable_submit_guess()
+		if (is_complete) {
+			console.log("IS COMLETED")
+		} else if (!is_complete) {
+			console.log("IS NOT  COMLETED and all were wrong...")
+			self.disable_submit_guess()
+			setTimeout(self.get_random_clue, 1800)
+		}
 	}
 
 	this.get_random_clue = function () {
@@ -519,7 +563,10 @@ function WordOptionWrapper(l2_sentence) {
 		} else {
 
 		}
-		self.l2_sentence.get_clue()
+		var rem = self.l2_sentence.get_visible_nodes_by_lang('de')
+		rem = parseInt(rem.length / 3.0)
+		rem = rem > 0 ? rem : 1;
+		self.l2_sentence.get_clue(null, rem)
 	}
 
 	this.submit_guess = function () {
@@ -568,7 +615,7 @@ function WordOptionWrapper(l2_sentence) {
 		})
 
 		var return_str = _.map(sentence_guess, function (s) {
-			var o = { w: s.word, g: s.guess }
+			var o = {w: s.word, g: s.guess}
 			return o
 		})
 
@@ -647,6 +694,9 @@ function WordOptionWrapper(l2_sentence) {
 		if (l2_words_remaining == 0) {
 			self.l2_sentence.stopClues = true
 			self.stopClues()
+			return true
+		} else {
+			return false
 		}
 	}
 
