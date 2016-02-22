@@ -263,6 +263,7 @@ function WordOptionWrapper(l2_sentence) {
 	this.get_view = function () {
 		if (this.view == null) {
 			this.view = document.createElement('div')
+
 			$(this.view).addClass('wordOptionContainer-Container')
 			this.view.optionContainer = document.createElement('div')
 			$(this.view.optionContainer).addClass('wordOptionContainer')
@@ -545,12 +546,16 @@ function WordOptionWrapper(l2_sentence) {
 	this.enable_submit_guess = function () {
 
 		$(this.view.submit_guess).prop('disabled', false)
-		//$(this.view.get_clue).prop('disabled', true)
+		$(this.view.submit_guess).text('Submit Guess')
+		$(this.view.submit_guess).removeAttr('title')
 	}
-	this.disable_submit_guess = function () {
+	this.disable_submit_guess = function (reason) {
 
 		$(this.view.submit_guess).prop('disabled', true)
-		//$(this.view.get_clue).prop('disabled', false)
+		if (reason != null) {
+			$(this.view.submit_guess).text('Submit Guess' + ' (' + reason + ')')
+			$(this.view.submit_guess).attr('title', reason)
+		}
 	}
 
 	this.enable_get_clue = function () {
@@ -597,6 +602,7 @@ function WordOptionWrapper(l2_sentence) {
 		if (l2_words_remaining == 0) {
 			self.l2_sentence.stopClues = true
 			self.stopClues()
+			self.disable_submit_guess()
 			return true
 		} else {
 			return false
@@ -713,7 +719,12 @@ function WordOptionWrapper(l2_sentence) {
 		if (ok_to_submit) {
 			self.enable_submit_guess()
 		} else {
-			self.disable_submit_guess()
+			if (un_revealed.length == 0) {
+				self.disable_submit_guess()
+			} else {
+				self.disable_submit_guess('enter more guesses')
+			}
+
 		}
 	}
 
