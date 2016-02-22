@@ -84,6 +84,10 @@ var InlineTranslationAttempt = function InlineTranslationAttempt(node) {
 
 				})
 
+				$(this.view).keyup(function () {
+
+				})
+
 				$(this.view).on('mouseenter', function () {
 					//self.addGuessingClass()
 
@@ -245,145 +249,6 @@ var InlineTranslationAttempt = function InlineTranslationAttempt(node) {
 			$(self.get_view().available_points).css('visibility', 'hidden')
 		}
 
-	}
-}
-
-//var punct = ['-', ',', '?', '.', ':', '!']
-//var punct = []
-function TranslationAttempt(wo) {
-	var self = this
-	this.max_points = 0.0
-	this.wo = wo
-	this.view = null
-	this.isCorrect = false
-	this.after_reveal = false
-
-	/*this.get_correctness_score = function () {
-		var acceptance = 0.0
-		var guess_phrase = self.val().split(" ")
-		_.each(self.wo.l1_translation, function (l1_word) {
-			_.each(guess_phrase, function (guess_word) {
-				console.log("WTF!!", accentsTidy(l1_word.toLowerCase()))
-
-				if (guess_word.toLowerCase() == accentsTidy(l1_word.toLowerCase())) {
-					acceptance += (1.0 / guess_phrase.length )
-				} else if (stemmer(guess_word.toLowerCase()) == stemmer(accentsTidy(l1_word.toLowerCase()))) {
-					acceptance += (1.0 / guess_phrase.length )
-				} else {
-
-				}
-			})
-		})
-		return acceptance
-	}*/
-
-	this.get_view = function () {
-		if (this.view == null) {
-			this.view = document.createElement('input')
-			$(this.view).addClass("translationAttempt")
-			$(this.view).focusout(function () {
-				console.log("focusout...")
-				var some_guess_exits = false
-				var any_blanks = false
-				self.max_points = 0.0
-				_.each(self.wo.wrapper.options, function (other_wo, k) {
-					if (other_wo.allowNewAttempts) {
-						self.max_points += 1
-					}
-					if (other_wo.get_enabled_attempt() != null && other_wo.get_enabled_attempt().val() != "") {
-						some_guess_exits = true
-					}
-					if (other_wo.get_enabled_attempt().val() != "") {
-						any_blanks = true
-					}
-				})
-				//console.log("l2_node.s:", self.wo.l2_node.s, "max_points:", self.max_points)
-				self.removeGuessingClass()
-				if (some_guess_exits && !any_blanks) {
-					//$(self.wo.wrapper.get_view().submit_guess).prop('disabled', false)
-					self.wo.wrapper.enable_submit_guess()
-				}
-
-			})
-
-			$(this.view).focusin(function () {
-				self.addGuessingClass()
-			})
-
-			$(this.view).on('mouseenter', function () {
-				self.addGuessingClass()
-
-			})
-			$(this.view).on('mouseleave', function () {
-				self.removeGuessingClass()
-			})
-
-			$(this.view).keyup(function () {
-				updateMessageBox("Once you make guesses, click 'Submit Guess'<br>")
-			})
-			return this.view
-		} else {
-			return this.view
-		}
-	}
-
-	this.addGuessingClass = function () {
-		_.each(self.wo.wrapper.l2_sentence.visible_nodes, function (vn) {
-			$(vn.get_view().textSpan).removeClass('guessing')
-		})
-		if (self.wo.l2_node.visible) {
-			$(self.wo.l2_node.get_view().textSpan).addClass("guessing")
-		} else {
-			_.each(self.wo.l2_node.graph.get_visible_nodes(), function (l2_vn) {
-				$(l2_vn.get_view().textSpan).addClass("guessing")
-			})
-		}
-	}
-	this.removeGuessingClass = function () {
-		if (self.wo.l2_node.visible) {
-			$(self.wo.l2_node.get_view().textSpan).removeClass("guessing")
-		} else {
-			_.each(self.wo.l2_node.graph.get_visible_nodes(), function (l2_vn) {
-				$(l2_vn.get_view().textSpan).removeClass("guessing")
-			})
-		}
-	}
-
-	this.fadeIn_new_attempt = function () {
-		//$(self.view).css("backgroundColor", "#FFFF00");
-		if (self.after_reveal) {
-			//$(self.view).animate({ backgroundColor: "transparent" }, 200);
-			//$(self.view).css("background", "transparent");
-			//$(self.view).css("background", "lightblue");
-			$(self.view).addClass('revealed')
-			//$(self.view).animate({ backgroundColor: "#ADD8E6" }, 100);
-		} else {
-			//$(self.view).animate({ backgroundColor: "transparent" }, 100);
-		}
-
-	}
-
-	this.update_max_points = function () {
-		self.max_points = 0.0
-		_.each(self.wo.wrapper.options, function (other_wo, k) {
-			if (other_wo.allowNewAttempts) {
-				self.max_points += 1
-			}
-		})
-		//console.log("updated max points:", wo.l2_node.s, self.max_points)
-	}
-
-	this.val = function () {
-		return $(this.get_view()).val().trim()
-	}
-
-	this.set_val = function (txt) {
-		$(this.get_view()).val(txt)
-	}
-
-	this.disable = function () {
-		this.get_view().tabIndex = parseInt(-1)
-		$(this.get_view()).prop('readOnly', true)
 	}
 }
 
@@ -833,17 +698,19 @@ function WordOptionWrapper(l2_sentence) {
 	}
 	this.check_to_enable_submit = function () {
 		var ok_to_submit = true
+		var num_blanks = 0.0
 		var un_revealed = _.filter(self.l2_sentence.visible_nodes, function (vn) {
 			return !vn.inline_translation.revealed && vn.lang == 'de'
 		})
 		_.each(un_revealed, function (vn) {
 			if ($(vn.inline_translation.view.input_box).val().trim() == '') {
 				ok_to_submit = false
+				num_blanks += 1.0
 
 			}
 		})
+		ok_to_submit = (num_blanks / un_revealed.length) < 0.5
 		if (ok_to_submit) {
-
 			self.enable_submit_guess()
 		} else {
 			self.disable_submit_guess()
