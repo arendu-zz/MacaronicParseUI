@@ -418,6 +418,10 @@ span {
     /*visibility: hidden;*/
 }
 
+.ignoreMouse {
+    pointer-events: none;
+}
+
 .container:hover {
     /*background: grey;*/
 }
