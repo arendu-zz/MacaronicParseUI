@@ -124,7 +124,7 @@ var InlineTranslationAttempt = function InlineTranslationAttempt(node) {
 
 	this.get_correctness_score = function () {
 		var acceptance = 0.0
-		var guess_phrase = $(self.view.input_box).val().split(" ")
+		var guess_phrase = $(self.view.input_box).val().trim().split(" ")
 		_.each(self.l1_translation, function (l1_word) {
 			_.each(guess_phrase, function (guess_word) {
 				if (guess_word.toLowerCase() == accentsTidy(l1_word.toLowerCase())) {
