@@ -27,6 +27,7 @@ var chain_of_nodes = []
 var ignoreReorder = false //make this false to use reordering
 var revealCorrectInstantly = true
 var old_instruction_message = null
+var animating = false
 
 $.fn.stars = function (i) {
 	return i.each(function () {
@@ -1387,7 +1388,9 @@ function Node() {
 			//self.unpreview_action()
 		}
 	}
+	this.turn_off_mouse_events = function () {
 
+	}
 	this.get_view = function () {
 		if (this.view == null) {
 			this.view = document.createElement('div')
@@ -1401,10 +1404,10 @@ function Node() {
 			$(this.view).append($(menu_container))
 			$(menu_container)
 
-			$(menu_container).on('mouseenter', function (e) {
+			/*$(menu_container).on('mouseenter', function (e) {
 
 				//self.preview_action()
-			})
+			})*/
 			$(menu_container).on('click', function (e) {
 
 				console.log("clicked node menu container")
@@ -1418,11 +1421,7 @@ function Node() {
 			$(this.view).append($(s))
 
 			$(s).on('mouseenter', function (e) {
-				//self.preview_action({action: 'external reorder', direction: 'en'})
-				//self.preview_action({action: 'translate', direction: 'en'})
 				self.isMouseOver = true
-				//setTimeout(self.delayed_preview, 10);
-				//self.preview_action()
 			})
 			$(s).on('mouseleave', function () {
 				self.isMouseOver = false
@@ -1430,14 +1429,13 @@ function Node() {
 			var bottom_menu_container = document.createElement('div')
 			$(bottom_menu_container).addClass('node_menu_container')
 			$(this.view).append($(bottom_menu_container))
-			$(this.view.textSpan).on('click', function (e) {
-				//console.log("take default action...")
-				//self.take_default_action()
-
-			})
+			/*$(this.view.textSpan).on('click', function (e) {
+				console.log("take default action...")
+				self.take_default_action()
+			})*/
 			$(this.view).on('mouseover', function (e) {
 				self.isMouseOver = true
-				if (self.lang == 'en') {
+				if (self.lang == 'en' && !animating) {
 					self.preview_action()
 				}
 
@@ -1773,6 +1771,7 @@ function Sentence() {
 	this.stopClues = false
 
 	this.get_clue = function (nodes, num_clues) {
+
 		console.log("going to reveal ", num_clues, "random clues...")
 		self.wordOptionWrapper.disable_get_clue()
 		chain_of_nodes = nodes || []
@@ -1902,6 +1901,7 @@ function Sentence() {
 	}
 
 	this.preview_chain = function (chain_type) {
+
 		if (chain_of_nodes.length > 0) {
 			var current = chain_of_nodes.shift()
 			if (current.node.visible) {
@@ -1913,6 +1913,9 @@ function Sentence() {
 			}
 
 		} else {
+
+			animating = false
+
 			if (chain_type == "submit_guess") {
 				//do something...
 				throw {name: "ShouldNotBeUsed", message: "actually calls get_clue()"};
@@ -1937,6 +1940,7 @@ function Sentence() {
 
 				//self.wordOptionWrapper.make_focus_button()
 				self.wordOptionWrapper.check_for_completion()
+
 				self.wordOptionWrapper.enable_input_boxes()
 				updateMessageBox("One (or more) foreign words have been revealed (in blue)<br> try guessing the remaining foreign words with this new information!")
 			} else if (chain_type == "reveal_get_clue") {
@@ -2473,6 +2477,7 @@ function Sentence() {
 			return this.text_container
 		}
 	}
+
 	this.get_container = function () {
 		if (this.container == null) {
 			this.container = document.createElement('div')

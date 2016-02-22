@@ -127,6 +127,7 @@ var InlineTranslationAttempt = function InlineTranslationAttempt(node) {
 		var guess_phrase = $(self.view.input_box).val().trim().split(" ")
 		_.each(self.l1_translation, function (l1_word) {
 			_.each(guess_phrase, function (guess_word) {
+				console.log("word in guess:", guess_word)
 				if (guess_word.toLowerCase() == accentsTidy(l1_word.toLowerCase())) {
 					acceptance += (1.0 / guess_phrase.length )
 				} else if (stemmer(guess_word.toLowerCase()) == stemmer(accentsTidy(l1_word.toLowerCase()))) {
@@ -136,7 +137,7 @@ var InlineTranslationAttempt = function InlineTranslationAttempt(node) {
 				}
 			})
 		})
-		return acceptance
+		return acceptance > 0.5 ? 1 : 0
 	}
 
 	this.get_effort_score = function () {
@@ -489,6 +490,7 @@ function WordOptionWrapper(l2_sentence) {
 	}
 
 	this.submit_guess_inline = function () {
+		animating = true
 		self.disable_submit_guess()
 		self.disable_input_boxes()
 		updateMessageBox("Correct guesses are green and incorrect guesses will disappear! <br> you can guess them again or get more clues.")
