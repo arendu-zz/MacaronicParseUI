@@ -188,9 +188,12 @@ var InlineTranslationAttempt = function InlineTranslationAttempt(node) {
 	}
 
 	this.update_on_correct = function () {
-		if (self.get_correctness_score() == 1) {
+		if (self.get_correctness_score() <= 1) {
 			self.revealed = true
-			$(self.view.input_box).text(self.l1_translation)
+			var g = $(self.view.input_box).val()
+			var answer = self.l1_translation.join(" ")
+			var indication = g == answer ? '' : '*'
+			$(self.view.input_box).val(answer + indication)
 			$(self.view.input_box).addClass('correctGuess')
 			$(self.view.input_box).prop('disabled', true)
 			$(self.view.input_box).off()
@@ -338,16 +341,34 @@ function WordOptionWrapper(l2_sentence) {
 			wo.reveal_correct()
 		})
 	}
-
-	this.get_punct_clues = function () {
-		var single_punct_nodes = []
+	this.get_proper_noun_clues = function () {
+		var proper_noun_nodes = []
 		_.each(self.l2_sentence.visible_nodes, function (vn) {
 			var gvns = vn.graph.get_visible_nodes()
-			if (vn.lang == 'de' && gvns.length == 1 && ['&quot;', '"', '-', ',', '?', '.', ':', '!'].indexOf(vn.s) >= 0) {
-				single_punct_nodes.push({action: true, node: vn, delay: 10})
-			} else {
-				console.log(vn.s, gvns.length)
+			if (vn.lang == 'de' && gvns.length == 1) {
+				var l1_translation = vn.inline_translation.l1_translation.join("").trim().toLowerCase()
+				if (vn.s.trim().toLowerCase() == l1_translation) {
+					proper_noun_nodes.push({action: true, node: vn, delay: 10})
+				}
 			}
+		})
+
+		if (proper_noun_nodes.length > 0) {
+			self.l2_sentence.get_clue(proper_noun_nodes, 1)
+		}
+	}
+	this.get_punct_clues = function () {
+		var single_punct_nodes = []
+
+		_.each(self.l2_sentence.visible_nodes, function (vn) {
+			var gvns = vn.graph.get_visible_nodes()
+			if (vn.lang == 'de' && gvns.length == 1) {
+				if (['&quot;', '"', '-', ',', '?', '.', ':', '!'].indexOf(vn.s) >= 0) {
+					single_punct_nodes.push({action: true, node: vn, delay: 10})
+				}
+
+			}
+
 		})
 		if (single_punct_nodes.length > 0) {
 			self.l2_sentence.get_clue(single_punct_nodes, 1)
@@ -661,6 +682,7 @@ function WordOptionWrapper(l2_sentence) {
 	}
 	this.initialOptions = function () {
 		self.get_punct_clues()
+		self.get_proper_noun_clues()
 		/*var l2_remaining = []
 		var current_idx = 0
 		_.each(self.l2_sentence.visible_nodes, function (n) {
