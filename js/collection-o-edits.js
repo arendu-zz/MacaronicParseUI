@@ -1942,7 +1942,7 @@ function Sentence() {
 				self.wordOptionWrapper.check_for_completion()
 
 				self.wordOptionWrapper.enable_input_boxes()
-				updateMessageBox("One (or more) foreign words have been revealed (in blue)<br> try guessing the remaining foreign words with this new information!")
+				updateMessageBox("Guessing the remaining foreign words")
 			} else if (chain_type == "reveal_get_clue") {
 				self.wordOptionWrapper.update_attemptability()
 				self.wordOptionWrapper.update_max_points()
@@ -2441,7 +2441,7 @@ function Sentence() {
 				$(self.text_container.text_area).show()
 				$(self.text_container.score_btn).show()
 				self.stopClues = true
-				updateMessageBox("Type your translation guess, then click 'score translation'.");
+				//updateMessageBox("Type your translation guess, then click 'score translation'.");
 				//var bla = self.get_full_representation()
 				//var bbb = JSON.stringify(bla)
 				//console.log(bbb)
@@ -2699,7 +2699,7 @@ function receivedPreview(msg) {
 
 function receivedUserProgress(msg) {
 	console.log("user received progress:", msg)
-	updateMessageBox("For each foreign word, guess its meaning in the text box below it<br> (you may leave it blank if you have no reasonable guesses)")
+	updateMessageBox("For each foreign word, guess its meaning in the text box below it, <br>(Keep an eye on the points you earn)")
 	$(mainview).empty()
 	$('#confirmInput').prop('disabled', true)
 	sentences = []

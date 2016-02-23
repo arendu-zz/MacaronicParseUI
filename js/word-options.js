@@ -61,7 +61,7 @@ var InlineTranslationAttempt = function InlineTranslationAttempt(node) {
 			$(this.view.input_box).keyup(function (e) {
 				self.node.graph.sentence.wordOptionWrapper.check_to_enable_submit()
 
-				updateMessageBox("Click 'Submit Guess' to get feeback on the guesses.<br> (correct guesses will earn points shown below each box)")
+
 			})
 
 			if (self.node.lang == 'en') {
@@ -380,7 +380,7 @@ function WordOptionWrapper(l2_sentence) {
 		animating = true
 		self.disable_submit_guess()
 		self.disable_input_boxes()
-		updateMessageBox("Correct guesses are green and incorrect guesses will disappear! <br> you can guess them again or get more clues.")
+		//updateMessageBox("Correct guesses are green and incorrect guesses will disappear! <br> you can guess them again or get more clues.")
 		if (socket && !is_preview) {
 			var guess_state = JSON.stringify(self.guess_state_inline())
 			var sentence_state = JSON.stringify(self.l2_sentence.get_full_representation())
@@ -531,7 +531,7 @@ function WordOptionWrapper(l2_sentence) {
 	}
 
 	this.stopClues = function () {
-		updateMessageBox("Click 'Submit' to move to the next sentence.")
+		updateMessageBox("Click 'Next Sentence' to move to the next sentence.")
 		self.disable_get_clue()
 		self.disable_submit_guess()
 		enable_submit()
