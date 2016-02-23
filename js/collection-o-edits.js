@@ -1942,7 +1942,7 @@ function Sentence() {
 				self.wordOptionWrapper.check_for_completion()
 
 				self.wordOptionWrapper.enable_input_boxes()
-				updateMessageBox("Guessing the remaining foreign words")
+				//updateMessageBox("Guessing the remaining foreign words")
 			} else if (chain_type == "reveal_get_clue") {
 				self.wordOptionWrapper.update_attemptability()
 				self.wordOptionWrapper.update_max_points()
