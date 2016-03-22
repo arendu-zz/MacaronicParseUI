@@ -336,5 +336,195 @@ span {
         flex-grow: 3;*/
 }
 
+.translationAttempt.glow {
 
+}
 
+.translationAttempt:last-child {
+    margin-bottom: 5px;
+}
+
+.translationAttempt[readOnly].revealed.translationAttempt {
+    background-color: #ADD8E6;
+}
+
+.translationAttempt[readOnly].correct.translationAttempt {
+    background-color: #90EE90;
+}
+
+.translationAttempt[readOnly].incorrect.translationAttempt {
+    background-color: #FFC1C1;
+}
+
+.translationAttempt[readOnly].translationAttempt {
+    background-color: #C0C0C0;
+}
+
+.inlineTranslation {
+    display: -moz-box;
+    display: -ms-box;
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+}
+
+.emptyPadding {
+    height: 0px;
+}
+
+.wordOptionContainer-Container {
+    display: -moz-box;
+    display: -ms-box;
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+
+}
+
+.wordOption {
+    padding: 2px;
+    display: none;
+}
+
+.wordOption.prompt {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    font-size: small;
+    font-family: Arial;
+    display: none;
+
+}
+
+.translationAttempt {
+    width: 95%;
+    font-family: Arial;
+    display: none;
+}
+
+.wordOptionContainer {
+    display: -moz-box;
+    display: -ms-box;
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    border: 1px #000000;
+
+}
+
+.guessing.textspan.de.enorder {
+    /*border-bottom: 2px solid #333333;*/
+    background: #ADD8E6;
+    box-shadow: 0px 0px 10px #ADD8E6;
+}
+
+.guessing {
+    /*border-bottom: 2px solid #333333;*/
+    background: #ADD8E6;
+    box-shadow: 0px 0px 10px #ADD8E6;
+}
+
+button {
+    height: 20px;
+    margin-top: 19px;
+    margin-left: 5px;
+}
+
+.totalScore {
+    margin-top: 19px;
+    margin-left: 15px;
+    font-size: 25px;
+    color: gray;
+}
+
+.totalScore.number {
+    margin-top: 19px;
+    margin-left: 5px;
+    font-size: 25px;
+    color: green;
+}
+
+.translationAttempt.glow {
+
+}
+
+.translationAttempt:last-child {
+    margin-bottom: 5px;
+}
+
+.translationAttempt[readOnly].revealed.translationAttempt {
+    background-color: #ADD8E6;
+}
+
+.translationAttempt[readOnly].correct.translationAttempt {
+    background-color: #90EE90;
+}
+
+.translationAttempt[readOnly].incorrect.translationAttempt {
+    background-color: #FFC1C1;
+}
+
+.translationAttempt[readOnly].translationAttempt {
+    background-color: #C0C0C0;
+}
+
+.inlineTranslation {
+    display: -moz-box;
+    display: -ms-box;
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+}
+
+.emptyPadding {
+    height: 0px;
+}
+
+.inlineTranslationInput {
+    -webkit-transition: background-color 0.4s;
+    -moz-transition: background-color 0.4s;
+    -ms-transition: background-color 0.4s;
+    -o-transition: background-color 0.4s;
+    transition: background-color 0.4s;
+}
+
+.inlineTranslation.revealed {
+    opacity: 0.2;
+}
+
+.inlineTranslationInput.correctGuess:disabled {
+    background-color: #90EE90;
+}
+
+.inlineTranslationInput:disabled {
+    background-color: #efefef;
+}
+
+.inlineTranslationInput.incorrectGuess {
+    background-color: #FFC1C1;
+
+}
+
+.inlineTranslationInput.closeGuess {
+    background-color: #EEEE00;
+}
+
+.available_points {
+    font-size: x-small;
+    color: darkgray;
+}
+
+small {
+    font-size: x-small;
+}
