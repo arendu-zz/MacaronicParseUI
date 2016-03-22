@@ -847,6 +847,9 @@ function Node() {
 				if (self.inline_translation.guessed) {
 					forceGuess = false
 				}
+				if (self.inline_translation.skipped) {
+					forceGuess = true
+				}
 
 			}
 			//If the translation action has changed the visible nodes, result will be true
@@ -1383,7 +1386,7 @@ function Sentence() {
 
 	this.remove_all_previews = function (exception) {
 		_.each(self.visible_nodes, function (vn) {
-			vn.inline_translation.set_visibility(false)
+			vn.inline_translation.remove_as_preview()
 		})
 		_.each(self.visible_nodes, function (vn) {
 			if (exception != null) {
@@ -1732,7 +1735,11 @@ Edge.parse = function (input) {
 Node.parse = function (input) {
 	var n = new Node()
 	n.id = input.id
-	n.s = input.s
+	if (input.s == '@-@') {
+		n.s = '-'
+	} else {
+		n.s = input.s
+	}
 	n.en_id = input.en_id
 	n.de_id = input.de_id
 	n.lang = input.lang
@@ -1877,22 +1884,22 @@ function setup(mview, uname, socketObj) {
 		do_precomputations()
 
 		/*var end = sentences_per_page < json_str_arr.length ? sentences_per_page : json_str_arr.length
-		var st = 0
-		for (var i = st; i < end; i++) {
-			var jo = JSON.parse(json_str_arr[i])
-			var s = Sentence.parse(jo)
-			s.initialize(mainview)
-			s.visible_nodes = _.sortBy(s.visible_nodes, function (vn) {
-				if (s.initial_order_by == 'en') {
-					return vn.en_id
-				} else {
-					return vn.de_id
-				}
-			})
-			s.assign_display_order_by_array_order()
-			s.update_visible_nodes()
-			sentences.push(s)
-		}*/
+		  var st = 0
+		  for (var i = st; i < end; i++) {
+		  var jo = JSON.parse(json_str_arr[i])
+		  var s = Sentence.parse(jo)
+		  s.initialize(mainview)
+		  s.visible_nodes = _.sortBy(s.visible_nodes, function (vn) {
+		  if (s.initial_order_by == 'en') {
+		  return vn.en_id
+		  } else {
+		  return vn.de_id
+		  }
+		  })
+		  s.assign_display_order_by_array_order()
+		  s.update_visible_nodes()
+		  sentences.push(s)
+		  }*/
 	}
 
 	console.log('user name is ' + username)

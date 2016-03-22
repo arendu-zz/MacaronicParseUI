@@ -47,21 +47,28 @@ div {
 }
 
 table {
-    border-collapse: collapse;
+    /*border: 2px;*/
+    /*border-collapse: collapse;*/
+    /*border-style: solid;*/
 }
 
 table td {
     border: 2px;
+    border-collapse: collapse;
     /*border-style: solid;*/
 
 }
 
 .leaf {
-    color: black;
+    font-size: larger;
+    font-style: normal;
+    color: #333333;
 }
 
 .nonleaf {
-    /*color: #E3530D;*/
+    font-size: larger;
+    font-style: italic;
+    color: #028090;
 
 }
 
@@ -103,3 +110,4 @@ span {
 .curly-underline {
 
 }
+

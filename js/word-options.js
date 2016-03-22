@@ -9,6 +9,7 @@ var PreviewGuessRequest = function PreviewGuessRequest(node) {
 	this.node = node
 	this.isVisible = false
 	this.guessed = false
+	this.skipped = false
 
 	this.get_view = function () {
 		if (this.view == null) {
@@ -40,6 +41,7 @@ var PreviewGuessRequest = function PreviewGuessRequest(node) {
 				params["forceGuess"] = false
 				self.node.completeTranslation(params)
 				self.guessed = true
+				self.skipped = false
 			}
 		})
 
@@ -66,7 +68,10 @@ var PreviewGuessRequest = function PreviewGuessRequest(node) {
 
 		})
 	}
-
+	this.remove_as_preview = function () {
+		this.skipped = true
+		self.set_visibility(false)
+	}
 	this.set_visibility = function (v) {
 		if (v) {
 			this.view.style.visibility = 'visible'
