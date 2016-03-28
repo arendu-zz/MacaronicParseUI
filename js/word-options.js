@@ -10,6 +10,7 @@ var PreviewGuessRequest = function PreviewGuessRequest(node) {
 	this.isVisible = false
 	this.guessed = false
 	this.skipped = false
+	this.has_partial = false
 
 	this.get_view = function () {
 		if (this.view == null) {
@@ -38,10 +39,15 @@ var PreviewGuessRequest = function PreviewGuessRequest(node) {
 			if (code == 13) {
 				var g = $(self.view.input_box).val().trim()
 				//this.node.logRequestGuess(g)
-				params["forceGuess"] = false
-				self.node.completeTranslation(params)
-				self.guessed = true
-				self.skipped = false
+				if (g != '') {
+					params["forceGuess"] = false
+					self.skipped = false
+					self.node.completeTranslation(params)
+					self.guessed = true
+					//should log guess to db here
+					self.view.input_box.val("")
+				}
+
 			}
 		})
 
@@ -69,7 +75,11 @@ var PreviewGuessRequest = function PreviewGuessRequest(node) {
 		})
 	}
 	this.remove_as_preview = function () {
-		this.skipped = true
+		//this.skipped = true
+		var g = $(self.view.input_box).val().trim()
+		if (g != '') {
+			self.has_partial = true
+		}
 		self.set_visibility(false)
 	}
 	this.set_visibility = function (v) {

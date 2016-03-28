@@ -11,6 +11,7 @@ var json_sentences = []
 var mainview = null
 var global_preview_views = []
 var global_preview_classes = []
+var ask_preview_guesses = false
 
 gotoPrevPage = function () {
 	console.log("go to prev page")
@@ -672,6 +673,9 @@ function Node() {
 		} else {
 			forceGuess = param.forceGuess
 		}
+		if (!ask_preview_guesses){
+			forceGuess = false
+		}
 
 		if (param.action == 'split reorder') {
 
@@ -847,7 +851,7 @@ function Node() {
 				if (self.inline_translation.guessed) {
 					forceGuess = false
 				}
-				if (self.inline_translation.skipped) {
+				if (self.inline_translation.has_partial && param.forceGuess) {
 					forceGuess = true
 				}
 
