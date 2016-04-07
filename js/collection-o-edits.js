@@ -11,7 +11,7 @@ var json_sentences = []
 var mainview = null
 var global_preview_views = []
 var global_preview_classes = []
-var ask_preview_guesses = false
+var ask_preview_guesses = true
 
 gotoPrevPage = function () {
 	console.log("go to prev page")
@@ -669,11 +669,12 @@ function Node() {
 		var rule = param.action
 		var forceGuess = null
 		if (param.forceGuess == null) {
-			forceGuess = Math.random() > 0.5 // force a guess by default... todo: change to randomize
+			forceGuess = Math.random() > 0.9 // force a guess by default... todo: change to randomize
+			//forceGuess = 1.0 > 0.5 // force a guess by default... todo: change to randomize
 		} else {
 			forceGuess = param.forceGuess
 		}
-		if (!ask_preview_guesses){
+		if (!ask_preview_guesses) {
 			forceGuess = false
 		}
 
@@ -849,9 +850,10 @@ function Node() {
 			} else {
 				modified_nodes = self.graph.translate_from(self, 'en')
 				if (self.inline_translation.guessed) {
+					// user has already given their guess for this token so we don't bother them again
 					forceGuess = false
-				}
-				if (self.inline_translation.has_partial && param.forceGuess) {
+				} else if (ask_preview_guesses && (self.inline_translation.skipped || forceGuess)) {
+					//user got a input box which they skipped so we show the input box again.
 					forceGuess = true
 				}
 
@@ -937,6 +939,7 @@ function Node() {
 							})
 						}
 					} else {
+						console.log(modified_nodes.add, modified_nodes.remove)
 						assert(0 > 1, 'translations from many to many is not possible anymore!!!')
 					}
 				}
@@ -1357,7 +1360,20 @@ function Graph() {
 			//console.log('added ' + neighbors.length + ' nodes to visible_nodes')
 			var result = {}
 			result.add = neighbors
+			var add_str_list = []
+			_.each(neighbors, function (n) {
+				add_str_list.push({token: n.s, lang: n.lang})
+			})
+			//result.addStr = add_str_list.join(' ')
+			result.addStr = add_str_list
+
 			result.remove = nodes_to_remove
+			var remove_str_list = []
+			_.each(nodes_to_remove, function (n) {
+				remove_str_list.push({token: n.s, lang: n.lang})
+			})
+			//result.removeStr = remove_str_list.join(' ')
+			result.removeStr = remove_str_list
 			return result
 		} else {
 			//console.log('can not translate in the given direction, nothing to remove or add')

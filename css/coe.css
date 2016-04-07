@@ -507,6 +507,10 @@ button {
     background-color: #90EE90;
 }
 
+.inlineTranslationInput.correctGuess {
+    background-color: #90EE90;
+}
+
 .inlineTranslationInput:disabled {
     background-color: #efefef;
 }
@@ -517,7 +521,7 @@ button {
 }
 
 .inlineTranslationInput.closeGuess {
-    background-color: #EEEE00;
+    background-color: #bebe00;
 }
 
 .available_points {
