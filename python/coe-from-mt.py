@@ -8,13 +8,13 @@ import json
 import sys
 import operator
 
-'''reload(sys)
+reload(sys)
 sys.setdefaultencoding('utf-8')
 sys.stdin = codecs.getreader('utf-8')(sys.stdin)
 sys.stdout = codecs.getwriter('utf-8')(sys.stdout)
 sys.stdout.encoding = 'utf-8'
-'''
-VIS_LANG = 'en'
+
+VIS_LANG = 'de'
 INPUT_LANG = 'de'
 
 
@@ -391,7 +391,7 @@ def find_nearest_node_with_property(n, direction, graph):
 
 def propagate(graph):
     graph.set_visibility(VIS_LANG)
-    graph.cognate_visibility(VIS_LANG)
+    #graph.cognate_visibility(VIS_LANG)
     for n in graph.nodes:
         if n.de_id is None:
             de_n = n
@@ -471,7 +471,7 @@ if __name__ == '__main__':
     sent_idx = 0
     eps_word_alignment = 0
     coe_sentences = []
-    for input_line, output_line, input_parse in zip(input_mt, output_mt, input_parsed)[40:45]:
+    for input_line, output_line, input_parse in zip(input_mt, output_mt, input_parsed)[:200]:
 
         sys.stderr.write('SENT' + str(sent_idx) + '\n')
         input_sent = input_line.strip().split()
