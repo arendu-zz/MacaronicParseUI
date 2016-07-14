@@ -11,7 +11,8 @@ var json_sentences = []
 var mainview = null
 var global_preview_views = []
 var global_preview_classes = []
-var ask_preview_guesses = true
+var ask_preview_guesses = false
+var preview_guess_probability = 0.1
 
 gotoPrevPage = function() {
     console.log("go to prev page")
@@ -217,12 +218,14 @@ function Node() {
         if (self.translate_de && !self.split_reorder_de) {
             $(view.translation_selector_to_de).show()
         } else if (self.translate_de && self.split_reorder_de) {
-            //do not show translation if a split is possible...
+            console.log("not showing translation as a split is possible")
+                //do not show translation if a split is possible...
         }
         if (self.translate_en && !self.split_reorder_en) {
             $(view.translation_selector_to_en).show()
         } else if (self.translate_en && self.split_reorder_en) {
             //do not show translation if split is possible
+            console.log("not showing translation as a split is possible")
         }
     }
 
@@ -343,48 +346,7 @@ function Node() {
                 }
 
                 num_swaps.push(arrows)
-                    /*global_preview_views.push(arrows.parent)
-                      var container = self.graph.sentence.get_container()
-                      $(container).append(arrows.parent)
-                      arrows.path.on('mouseenter', function () {
-                      arrows.path.attr('fill-opacity', '1.0').attr('stroke-opacity', '1.0')
-                      arrows.marker.attr('fill-opacity', '1.0').attr('stroke-opacity', '1.0')
-                      arrows.path.attr('class', 'arrow highlighted')
-                      arrows.marker.attr('class', 'arrow highlighted')
-                      console.log("wha whaaa!!")
-                      })
-                      arrows.path.on('mouseleave', function () {
-                      arrows.path.attr('fill-opacity', '0.2').attr('stroke-opacity', '0.2')
-                      arrows.marker.attr('fill-opacity', '0.2').attr('stroke-opacity', '0.2')
-                      arrows.path.attr('class', 'arrow')
-                      arrows.marker.attr('class', 'arrow')
-                      console.log("dooo doooo whaaa!!")
-                      })
-                      arrows.path.on('click', function () {
-                      console.log("its been clicked!!!")
 
-                      self.take_action({action: 'external reorder', direction: direction})
-                      })*/
-                    /*_.each(arrows, function (arrow) {
-                      $(container).append(arrow)
-                      global_preview_views.push(arrow)
-                      })*/
-                    /*var sd = document.createElement('div')
-                      $(sd).on('mouseenter', function () {
-                      console.log("setting css of .preview.swap")
-                      $('.preview.swap').css('opacity', '1.0')
-                      })
-                      $(sd).on('mouseleave', function () {
-                      $('.preview.swap').css('opacity', '0.2')
-                      })
-                      $(sd).on('click', function () {
-                      console.log("i have been clicked swap btn")
-                      self.take_action({action: 'external reorder', direction: direction})
-
-                      })*/
-                    //$(sd).addClass("swap btn")
-                    //$(pv_menu).append($(sd))
-                    //btns.push(sd)
 
             } else if (self.graph.splits && self["split_reorder_" + direction]) {
                 //console.log("this graphs splits")
@@ -484,46 +446,22 @@ function Node() {
                     var pathDiv = document.createElement('div')
                     var arrows = self.get_split_preview_view(pathDiv, bounds, moving_bounds, moving_to_bounds, direction)
                     num_swaps.push(arrows)
-                        /*global_preview_views.push(arrows.parent)
-                          var container = self.graph.sentence.get_container()
-                          $(container).append(arrows.parent)
-                        //currently split and should be unsplit
-                        arrows.path.on('mouseenter', function () {
-                        self.set_path_attr(arrows, 'arrow highlighted')
-                        console.log("wha whaaa!!")
-                        })
-                        arrows.path.on('mouseleave', function () {
-                        self.set_path_attr(arrows, 'arrow')
-                        console.log("dooo doooo whaaa!!")
-                        })
-                        arrows.path.on('click', function () {
-                        console.log("its been clicked!!!")
-                        self.take_action({action: 'split reorder', direction: direction})
-                        })*/
-                        /*console.log("currently split and should be unsplit ")
-                          var sd = document.createElement('div')
-                          $(sd).addClass("split btn")
-                          $(sd).on('mouseenter', function () {
-                          $(".preview.split").css('opacity', '1.0')
-                          })
-                          $(sd).on('mouseleave', function () {
-                          $(".preview.split").css('opacity', '0.2')
-                          })
-                          $(sd).on('click', function () {
-                          console.log("i have been clicked split btn")
-                          self.take_action({action: 'split reorder', direction: direction})
-                          })
-                          btns.push(sd)*/
+
                 }
 
             }
 
             var modified_nodes = null
-            if (direction == 'de') {
-                modified_nodes = self.graph.translate_from(self, 'de')
+            if (split_possible) {
+                //do not allow translation when a split is possible 
             } else {
-                modified_nodes = self.graph.translate_from(self, 'en')
+                if (direction == 'de') {
+                    modified_nodes = self.graph.translate_from(self, 'de')
+                } else {
+                    modified_nodes = self.graph.translate_from(self, 'en')
+                }
             }
+
             if (modified_nodes != null) {
                 if (self.isTranslationSame(modified_nodes)) {
                     _.each(modified_nodes.remove, function(tmp) {
@@ -702,7 +640,7 @@ function Node() {
         var rule = param.action
         var forceGuess = null
         if (param.forceGuess == null) {
-            forceGuess = Math.random() > 0.9 // force a guess by default... todo: change to randomize
+            forceGuess = Math.random() > 1.0 - preview_guess_probability // force a guess by default... todo: change to randomize
                 //forceGuess = 1.0 > 0.5 // force a guess by default... todo: change to randomize
         } else {
             forceGuess = param.forceGuess
