@@ -13,6 +13,24 @@ var global_preview_views = []
 var global_preview_classes = []
 var ask_preview_guesses = false
 var preview_guess_probability = 0.1
+var mllist = []
+
+function mysliderup(valnum) {
+    console.log("mouse up on slider" + valnum.toString())
+    NodeList.prototype.forEach = Array.prototype.forEach
+    mllist.forEach(function (item) {
+        item.removePreviews(valnum)
+    });
+}
+function mysliderfunc(valnum) {
+    console.log("current slider:" + valnum.toString())
+    currentSlider = valnum
+    NodeList.prototype.forEach = Array.prototype.forEach
+    mllist.forEach(function (item) {
+        item.setSliderNum(valnum)
+    });
+}
+
 
 function replaceAll(str, find, replace) {
       return str.replace(new RegExp(find, 'g'), replace);
@@ -253,7 +271,10 @@ function Node() {
             console.log('on preview from ' + fromview)
         }
     }
-
+    this.step_towards_en = function(){
+    }
+    this.step_towards_de = function(){
+    }
     this.delayed_preview = function() {
         if (self.isMouseOver) {
             self.preview_action()
@@ -1414,6 +1435,9 @@ function Sentence() {
                 vn.unpreview_action()
             }
         })
+    }
+
+    this.get_next_preview = function(direction){
     }
 
     this.get_graph_by_id = function(gid) {

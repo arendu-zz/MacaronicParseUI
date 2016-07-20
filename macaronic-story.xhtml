@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html
+        PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <link href="css/coe.css" type="text/css" rel="stylesheet"/>
+    <link href="http://code.jquery.com/ui/1.9.1/themes/base/jquery-ui.css" type="text/css" rel="stylesheet"/>
+    <script type="text/javascript" src="data/story.js"/>
+    <script type="text/javascript" src="js/jquery-1.11.3.min.js"/>
+    <script type="text/javascript" src="js/jquery-ui.min.js"/>
+    <script type="text/javascript" src="js/collection-o-edits.js"/>
+    <script type="text/javascript" src="js/editdistance.js"/>
+    <script type="text/javascript" src="js/treemethods.js"/>
+    <script type="text/javascript" src="js/messages.js"/>
+    <script type="text/javascript" src="js/socket.io.js"/>
+    <script type="text/javascript" src="js/jquery.d3.js"/>
+    <script type="text/javascript" src="js/d3.min.js"/>
+    <script type="text/javascript" src="js/jquery.curvedarrow.js"/>
+    <script type="text/javascript" src="js/jquery.straightline.js"/>
+    <script type="application/javascript" src="js/underscore-min.js"/>
+    <script type="application/javascript" src="js/coe-utils.js"/>
+    <script type="application/javascript" src="js/word-options.js"/>
+    <script type="application/javascript" src="js/similarity.js"/>
+    <script type="application/javascript" src="js/glove.js"/>
+    <script type="application/javascript" src="data/story.js"/>
+    <script type="text/javascript">
+
+        $(document).ready(function () {
+            if (jQuery.ui) {
+                $("#slider").slider({
+                    step: 1,
+                    min: 0,
+                    max: 100,
+                    slide: function (e, ui) {
+                        mysliderfunc(ui.value)
+                        console.log("slide:", ui.value)
+                    },
+                    change: function (e, ui) {
+                        mysliderup(ui.value)
+                        console.log("change:", ui.value)
+                    }
+                })
+            } else {
+                alert("no jquery ui")
+            }
+            $("#slider").slider('value', 100);
+
+            setup($('#mainbody'), 'developer-user', null)
+
+        });
+
+
+    </script>
+    <title></title>
+</head>
+
+<body>
+
+
+<div id="mainbody" style='margin-bottom:20;margin-top:20;margin-left:20;margin-right:20;'>
+<div id="slider"></div>
+</div>
+<button id="prevbtn" type="button" onclick="gotoPrevPage()">prev</button>
+<button id="nextbtn" type="button" onclick="gotoNextPage()">next</button>
+</body>
+</html>
