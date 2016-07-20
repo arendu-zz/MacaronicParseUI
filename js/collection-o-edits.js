@@ -14,6 +14,9 @@ var global_preview_classes = []
 var ask_preview_guesses = false
 var preview_guess_probability = 0.1
 
+function replaceAll(str, find, replace) {
+      return str.replace(new RegExp(find, 'g'), replace);
+}
 gotoPrevPage = function() {
     console.log("go to prev page")
     page -= 1
@@ -1750,7 +1753,7 @@ Node.parse = function(input) {
     if (input.s == '@-@') {
         n.s = '-'
     } else {
-        n.s = input.s
+        n.s = replaceAll(input.s, '@@@', ' ')
     }
     n.en_id = input.en_id
     n.de_id = input.de_id
