@@ -3,11 +3,9 @@
 }
 
 #slider {
-    max-width: 100px;
-}
-
-#emptydiv {
-    height: 50px;
+    max-width: 150px;
+    margin: 0 auto;
+    text-align: center;
 }
 
 div {
