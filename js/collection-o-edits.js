@@ -963,7 +963,7 @@ function Node() {
 		var after = JSON.stringify(self.graph.sentence.getLogObjs())
 		var sm = new SocketMessage(username, rule, before, after)
 		if (socket != null) {
-			socket.emit('logEvent', sm)
+			//socket.emit('logEvent', sm)
 		}
 	}
 
