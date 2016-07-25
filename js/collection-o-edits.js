@@ -1109,13 +1109,10 @@ function Node() {
 			s.innerHTML = this.s
 			this.view.textSpan = s
 			$(s).addClass("textspan")
-			if (self.graph.sentence.id == 1) {
+			if (self.graph.sentence.id == 0) {
 				$(s).addClass("title")
-				console.log('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
-			} else {
-				console.log('^^^^^^^^^^^^^^^^^^^^^^^^^', self.graph.sentence.id)
 			}
-			$(s).addClass(this.lang)
+      $(s).addClass(this.lang)
 			$(this.view).append($(s))
 
 			$(s).on('mouseenter', function (e) {
@@ -2048,6 +2045,7 @@ function ok_parse(st, end) {
 	for (var i = st; i < end; i++) {
 		var jo = JSON.parse(json_sentences[i]);
 		var s = MacaronicSentence.parse(jo);
+    s.id = i
 		s.initialize(mainview);
 		s.visible_nodes = _.sortBy(s.visible_nodes, function (vn) {
 			if (s.initial_order_by == 'en') {
