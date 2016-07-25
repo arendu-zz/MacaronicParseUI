@@ -13,6 +13,7 @@ var ask_preview_guesses = false
 var preview_guess_probability = 0.1
 var mllist = []
 var prev_valnum = 1000
+var scale_val = 0.2
 
 function sliderUp(valnum) {
 	console.log("mouse up on slider" + valnum.toString())
@@ -1457,12 +1458,13 @@ function MacaronicSentence() {
 			}
 			_.each(priority_nodes, function (n) {
 				//console.log('visible node in', g.id, n.s, n.frequency)
-				graph_priority_value += parseFloat(n.frequency) / parseFloat(priority_nodes.length)
+				graph_priority_value += (1.0 - parseFloat(n.frequency)) / parseFloat(priority_nodes.length)
 				for (var i = 0; i < n.s.length; i++) {
 					graph_priority_tiebreak += n.s.charCodeAt(i)
 				}
 
 			})
+      graph_priority_value = (scale_val * graph_priority_value) + ((1 - scale_val) * parseFloat(g.graph_edit_distance))
 
 			if (has_translations) {
 				num_remaining_edits += 1
@@ -1950,6 +1952,7 @@ Graph.parse = function (input) {
 	g.splits = input.splits
 	g.swaps = input.swaps
 	g.separators = input.separators
+  g.graph_edit_distance = input.graph_edit_ditstance
 
 	g.separator_positions = input.separator_positions
 	g.is_separator = input.is_separator
