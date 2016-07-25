@@ -68,6 +68,7 @@ span.no_selection {
 
 .textspan {
     background: transparent;
+    font-weight: lighter;
     /*border: 1px red solid;*/
 }
 
@@ -111,7 +112,7 @@ span.no_selection {
     /*border: 2px solid grey;*/
     justify-content: space-around;
     flex-direction: column;
-    height: 70px;
+    /*height: 70px;*/
     /*transition: height 0.25s;*/
     /*padding: 0px;*/
     /*height: -webkit-fit-content;*/
@@ -144,7 +145,7 @@ span.no_selection {
 
 .node_menu_container {
     display: flex;
-    height: 20px;
+    height: 12px;
     padding: 0px;
     flex-direction: row;
     justify-content: space-around;
@@ -419,6 +420,11 @@ span.no_selection {
     font-family: Arial;
     display: none;
 
+}
+
+.textspan.title {
+    font-size: x-large;
+    font-weight: bold;
 }
 
 .translationAttempt {

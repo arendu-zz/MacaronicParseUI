@@ -10,7 +10,7 @@ var socket = null
 var json_sentences = []
 var mainview = null
 var ask_preview_guesses = false
-var preview_guess_probability = 0.1
+var preview_guess_probability = 0.0
 var mllist = []
 var prev_valnum = 1000
 var scale_val = 0.2
@@ -1109,6 +1109,12 @@ function Node() {
 			s.innerHTML = this.s
 			this.view.textSpan = s
 			$(s).addClass("textspan")
+			if (self.graph.sentence.id == 1) {
+				$(s).addClass("title")
+				console.log('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
+			} else {
+				console.log('^^^^^^^^^^^^^^^^^^^^^^^^^', self.graph.sentence.id)
+			}
 			$(s).addClass(this.lang)
 			$(this.view).append($(s))
 
@@ -1464,7 +1470,7 @@ function MacaronicSentence() {
 				}
 
 			})
-      graph_priority_value = (scale_val * graph_priority_value) + ((1 - scale_val) * parseFloat(g.graph_edit_distance))
+			graph_priority_value = (scale_val * graph_priority_value) + ((1 - scale_val) * parseFloat(g.graph_edit_distance))
 
 			if (has_translations) {
 				num_remaining_edits += 1
@@ -1952,7 +1958,7 @@ Graph.parse = function (input) {
 	g.splits = input.splits
 	g.swaps = input.swaps
 	g.separators = input.separators
-  g.graph_edit_distance = input.graph_edit_ditstance
+	g.graph_edit_distance = input.graph_edit_ditstance
 
 	g.separator_positions = input.separator_positions
 	g.is_separator = input.is_separator
