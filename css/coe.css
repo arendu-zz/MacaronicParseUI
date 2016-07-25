@@ -1,19 +1,18 @@
-#mainbody {
+#mainbody {}
 
+.textspan.title {
+    font-size: x-large;
+    font-weight: bold;
 }
 
-div {
-
-}
+div {}
 
 .subItem {
     display: flex;
-
 }
 
 span {
     cursor: default;
-
 }
 
 .blurry {
@@ -33,14 +32,10 @@ span {
 }
 
 .arrow.body {
-
     opacity: 0.1;
-
 }
 
-.arrow.head {
-
-}
+.arrow.head {}
 
 .arrow.highlighted {
     opacity: 1.0;
@@ -52,7 +47,6 @@ span {
 
 .arrow.invisible {
     opacity: 0.0;
-
 }
 
 .textspan {
@@ -61,16 +55,13 @@ span {
 }
 
 .en.textspan {
-
     font-style: italic;
     color: #028090;
-
 }
 
 .textspan.de {
     font-style: normal;
     color: #333333;
-
 }
 
 .textspan.de.tmpAccept {
@@ -78,9 +69,7 @@ span {
     font-style: italic;
 }
 
-.textspan.en.deorder {
-
-}
+.textspan.en.deorder {}
 
 .textspan.de.enorder {
     background-color: rgba(2, 128, 144, 0.1)
@@ -123,9 +112,8 @@ span {
     /*border-color: white;*/
 }
 
-.item:hover > .node_menu_container {
+.item:hover> .node_menu_container {
     /*opacity: 1;*/
-
 }
 
 .container:hover {
@@ -140,9 +128,9 @@ span {
     justify-content: space-around;
     pointer-events: all;
     /*border: 1px solid green;*/
-
     /* transition: opacity 0.25s linear;*/
 }
+
 
 /*.node_menu_container:hover {
     opacity: 1;
@@ -179,7 +167,6 @@ span {
     padding-left: 2px;
     padding-right: 2px;
     font-size: large;
-
 }
 
 .preview.translation.en {
@@ -187,7 +174,6 @@ span {
     color: #028090;
     color: transparent;
     text-shadow: 0px 0px 8px #028090;
-
 }
 
 .preview.translation.de {
@@ -197,12 +183,10 @@ span {
 }
 
 .preview.split {
-
     pointer-events: none;
 }
 
 .preview.swap {
-
     pointer-events: none;
 }
 
@@ -225,7 +209,6 @@ span {
     height: 100%;
     flex-grow: 1;
     padding: 0px;
-
 }
 
 .translation_selector:hover {
@@ -240,7 +223,6 @@ span {
     /*width: 3px;*/
     flex-grow: 1;
     padding: 0px;
-
 }
 
 .external_reorder_selector:hover {
@@ -254,7 +236,6 @@ span {
     /*width: 3px;*/
     flex-grow: 1;
     padding: 0px;
-
 }
 
 .split_reorder_selector:hover {
@@ -264,7 +245,6 @@ span {
 .previewTranslateContainer {
     min-height: 20px;
     /*border: 1px solid grey;*/
-
 }
 
 .affected {
@@ -297,6 +277,7 @@ span {
     background: #028090;
 }
 
+
 /*--- ORDER ---*/
 
 #one {
@@ -319,6 +300,7 @@ span {
     order: 5;
 }
 
+
 /*--- BASIS Grow & shrink ---*/
 
 #one {
@@ -336,9 +318,7 @@ span {
         flex-grow: 3;*/
 }
 
-.translationAttempt.glow {
-
-}
+.translationAttempt.glow {}
 
 .translationAttempt:last-child {
     margin-bottom: 5px;
@@ -382,7 +362,6 @@ span {
     display: flex;
     flex-direction: row;
     align-items: center;
-
 }
 
 .wordOption {
@@ -400,7 +379,6 @@ span {
     font-size: small;
     font-family: Arial;
     display: none;
-
 }
 
 .translationAttempt {
@@ -418,7 +396,6 @@ span {
     flex-direction: row;
     flex-wrap: wrap;
     border: 1px #000000;
-
 }
 
 .guessing.textspan.de.enorder {
@@ -453,9 +430,7 @@ button {
     color: green;
 }
 
-.translationAttempt.glow {
-
-}
+.translationAttempt.glow {}
 
 .translationAttempt:last-child {
     margin-bottom: 5px;
@@ -517,7 +492,6 @@ button {
 
 .inlineTranslationInput.incorrectGuess {
     background-color: #FFC1C1;
-
 }
 
 .inlineTranslationInput.closeGuess {
