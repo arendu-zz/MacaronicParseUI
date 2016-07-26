@@ -15,6 +15,23 @@ var mllist = []
 var prev_valnum = 1000
 var scale_val = 0.2
 
+function slideInitially(until) {
+	var current_val = $('#slider').slider("option", "value");
+	if (current_val > until) {
+		current_val -= 10
+		$('#slider').slider('value', current_val)
+		sliderMoving(current_val)
+		setTimeout(function () {
+			slideInitially(until)
+		}, 1)
+	} else {
+		setTimeout(function () {
+			sliderUp(current_val)
+		}, 1)
+	}
+
+}
+
 function sliderUp(valnum) {
 	console.log("mouse up on slider" + valnum.toString())
 	_.each(macaronic_sentences, function (macSentence) {
@@ -2028,23 +2045,6 @@ function precomputations(i) {
 		var until = 750
 		slideInitially(until)
 
-	}
-
-}
-
-function slideInitially(until) {
-	var current_val = $('#slider').slider("option", "value");
-	if (current_val > until) {
-		current_val -= 10
-		$('#slider').slider('value', current_val)
-		sliderMoving(current_val)
-		setTimeout(function () {
-			slideInitially(until)
-		}, 10)
-	} else {
-		setTimeout(function () {
-			sliderUp(current_val)
-		}, 10)
 	}
 
 }
