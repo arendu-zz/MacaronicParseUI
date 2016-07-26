@@ -6,7 +6,10 @@
     max-width: 150px;
     margin: 0 auto;
     text-align: center;
+    pointer-events: none;
 }
+/* Enable pointer events for slider handle only */
+#slider .ui-slider-handle { pointer-events: auto; }
 
 div {
 
