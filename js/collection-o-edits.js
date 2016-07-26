@@ -1112,7 +1112,7 @@ function Node() {
 			if (self.graph.sentence.id == 0) {
 				$(s).addClass("title")
 			}
-      $(s).addClass(this.lang)
+			$(s).addClass(this.lang)
 			$(this.view).append($(s))
 
 			$(s).on('mouseenter', function (e) {
@@ -2023,12 +2023,37 @@ function precomputations(i) {
 	s.number_of_edits = s.get_remaining_edits('en').length
 	console.log(i, s.number_of_edits)
 	s.trigger_gap = parseInt(990 / parseFloat(s.number_of_edits))
+	if (i == macaronic_sentences.length - 1) {
+		console.log('done')
+		var until = 750
+		slideInitially(until)
+
+	}
+
+}
+
+function slideInitially(until) {
+	var current_val = $('#slider').slider("option", "value");
+	if (current_val > until) {
+		current_val -= 10
+		$('#slider').slider('value', current_val)
+		sliderMoving(current_val)
+		setTimeout(function () {
+			slideInitially(until)
+		}, 10)
+	} else {
+		setTimeout(function () {
+			sliderUp(current_val)
+		}, 10)
+	}
+
 }
 
 function do_precomputations() {
 	for (var i = 0; i < macaronic_sentences.length; i++) {
 		async(precomputations, i, null)
 	}
+
 }
 
 function receivedJsonSentence(msg) {
@@ -2045,7 +2070,7 @@ function ok_parse(st, end) {
 	for (var i = st; i < end; i++) {
 		var jo = JSON.parse(json_sentences[i]);
 		var s = MacaronicSentence.parse(jo);
-    s.id = i
+		s.id = i
 		s.initialize(mainview);
 		s.visible_nodes = _.sortBy(s.visible_nodes, function (vn) {
 			if (s.initial_order_by == 'en') {
