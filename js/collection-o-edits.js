@@ -14,6 +14,29 @@ var preview_guess_probability = 0.1
 var mllist = []
 var prev_valnum = 1000
 var scale_val = 0.2
+var current_val = 999
+var until = 700
+
+function slideInitially(until) {
+	if (current_val > until) {
+		current_val -= 10
+		$('#slider').slider('value', current_val)
+		sliderMoving(current_val, false)
+		setTimeout(function () {
+
+			slideInitially(until)
+		}, 10)
+	} else {
+		setTimeout(function () {
+			sliderUp(current_val)
+		}, 10)
+		setTimeout(function () {
+			ask_preview_guesses = true
+			console.log("re-enabled quiz feature...")
+		}, 20)
+	}
+
+}
 
 function sliderUp(valnum) {
 	console.log("mouse up on slider" + valnum.toString())
@@ -23,16 +46,19 @@ function sliderUp(valnum) {
 
 }
 
-function sliderMoving(valnum) {
+function sliderMoving(valnum, show_preview) {
+	if (show_preview == null) {
+		show_preview = true
+	}
 	//console.log("current slider:" + valnum.toString())
 	if (valnum < prev_valnum) {
 		_.each(macaronic_sentences, function (macSentence) {
-			macSentence.slider_response_reduce(valnum)
+			macSentence.slider_response_reduce(valnum, show_preview)
 			//async(macSentence.slider_response_reduce, valnum, null)
 		})
 	} else if (valnum > prev_valnum) {
 		_.each(macaronic_sentences, function (macSentence) {
-			macSentence.slider_response_increase(valnum)
+			macSentence.slider_response_increase(valnum, show_preview)
 			//async(macSentence.slider_response_increase, valnum, null)
 		})
 	} else {
@@ -1112,7 +1138,7 @@ function Node() {
 			if (self.graph.sentence.id == 0) {
 				$(s).addClass("title")
 			}
-      $(s).addClass(this.lang)
+			$(s).addClass(this.lang)
 			$(this.view).append($(s))
 
 			$(s).on('mouseenter', function (e) {
@@ -1366,12 +1392,12 @@ function MacaronicSentence() {
 		}
 	}
 
-	this.slider_response_increase = function (valnum) {
+	this.slider_response_increase = function (valnum, show_preview) {
 		if ((valnum - self.last_trigger_point) >= self.trigger_gap) {
 			var force_ls = null
 			var change = valnum - self.last_trigger_point
 			var step = parseInt((change) / self.trigger_gap)
-			var edit_params = self.get_remaining_edits('de')
+			var edit_params = self.get_remaining_edits('de', show_preview)
 			if (1000 - valnum < self.trigger_gap) {
 				step = edit_params.length
 				force_ls = 999
@@ -1394,12 +1420,12 @@ function MacaronicSentence() {
 		}
 	}
 
-	this.slider_response_reduce = function (valnum) {
+	this.slider_response_reduce = function (valnum, show_preview) {
 		if ((self.last_trigger_point - valnum) >= self.trigger_gap) {
 			var force_ls = null
 			var change = self.last_trigger_point - valnum
 			var step = parseInt((change) / self.trigger_gap)
-			var edit_params = self.get_remaining_edits('en')
+			var edit_params = self.get_remaining_edits('en', show_preview)
 			if (valnum < self.trigger_gap) {
 				step = edit_params.length
 				force_ls = 1
@@ -1437,7 +1463,7 @@ function MacaronicSentence() {
 			}
 		})
 	}
-	this.get_remaining_edits = function (direction) {
+	this.get_remaining_edits = function (direction, show_preview) {
 		var num_remaining_edits = 0
 		var edit_params = []
 		var unique_swaps = []
@@ -1565,7 +1591,7 @@ function MacaronicSentence() {
 				action_priority: ep.action_priority,
 				graph: ep.graph
 			}
-			if (!ep.graph.showing_automated_preview) {
+			if (!ep.graph.showing_automated_preview && show_preview) {
 				var ep_preview = {
 					preview: true,
 					action: ep.action,
@@ -2023,6 +2049,12 @@ function precomputations(i) {
 	s.number_of_edits = s.get_remaining_edits('en').length
 	console.log(i, s.number_of_edits)
 	s.trigger_gap = parseInt(990 / parseFloat(s.number_of_edits))
+	if (i == macaronic_sentences.length - 1) {
+		console.log('done')
+		ask_preview_guesses = false
+		slideInitially(until)
+
+	}
 }
 
 function do_precomputations() {
@@ -2045,7 +2077,7 @@ function ok_parse(st, end) {
 	for (var i = st; i < end; i++) {
 		var jo = JSON.parse(json_sentences[i]);
 		var s = MacaronicSentence.parse(jo);
-    s.id = i
+		s.id = i
 		s.initialize(mainview);
 		s.visible_nodes = _.sortBy(s.visible_nodes, function (vn) {
 			if (s.initial_order_by == 'en') {
