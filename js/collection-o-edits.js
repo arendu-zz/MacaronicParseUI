@@ -1161,7 +1161,7 @@ function Node() {
 				if (self.inline_translation.isVisible) {
 					console.log("do not show previews during text box...")
 				} else {
-					setTimeout(self.delayed_preview, 10);
+					setTimeout(self.delayed_preview, 200);
 				}
 
 			})
