@@ -15,7 +15,7 @@ var mllist = []
 var prev_valnum = 1000
 var scale_val = 0.2
 var current_val = 999
-var until = 700
+var until = 750
 
 function slideInitially(until) {
 	if (current_val > until) {
