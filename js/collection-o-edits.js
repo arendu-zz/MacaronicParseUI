@@ -1944,7 +1944,7 @@ Node.parse = function (input) {
 	if (input.s == '@-@') {
 		n.s = '-'
 	} else {
-		n.s = replaceAll(input.s, '@@@', ' ')
+		n.s = replaceAll(input.s, '~~~', ' ')
 	}
 	n.en_id = input.en_id
 	n.de_id = input.de_id
