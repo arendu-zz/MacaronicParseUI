@@ -4,7 +4,7 @@
 
 var macaronic_sentences = []
 var page = 0;
-var sentences_per_page = 100
+var sentences_per_page = 10
 var username = null
 var socket = null
 var json_sentences = []
@@ -2072,8 +2072,8 @@ function receivedJsonSentence(msg) {
 }
 
 function ok_parse(st, end) {
-	//end = sentences_per_page < json_sentences.length ? end : json_sentences.length
-	end = json_sentences.length
+	end = sentences_per_page < json_sentences.length ? end : json_sentences.length
+	//end = json_sentences.length
 	for (var i = st; i < end; i++) {
 		var jo = JSON.parse(json_sentences[i]);
 		var s = MacaronicSentence.parse(jo);
@@ -2105,7 +2105,7 @@ function setup(mview, uname, socketObj, file_path) {
 		socket.on('JsonSentences', receivedJsonSentence);
 	} else {
 		json_sentences = json_str_arr;
-		ok_parse(0, 10);
+		ok_parse(0, sentences_per_page);
 		do_precomputations();
 	}
 

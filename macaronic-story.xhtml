@@ -6,7 +6,6 @@
 <head>
     <link href="css/coe.css" type="text/css" rel="stylesheet"/>
     <link href="http://code.jquery.com/ui/1.9.1/themes/base/jquery-ui.css" type="text/css" rel="stylesheet"/>
-    <script type="text/javascript" src="data/story.js"/>
     <script type="text/javascript" src="js/jquery-1.11.3.min.js"/>
     <script type="text/javascript" src="js/jquery-ui.min.js"/>
     <script type="text/javascript" src="js/collection-o-edits.js"/>
@@ -23,7 +22,7 @@
     <script type="application/javascript" src="js/word-options.js"/>
     <script type="application/javascript" src="js/similarity.js"/>
     <script type="application/javascript" src="js/glove.js"/>
-    <script type="application/javascript" src="data/story.js"/>
+    <script type="text/javascript" src="data/story.js"/>
     <script type="text/javascript">
 
         $(document).ready(function () {
@@ -33,11 +32,11 @@
                     min: 0,
                     max: 100,
                     slide: function (e, ui) {
-                        mysliderfunc(ui.value)
+                        sliderMoving(ui.value)
                         console.log("slide:", ui.value)
                     },
                     change: function (e, ui) {
-                        mysliderup(ui.value)
+                        sliderUp(ui.value)
                         console.log("change:", ui.value)
                     }
                 })
