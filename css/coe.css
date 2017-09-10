@@ -74,6 +74,13 @@ span {
 .textspan.de.enorder {
     background-color: rgba(2, 128, 144, 0.1)
 }
+.wordhighlight.en {
+    text-shadow: 0px 0px 8px #028090;
+}
+
+.wordhighlight.de {
+    text-shadow: 0px 0px 8px #333333;
+}
 
 .item {
     background: transparent;
@@ -118,6 +125,12 @@ span {
 
 .container:hover {
     /*background: gray;*/
+}
+
+.container.nonactive {
+    color: rgba(20, 20, 20, 0.1);
+    background-color: rgba(20, 20, 20, 0.1);
+    pointer-events: none;
 }
 
 .node_menu_container {
@@ -168,12 +181,20 @@ span {
     padding-right: 2px;
     font-size: large;
 }
-
-.preview.translation.en {
+.preview.translation.en:hover {
+    opacity: 1.0;
     font-style: italic;
     color: #028090;
-    color: transparent;
-    text-shadow: 0px 0px 8px #028090;
+    color: 028090;
+    /*text-shadow: 0px 0px 8px #028090;*/
+}
+
+.preview.translation.en {
+    opacity: 0.2;
+    font-style: italic;
+    color: #028090;
+    color: 028090;
+    /*text-shadow: 0px 0px 8px #028090;*/
 }
 
 .preview.translation.de {
