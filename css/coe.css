@@ -1,8 +1,12 @@
 #mainbody {}
 
 .textspan.title {
-    font-size: x-large;
+    font-size: large;
     font-weight: bold;
+}
+
+.counter {
+    font-size: large;
 }
 
 div {}
@@ -75,11 +79,19 @@ span {
     background-color: rgba(2, 128, 144, 0.1)
 }
 .wordhighlight.en {
-    text-shadow: 0px 0px 8px #028090;
+    text-shadow: 0px 0px 22px yellow;
+    background-color: yellow;
 }
 
 .wordhighlight.de {
-    text-shadow: 0px 0px 8px #333333;
+    text-shadow: 0px 0px 22px yellow;
+    background-color: yellow;
+}
+
+.item.padded {
+    width: 40px;
+    justify-content: space-around;
+    flex-direction: column;
 }
 
 .item {
@@ -128,8 +140,8 @@ span {
 }
 
 .container.nonactive {
-    color: rgba(20, 20, 20, 0.1);
-    background-color: rgba(20, 20, 20, 0.1);
+    color: rgba(100, 100, 100, 0.1);
+    background-color: rgba(100, 100, 100, 0.1);
     pointer-events: none;
 }
 
@@ -144,6 +156,14 @@ span {
     /* transition: opacity 0.25s linear;*/
 }
 
+.node_menu_container.extraheight {
+    display: flex;
+    height: 35px;
+    padding: 0px;
+    flex-direction: row;
+    justify-content: space-around;
+    pointer-events: all;
+}
 
 /*.node_menu_container:hover {
     opacity: 1;
@@ -493,6 +513,24 @@ button {
     -ms-transition: background-color 0.4s;
     -o-transition: background-color 0.4s;
     transition: background-color 0.4s;
+}
+
+.flashing {
+    -webkit-animation-name: flash-animation;
+    -webkit-animation-duration: 1s;
+
+    animation-name: flash-animation;
+    animation-duration: 1s;
+}
+
+@-webkit-keyframes flash-animation {
+    from { background: yellow; }
+    to   { background: transparent; }
+}
+
+@keyframes flash-animation {
+    from { background: yellow; }
+    to   { background: transparent; }
 }
 
 .inlineTranslation.revealed {

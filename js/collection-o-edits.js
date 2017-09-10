@@ -612,12 +612,6 @@ function Node() {
                         });
                         $(pv_translate).on('click', 'span', function (event) {
                             console.log("translation preview clicked", event.currentTarget.innerHTML)
-                            var force_guess = null
-                            if (event.currentTarget.innerHTML == 'G'){
-                                force_guess = true;
-                            }else{
-
-                            }
                             _.each(modified_nodes.remove, function (rm) {
                                 $(rm.get_view().textSpan).removeClass("affected")
                             });
@@ -625,9 +619,14 @@ function Node() {
                                 $(rm.get_view().textSpan).removeClass("affected")
                             });
                             if (!self.isTranslationSame(modified_nodes)) {
+                                var force_guess = ((event.currentTarget.innerHTML == 'G') ? true : null)
                                 self.take_action({
                                     action: 'translate', direction: direction, forceGuess: force_guess
                                 })
+                                if (event.currentTarget.innerHTML =='T'){
+                                    self.graph.sentence.remaining_hints  = self.graph.sentence.remaining_hints - 1
+                                    self.graph.sentence.update_display_remaining_hints();
+                                }
                             }
                             event.stopPropagation()
                         })
@@ -751,16 +750,17 @@ function Node() {
         self.graph.sentence.remove_all_previews(null);
         var before = JSON.stringify(self.graph.sentence.getLogObjs());
         var rule = param.action;
-        var forceGuess = null;
-        if (param.forceGuess == null) {
-            forceGuess = Math.random() > 1.0 - preview_guess_probability // force a guess by default... todo: change to randomize
+        var forceGuess = param.forceGuess;
+        //if (param.forceGuess == null) {
+        //    forceGuess = Math.random() > 1.0 - preview_guess_probability // force a guess by default... todo: change to randomize
             //forceGuess = 1.0 > 0.5 // force a guess by default... todo: change to randomize
-        } else {
-            forceGuess = param.forceGuess
-        }
-        if (!ask_preview_guesses) {
-            forceGuess = false
-        }
+        //} else {
+        //    forceGuess = param.forceGuess
+        //}
+        //if (!ask_preview_guesses) {
+        //    forceGuess = false
+        //}
+
 
         if (param.action == 'split reorder') {
 
@@ -934,15 +934,15 @@ function Node() {
             var modified_nodes = null;
             if (param.direction == 'de') {
                 modified_nodes = self.graph.translate_from(self, 'de');
-                forceGuess = false
+                //forceGuess = false
             } else {
                 modified_nodes = self.graph.translate_from(self, 'en');
                 if (self.inline_translation.guessed) {
                     // user has already given their guess for this token so we don't bother them again
-                    forceGuess = false
+                    //forceGuess = false
                 } else if (ask_preview_guesses && (self.inline_translation.skipped || forceGuess)) {
                     //user got a input box which they skipped so we show the input box again.
-                    forceGuess = true
+                    //forceGuess = true
                 }
 
             }
@@ -950,7 +950,8 @@ function Node() {
 
             if (modified_nodes != null) {
                 if (forceGuess) {
-                    self.inline_translation.requestGuess(param)
+                    var is_guess_correct = self.inline_translation.requestGuess(param)
+                    console.log("here!!!!", is_guess_correct)
                 } else {
                     var remove_positions = [];
                     for (var mnr = 0; mnr < modified_nodes.remove.length; mnr++) {
@@ -1061,7 +1062,13 @@ function Node() {
     };
 
     this.completeTranslation = function (params) {
-        self.take_action(params)
+        self.graph.sentence.remove_all_previews(null);
+        if (params.guess_result == 'correctGuess'){
+            self.take_action(params)
+        }else{
+            console.log("incorrect guess...")
+        }
+
     };
 
     this.get_translate_preview_view = function (addNodes, bounds, direction, is_automated) {
@@ -1429,7 +1436,9 @@ function MacaronicSentence() {
     this.visible_nodes = [];
     this.container = null;
     this.outer_container = null;
+    this.counter_container = null;
     this.done_bttn = null;
+    this.remaining_hints = null;
     this.initial_order_by = null;
     this.sentence_preview_views = [];
     this.sentence_preview_classes = [];
@@ -1875,25 +1884,41 @@ function MacaronicSentence() {
 
 
     this.get_container = function () {
-        if (this.container == null) {
-            this.container = document.createElement('div');
-            this.outer_container = document.createElement('div');
-            $(this.outer_container).addClass('container');
-            $(this.outer_container).append($(this.container));
-            this.done_bttn = document.createElement('button');
-            $(this.done_bttn).text('done');
-            $(this.done_bttn).on('click', function(){
-                make_next_sentence_active(self.id, self.id + 1);
-            })
-            $(this.outer_container).append($(this.done_bttn));
-            $(this.container).addClass('container');
-            $(this.container).on('mouseleave', function () {
+        if (self.container == null) {
+            self.container = document.createElement('div');
+            self.outer_container = document.createElement('div');
+            self.counter_container = document.createElement('div');
+
+            $(self.outer_container).addClass('container');
+            $(self.container).addClass('container');
+            $(self.counter_container).addClass('item padded');
+
+
+            $(self.outer_container).append($(self.container));
+            $(self.outer_container).append($(self.counter_container));
+
+            self.upper_done_bttn = document.createElement('div');
+            $(self.upper_done_bttn).addClass('node_menu_container')
+            self.done_bttn = document.createElement('span');
+
+            $(self.done_bttn).addClass('counter')
+            self.bottom_done_bttn = document.createElement('div');
+            $(self.bottom_done_bttn).addClass('node_menu_container extraheight')
+            //$(self.done_bttn).text(self.remaining_hints);
+            //$(self.done_bttn).on('click', function(){
+            //    make_next_sentence_active(self.id, self.id + 1);
+            //})
+            $(self.counter_container).append($(self.upper_done_bttn));
+            $(self.counter_container).append($(self.done_bttn));
+            $(self.counter_container).append($(self.bottom_done_bttn));
+
+            $(self.container).on('mouseleave', function () {
                 self.remove_all_previews(null);
                 self.remove_word_highlights();
             });
-            return this.container
+            return self.container
         } else {
-            return this.container
+            return self.container
         }
     };
 
@@ -1909,13 +1934,25 @@ function MacaronicSentence() {
             $(item).css('order', i)
         }
     };
+
+    this.update_display_remaining_hints = function() {
+
+        $(self.done_bttn).text('[' + this.remaining_hints + ']');
+        $(self.done_bttn).removeClass('flashing')
+        setTimeout(function() {
+            $(self.done_bttn).addClass('flashing')
+        }, 50);
+        if (self.remaining_hints <= 0){
+            make_next_sentence_active(self.id, self.id + 1);
+        }
+    }
     this.make_nonactive = function () {
-        $(this.done_bttn).attr('disabled', true);
-        $(this.get_container()).addClass('nonactive');
+        $(self.counter_container).css('display', 'none');
+        $(self.get_container()).addClass('nonactive');
     };
     this.remove_nonactive = function() {
-        $(this.done_bttn).removeAttr('disabled');
-        $(this.get_container()).removeClass('nonactive');
+        $(self.counter_container).show();
+        $(self.get_container()).removeClass('nonactive');
     };
 
     this.update_visible_nodes = function () {
@@ -2110,6 +2147,8 @@ function ok_parse(st, end) {
         });
         s.assign_display_order_by_array_order();
         s.update_visible_nodes();
+        s.remaining_hints = parseInt(s.visible_nodes.length / 2);
+        s.update_display_remaining_hints()
         if (i > st) {
             s.make_nonactive();
         }

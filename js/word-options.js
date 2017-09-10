@@ -46,18 +46,17 @@ var PreviewGuessRequest = function PreviewGuessRequest(node) {
 	this.l1_translation = self.set_l1_translation(node)
 
 	this.requestGuess = function (params) {
+
 		self.set_visibility(true)
 		self.skipped = true
 		$(this.view).keyup(function (e) {
 			var code = e.which;
-			console.log("typing something..." + self.node.lang + " : " + self.node.s + "code:" + code)
+			console.log("typing:" + self.node.lang + " : " + self.node.s + "code:" + code)
 			if (code == 13) {
 				var g = $(self.view.input_box).val().trim()
 				//this.node.logRequestGuess(g)
 				if (g != '') {
-					params["forceGuess"] = false
-					self.skipped = false
-					self.guessed = true
+
 					//should log guess to db here
 					//$(self.get_view().input_box).addClass('correctGuess')
 					var score = self.get_cosine_sim()
@@ -68,7 +67,11 @@ var PreviewGuessRequest = function PreviewGuessRequest(node) {
 					} else if (score < 0.9) {
 						self.flashClass('closeGuess', params)
 					} else {
+                        params["forceGuess"] = false
+                        self.skipped = false
+                        self.guessed = true
 						self.flashClass('correctGuess', params)
+
 					}
 
 				}
@@ -84,6 +87,7 @@ var PreviewGuessRequest = function PreviewGuessRequest(node) {
 			//self.removeGuessingClass()
 
 		})
+
 	}
 
 	this.removeRequest = function () {
@@ -122,6 +126,7 @@ var PreviewGuessRequest = function PreviewGuessRequest(node) {
 	}
 
 	this.flashClass = function (c, params) {
+		params['guess_result'] = c
 		var delay = c == 'incorrectGuess' ? 700 : 700;
 		if ($(self.view.input_box).val().trim() != "") {
 			$(self.view.input_box).addClass(c)
