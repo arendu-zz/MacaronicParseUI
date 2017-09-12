@@ -1449,7 +1449,7 @@ function MacaronicSentence() {
     this.container = null;
     this.outer_container = null;
     this.counter_container = null;
-    this.done_bttn = null;
+    this.clue_counter = null;
     this.remaining_hints = null;
     this.initial_order_by = null;
     this.sentence_preview_views = [];
@@ -1909,20 +1909,20 @@ function MacaronicSentence() {
             $(self.outer_container).append($(self.container));
             $(self.outer_container).append($(self.counter_container));
 
-            self.upper_done_bttn = document.createElement('div');
-            $(self.upper_done_bttn).addClass('node_menu_container')
-            self.done_bttn = document.createElement('span');
+            self.upper_clue_counter = document.createElement('div');
+            $(self.upper_clue_counter).addClass('node_menu_container')
+            self.clue_counter = document.createElement('span');
 
-            $(self.done_bttn).addClass('counter')
-            self.bottom_done_bttn = document.createElement('div');
-            $(self.bottom_done_bttn).addClass('node_menu_container extraheight')
-            //$(self.done_bttn).text(self.remaining_hints);
-            //$(self.done_bttn).on('click', function(){
+            $(self.clue_counter).addClass('counter')
+            self.bottom_clue_counter = document.createElement('div');
+            $(self.bottom_clue_counter).addClass('node_menu_container extraheight')
+            //$(self.clue_counter).text(self.remaining_hints);
+            //$(self.clue_counter).on('click', function(){
             //    make_next_sentence_active(self.id, self.id + 1);
             //})
-            $(self.counter_container).append($(self.upper_done_bttn));
-            $(self.counter_container).append($(self.done_bttn));
-            $(self.counter_container).append($(self.bottom_done_bttn));
+            $(self.counter_container).append($(self.upper_clue_counter));
+            $(self.counter_container).append($(self.clue_counter));
+            $(self.counter_container).append($(self.bottom_clue_counter));
 
             $(self.container).on('mouseleave', function () {
                 self.remove_all_previews(null);
@@ -1949,10 +1949,10 @@ function MacaronicSentence() {
 
     this.update_display_remaining_hints = function() {
 
-        $(self.done_bttn).text('[' + this.remaining_hints + ']');
-        $(self.done_bttn).removeClass('flashing')
+        $(self.clue_counter).text('[' + this.remaining_hints + ']');
+        $(self.clue_counter).removeClass('flashing')
         setTimeout(function() {
-            $(self.done_bttn).addClass('flashing')
+            $(self.clue_counter).addClass('flashing')
         }, 50);
         if (self.remaining_hints <= 0){
             make_next_sentence_active(self.id, self.id + 1);
