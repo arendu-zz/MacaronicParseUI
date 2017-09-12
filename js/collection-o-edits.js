@@ -383,10 +383,14 @@ function Node() {
             var pv_bounds = self.get_view_text_position();
             pv_bounds['right'] = pv_bounds.left + pv_bounds.width;
 
-            if (self.graph.swaps && self["swap_reorder_" + direction] && selective_preview.swap) {
+            //if (self.graph.swaps && self["swap_reorder_" + direction] && selective_preview.swap) {
+            if (self.graph.swaps && selective_preview.swap) {
                 var self_1 = false;
                 var self_2 = false;
                 var swap_obj = self.graph.get_swap(direction);
+                if (swap_obj == null){
+                    swap_obj = {"graphs": [], "other_graphs": []};
+                }
                 var bounds = {
                     'height': 0, 'left': Number.POSITIVE_INFINITY, 'right': Number.NEGATIVE_INFINITY, 'top': 0
                 };
@@ -433,12 +437,15 @@ function Node() {
                     arrows = self.get_swap_preview_view(pathDiv, bounds, other_bounds, direction)
 
                 }
-
-                num_swaps.push(arrows);
-                var preview_param = {
-                    node: self, action: arrows.type + ' reorder', direction: arrows.direction, priority: 1
-                };
-                possible_previews.push(preview_param)
+                if (arrows != null){
+                    num_swaps.push(arrows);
+                    var preview_param = {
+                        node: self, action: arrows.type + ' reorder', direction: arrows.direction, priority: 1
+                    };
+                    possible_previews.push(preview_param)
+                }else{
+                    console.log("arrows are null...")
+                }
 
             } else if (self.graph.splits && self["split_reorder_" + direction] && selective_preview.split) {
                 //console.log("this graphs splits")
@@ -849,7 +856,7 @@ function Node() {
                 return node.visible
             });
 
-            if (this.graph.swaps) {
+            if (self.graph.swaps) {
                 console.log("this graphs swaps");
                 var swap_obj = self.graph.get_swap(param.direction);
                 assert(swap_obj != null, 'swap object is null!!');
@@ -1154,7 +1161,11 @@ function Node() {
     };
 
     this.get_swap_preview_view = function (pathDiv, bounds, other_bounds, direction) {
-        return drawSwap('external', pathDiv, bounds, other_bounds, null, 3.5, direction, direction == 'en' ? '#028090' : '#666666');
+        console.log("arrow args", pathDiv, bounds, other_bounds, direction)
+        if (bounds.height != 0 && bounds.top != 0){
+            return drawSwap('external', pathDiv, bounds, other_bounds, null, 3.5, direction, direction == 'en' ? '#028090' : '#666666');
+        }
+        return null;
     };
 
     this.offView = function (fromdiv) {
