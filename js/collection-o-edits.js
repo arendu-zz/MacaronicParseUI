@@ -384,6 +384,7 @@ function Node() {
             pv_bounds['right'] = pv_bounds.left + pv_bounds.width;
 
             //if (self.graph.swaps && self["swap_reorder_" + direction] && selective_preview.swap) {
+            //TODO: how does "swap_reoder_en" get set?????
             if (self.graph.swaps && selective_preview.swap) {
                 var self_1 = false;
                 var self_2 = false;
@@ -1161,7 +1162,7 @@ function Node() {
     };
 
     this.get_swap_preview_view = function (pathDiv, bounds, other_bounds, direction) {
-        console.log("arrow args", pathDiv, bounds, other_bounds, direction)
+        //console.log("arrow args", pathDiv, bounds, other_bounds, direction)
         if (bounds.height != 0 && bounds.top != 0){
             return drawSwap('external', pathDiv, bounds, other_bounds, null, 3.5, direction, direction == 'en' ? '#028090' : '#666666');
         }
