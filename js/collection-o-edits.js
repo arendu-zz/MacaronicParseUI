@@ -1910,18 +1910,26 @@ function MacaronicSentence() {
             $(self.outer_container).append($(self.counter_container));
 
             self.upper_clue_counter = document.createElement('div');
-            $(self.upper_clue_counter).addClass('node_menu_container')
-            self.clue_counter = document.createElement('span');
+            $(self.upper_clue_counter).addClass('node_menu_container');
+            self.yac = document.createElement('div');
+            $(self.yac).addClass('yac');
 
-            $(self.clue_counter).addClass('counter')
+            self.clue_counter = document.createElement('span');
+            self.done_bttn = document.createElement('button');
+            //$(self.done_bttn).prop('value','Next');
+            self.done_bttn.innerHTML = 'Next'
+            $(self.done_bttn).on('click', function(){
+                make_next_sentence_active(self.id, self.id + 1);
+            });
+            //$(self.clue_counter).addClass('counter')
             self.bottom_clue_counter = document.createElement('div');
             $(self.bottom_clue_counter).addClass('node_menu_container extraheight')
             //$(self.clue_counter).text(self.remaining_hints);
-            //$(self.clue_counter).on('click', function(){
-            //    make_next_sentence_active(self.id, self.id + 1);
-            //})
+
             $(self.counter_container).append($(self.upper_clue_counter));
-            $(self.counter_container).append($(self.clue_counter));
+            $(self.yac).append($(self.clue_counter));
+            $(self.yac).append($(self.done_bttn));
+            $(self.counter_container).append($(self.yac));
             $(self.counter_container).append($(self.bottom_clue_counter));
 
             $(self.container).on('mouseleave', function () {

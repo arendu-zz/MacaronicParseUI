@@ -291,6 +291,23 @@ span {
 .affected {
     opacity: 0.2;
 }
+.yac {
+    background: transparent;
+    display: -moz-box;
+    display: -ms-box;
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: flex;
+    width: 100px;
+    flex-direction: row;
+    /*----- row | row-reverse | column | column-reverse*/
+    justify-content: space-around;
+    /*----- flex-start | flex-end | center | space-between | space-around*/
+    align-items: center;
+    /*----- flex-start | flex-end | center | baseline | stretch*/
+    padding-top: 0px;
+    padding-bottom: 0px;
+}
 
 .container {
     background: transparent;
@@ -452,9 +469,9 @@ span {
 }
 
 button {
-    height: 20px;
+ /*   height: 20px;
     margin-top: 19px;
-    margin-left: 5px;
+    margin-left: 5px;*/
 }
 
 .totalScore {
