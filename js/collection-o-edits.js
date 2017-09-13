@@ -2151,8 +2151,8 @@ function receivedJsonSentence(msg) {
 }
 
 function ok_parse(st, end) {
-    end = sentences_per_page < json_sentences.length ? end : json_sentences.length;
-    //end = json_sentences.length
+    //end = sentences_per_page < json_sentences.length ? end : json_sentences.length;
+    end = json_sentences.length
     for (var i = st; i < end; i++) {
         var jo = JSON.parse(json_sentences[i]);
         var s = MacaronicSentence.parse(jo);
