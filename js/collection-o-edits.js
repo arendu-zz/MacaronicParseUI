@@ -10,25 +10,70 @@ var socket = null
 var json_sentences = []
 var mainview = null
 var ask_preview_guesses = true
-var preview_guess_probability = 0.1
+var preview_guess_probability = 1
 var mllist = []
 var prev_valnum = 1000
 var scale_val = 0.2
+var until = 90
 var current_val = 999
-var until = 750
 var global_allowed_directions = ['en']
-function slideInitially(until) {
-	if (current_val > until) {
+var completed_precomputations = 0
+
+function slideInitially(u, macSentence) {
+	//console.log("u", macSentence.de , u, macSentence.current_val )
+    if (current_val > u) {
+        current_val  -= 1
+        //$('#slider').slider('value', current_val)
+        sliderMoving(current_val , false, macSentence)
+        setTimeout(function () {
+            slideInitially(u, macSentence)
+        }, 10)
+    } else {
+        setTimeout(function () {
+            sliderUp(current_val , macSentence)
+        }, 10)
+        setTimeout(function () {
+            //ask_preview_guesses = true
+            //console.log("re-enabled quiz feature...")
+        }, 20)
+    }
+
+}
+
+function sliderUp(valnum, macSentence) {
+    console.log("mouse up on slider" + valnum.toString())
+	macSentence.apply_automated_preview()
+}
+
+function sliderMoving(valnum, show_preview, macSentence) {
+    if (show_preview == null) {
+        show_preview = true
+    }
+    //console.log("current slider:" + valnum.toString())
+    if (valnum < prev_valnum) {
+		macSentence.slider_response_reduce(valnum, show_preview)
+		//async(macSentence.slider_response_reduce, valnum, null)
+	} else if (valnum > prev_valnum) {
+		macSentence.slider_response_increase(valnum, show_preview)
+    } else {
+        //no movement in slider...
+    }
+    prev_valnum = valnum
+}
+
+/*
+function slideInitiallyALL(u) {
+	if (current_val > u) {
 		current_val -= 10
 		$('#slider').slider('value', current_val)
-		sliderMoving(current_val, false)
+		sliderMovingALL(current_val, false)
 		setTimeout(function () {
 
-			slideInitially(until)
+			slideInitiallyALL(u)
 		}, 10)
 	} else {
 		setTimeout(function () {
-			sliderUp(current_val)
+			sliderUpALL(current_val)
 		}, 10)
 		setTimeout(function () {
 			ask_preview_guesses = true
@@ -38,7 +83,7 @@ function slideInitially(until) {
 
 }
 
-function sliderUp(valnum) {
+function sliderUpALL(valnum) {
 	console.log("mouse up on slider" + valnum.toString())
 	_.each(macaronic_sentences, function (macSentence) {
 		macSentence.apply_automated_preview()
@@ -46,7 +91,7 @@ function sliderUp(valnum) {
 
 }
 
-function sliderMoving(valnum, show_preview) {
+function sliderMovingALL(valnum, show_preview) {
 	if (show_preview == null) {
 		show_preview = true
 	}
@@ -66,7 +111,7 @@ function sliderMoving(valnum, show_preview) {
 	}
 	prev_valnum = valnum
 }
-
+*/
 function replaceAll(str, find, replace) {
 	return str.replace(new RegExp(find, 'g'), replace);
 }
@@ -79,6 +124,7 @@ gotoPrevPage = function () {
 	if (page >= 0) {
 		$('#mainbody').empty()
 		macaronic_sentences = []
+        completed_precomputations = 0;
 		ok_parse(st, end)
 		do_precomputations()
 	}
@@ -117,6 +163,7 @@ gotoNextPage = function () {
 
 	$('#mainbody').empty()
 	macaronic_sentences = []
+    completed_precomputations = 0;
 	ok_parse(st, end)
 	do_precomputations()
 }
@@ -306,7 +353,7 @@ function Node() {
 		if (self.isMouseOver) {
 			self.preview_action()
 		} else {
-			console.log("too late")
+			//console.log("too late")
 		}
 	}
 
@@ -1156,7 +1203,7 @@ function Node() {
 			$(this.view).append($(bottom_menu_container))
 
 			$(this.view).on('mouseover', function (e) {
-				console.log("over view!!!")
+				//console.log("over view!!!")
 				self.isMouseOver = true
 				if (self.inline_translation.isVisible) {
 					console.log("do not show previews during text box...")
@@ -1369,6 +1416,7 @@ function MacaronicSentence() {
 	this.number_of_edits = null
 	this.trigger_gap = null
 	this.last_trigger_point = 999
+    this.current_val = 999
 
 	this.slider_action_stack = []
 
@@ -2027,6 +2075,15 @@ function async(your_function, arg, callback) {
 	}, 0);
 }
 
+function after_precomputations() {
+	completed_precomputations += 1
+	console.log("completed_precomputations", completed_precomputations)
+	if (completed_precomputations == macaronic_sentences.length){
+		console.log("done! precomps")
+
+	}
+}
+
 function get_bounding_of_nodes(list_of_nodes) {
 	var min_left = Number.POSITIVE_INFINITY
 	var max_right = 0
@@ -2050,17 +2107,21 @@ function precomputations(i) {
 	s.number_of_edits = s.get_remaining_edits('en').length
 	console.log(i, s.number_of_edits)
 	s.trigger_gap = parseInt(990 / parseFloat(s.number_of_edits))
-	if (i == macaronic_sentences.length - 1) {
-		console.log('done')
-		ask_preview_guesses = false
-		slideInitially(until)
 
-	}
+    if (i == macaronic_sentences.length - 1) {
+		ask_preview_guesses = false
+		for (var i = 0; i < macaronic_sentences.length; i++){
+        	var ms = macaronic_sentences[i]
+			var u =  300 + (500 * (i / macaronic_sentences.length))
+            slideInitially(u, ms)
+        }
+    }
 }
 
 function do_precomputations() {
-	for (var i = 0; i < macaronic_sentences.length; i++) {
-		async(precomputations, i, null)
+    ask_preview_guesses = false
+    for (var i = 0; i < macaronic_sentences.length; i++) {
+		async(precomputations, i, after_precomputations)
 	}
 }
 
