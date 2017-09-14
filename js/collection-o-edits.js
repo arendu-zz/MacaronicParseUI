@@ -16,7 +16,7 @@ var prev_valnum = 1000
 var scale_val = 0.2
 var current_val = 999
 var until = 750
-
+var global_allowed_directions = ['en']
 function slideInitially(until) {
 	if (current_val > until) {
 		current_val -= 10
@@ -314,7 +314,7 @@ function Node() {
 		var automated_preview = false
 		var directions = []
 		if (selective_direction == null) {
-			directions = ['en', 'de']
+			directions = global_allowed_directions;
 		} else {
 			directions = [selective_direction]
 		}
@@ -1945,6 +1945,7 @@ Node.parse = function (input) {
 		n.s = '-'
 	} else {
 		n.s = replaceAll(input.s, '~~~', ' ')
+        n.s = replaceAll(input.s, '@@@', ' ')
 	}
 	n.en_id = input.en_id
 	n.de_id = input.de_id
@@ -2072,8 +2073,8 @@ function receivedJsonSentence(msg) {
 }
 
 function ok_parse(st, end) {
-	end = sentences_per_page < json_sentences.length ? end : json_sentences.length
-	//end = json_sentences.length
+	//end = sentences_per_page < json_sentences.length ? end : json_sentences.length
+	end = json_sentences.length
 	for (var i = st; i < end; i++) {
 		var jo = JSON.parse(json_sentences[i]);
 		var s = MacaronicSentence.parse(jo);
