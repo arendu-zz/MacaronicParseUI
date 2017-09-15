@@ -20,7 +20,9 @@ var global_allowed_directions = ['en']
 var completed_precomputations = 0
 
 function slideInitially(u, macSentence) {
-	//console.log("u", macSentence.de , u, macSentence.current_val )
+    ask_preview_guesses = false
+
+    //console.log("u", macSentence.de , u, macSentence.current_val )
     if (current_val > u) {
         current_val  -= 1
         //$('#slider').slider('value', current_val)
@@ -33,7 +35,7 @@ function slideInitially(u, macSentence) {
             sliderUp(current_val , macSentence)
         }, 10)
         setTimeout(function () {
-            //ask_preview_guesses = true
+            ask_preview_guesses = true
             //console.log("re-enabled quiz feature...")
         }, 20)
     }
@@ -2112,7 +2114,7 @@ function precomputations(i) {
 		ask_preview_guesses = false
 		for (var i = 0; i < macaronic_sentences.length; i++){
         	var ms = macaronic_sentences[i]
-			var u =  300 + (500 * (i / macaronic_sentences.length))
+			var u =  500 + (300 * (i / macaronic_sentences.length))
             slideInitially(u, ms)
         }
     }
